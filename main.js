@@ -6,7 +6,7 @@ const COLOR = {
   red:    "#d93a3a",
   yellow: "#e6b422",
   green:  "#2f9e44",
-  gray:   "#9aa0a6",
+  gray:   "#4a5058",
 };
 
 const map = L.map("map", { preferCanvas: true });
@@ -32,13 +32,29 @@ function popupHtml(p) {
   const action = p.r
     ? `<a class="download" href="reports/${p.a}.pdf" download>Download appeal report (PDF)</a>`
     : `<a class="pending" href="report-pending.html?a=${encodeURIComponent(p.a)}&d=${encodeURIComponent(p.d || "")}">Report coming soon</a>`;
+  const owner = p.o ? `<div class="owner">${p.o}</div>` : "";
   return `
     <div class="parcel-popup">
       <div class="addr">${p.d || "(no address)"}</div>
+      ${owner}
       <div>HCAD ${p.a}${val ? ` · ${val}` : ""}</div>
       <div class="pct ${cls}">${pct} vs. median of 5 comps</div>
       ${action}
     </div>`;
+}
+
+// Hover popup: open on mouseover, close on mouseout with a small grace
+// period so the user can move into the popup (and click the download link)
+// without it closing out from under them. Only above HOVER_ZOOM — below that
+// the parcels are too densely packed for hover to feel intentional.
+const HOVER_ZOOM = 16;
+let hoverCloseTimer = null;
+function cancelHoverClose() {
+  if (hoverCloseTimer) { clearTimeout(hoverCloseTimer); hoverCloseTimer = null; }
+}
+function scheduleHoverClose(marker) {
+  cancelHoverClose();
+  hoverCloseTimer = setTimeout(() => marker.closePopup(), 200);
 }
 
 function drawParcels() {
@@ -50,7 +66,25 @@ function drawParcels() {
       fillColor: COLOR[p.c] || COLOR.gray,
       fillOpacity: 0.85,
     });
-    m.bindPopup(() => popupHtml(p));
+    m.bindPopup(() => popupHtml(p), {
+      autoPan: false,
+      closeButton: false,
+      offset: [0, -4],
+    });
+    m.on("mouseover", function () {
+      if (map.getZoom() < HOVER_ZOOM) return;
+      cancelHoverClose();
+      this.openPopup();
+    });
+    m.on("mouseout", function () {
+      scheduleHoverClose(this);
+    });
+    m.on("popupopen", function (e) {
+      const el = e.popup.getElement();
+      if (!el) return;
+      el.addEventListener("mouseenter", cancelHoverClose);
+      el.addEventListener("mouseleave", () => scheduleHoverClose(m));
+    });
     m.addTo(map);
     state.markers.set(p.a, m);
   }
@@ -158,21 +192,45 @@ function wireSearch() {
 function wireLegendInfo() {
   const btn = document.getElementById("legend-info-btn");
   const pop = document.getElementById("legend-info");
+  const nudge = document.getElementById("intro-nudge");
   if (!btn || !pop) return;
   const close = pop.querySelector(".info-close");
+  const INTRO_SEEN_KEY = "jv-seen-intro-v1";
 
-  function open() {
+  let introSeen = false;
+  try { introSeen = !!localStorage.getItem(INTRO_SEEN_KEY); } catch (e) {}
+  if (nudge && !introSeen) nudge.hidden = false;
+
+  function markIntroSeen() {
+    try { localStorage.setItem(INTRO_SEEN_KEY, "1"); } catch (e) {}
+    if (nudge) nudge.hidden = true;
+  }
+  function open(scrollToHowto) {
     pop.hidden = false;
     btn.setAttribute("aria-expanded", "true");
+    if (scrollToHowto) {
+      requestAnimationFrame(() => {
+        const sec = document.getElementById("info-howto");
+        if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }
   function shut() {
     pop.hidden = true;
     btn.setAttribute("aria-expanded", "false");
   }
+
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
-    pop.hidden ? open() : shut();
+    if (pop.hidden) { open(false); markIntroSeen(); } else { shut(); }
   });
+  if (nudge) {
+    nudge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      open(true);
+      markIntroSeen();
+    });
+  }
   close.addEventListener("click", shut);
   document.addEventListener("click", (e) => {
     if (!pop.hidden && !pop.contains(e.target) && e.target !== btn) shut();

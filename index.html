@@ -17,23 +17,37 @@
     <ul id="results" hidden></ul>
   </div>
   <div class="legend">
-    <span class="legend-item"><span class="dot red"></span> &gt;7% over <span class="legend-label">· strong case</span></span>
-    <span class="legend-item"><span class="dot yellow"></span> 2–7% over <span class="legend-label">· consider filing</span></span>
-    <span class="legend-item"><span class="dot green"></span> &lt;2% over <span class="legend-label">· skip</span></span>
-    <button id="legend-info-btn" class="info-btn" type="button" aria-label="What do these colors mean?" aria-expanded="false" aria-controls="legend-info">?</button>
+    <span class="legend-item"><span class="dot red"></span> strong</span>
+    <span class="legend-item"><span class="dot yellow"></span> consider</span>
+    <span class="legend-item"><span class="dot green"></span> skip</span>
+    <span class="legend-item"><span class="dot gray"></span> no comps</span>
+    <button id="intro-nudge" class="intro-nudge" type="button" hidden>New here? Read this first →</button>
+    <button id="legend-info-btn" class="info-btn" type="button" aria-label="About this map" aria-expanded="false" aria-controls="legend-info">?</button>
   </div>
   <div id="legend-info" class="info-popover" hidden role="dialog" aria-labelledby="legend-info-title">
-    <h2 id="legend-info-title">How to read these colors</h2>
-    <p>
-      Each color shows how your 2026 appraised value compares with the
-      median of 5 similar homes (same neighborhood, same HCAD grade,
-      within &plusmn;15% square footage and &plusmn;10 years of age).
-    </p>
-    <ul>
-      <li><span class="dot red"></span><strong>Strong case</strong> — more than 7% over the median. Under <a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.41.htm" target="_blank" rel="noopener">Tex. Tax Code §41.43(b)(3)</a>, the ARB is required to lower your appraisal to that median if your comps hold up.</li>
-      <li><span class="dot yellow"></span><strong>Consider filing</strong> — 2–7% over. A reduction is possible, but the ARB panel may push back on individual comp choices.</li>
-      <li><span class="dot green"></span><strong>Skip</strong> — less than 2% over. Within the noise of comp selection; not worth filing.</li>
-    </ul>
+    <section>
+      <h3 id="legend-info-title">What the colors mean</h3>
+      <p>
+        Each color shows how your 2026 appraised value compares with the
+        median of 5 similar homes (same neighborhood, same HCAD grade,
+        within &plusmn;15% square footage and &plusmn;10 years of age).
+      </p>
+      <ul>
+        <li><span class="dot red"></span><strong>Strong case</strong> — more than 7% over the median. Under <a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.41.htm" target="_blank" rel="noopener">Tex. Tax Code §41.43(b)(3)</a>, the ARB is required to lower your appraisal to that median if your comps hold up.</li>
+        <li><span class="dot yellow"></span><strong>Consider filing</strong> — 2–7% over. A reduction is possible, but the ARB panel may push back on individual comp choices.</li>
+        <li><span class="dot green"></span><strong>Skip</strong> — less than 2% over. Within the noise of comp selection; not worth filing.</li>
+        <li><span class="dot gray"></span><strong>No comps</strong> — fewer than 5 neighbors matched the filters. Usually an unusually old, new, large, or atypically-graded home. No automatic case — review comps by hand if it matters to you.</li>
+      </ul>
+    </section>
+    <section id="info-howto">
+      <h3>How to use this site</h3>
+      <ol>
+        <li>Find your home — type the address or HCAD account in the search box above, or pan/zoom the map.</li>
+        <li>Click (or hover, when zoomed in past block level) on any pin to see the over-assessment percentage and open the popup.</li>
+        <li>If your pin is <span class="dot red"></span> or <span class="dot yellow"></span>, download the pre-generated PDF. It has your parcel's facts, 5 comparable homes, the median, and the §41.43(b)(3) grounds paragraph — ready to file at the ARB or upload to iSettle.</li>
+        <li>If the report says <em>coming soon</em>, check back in a few days. Reports are generated in batches.</li>
+      </ol>
+    </section>
     <p class="info-disclaimer">
       Indicator, not a guarantee. Built by a neighbor. Not affiliated with HCAD or the City of Jersey Village. No legal advice.
     </p>

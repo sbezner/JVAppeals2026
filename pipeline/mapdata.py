@@ -29,7 +29,7 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
 
     rows = con.execute("""
         SELECT
-            p.account, p.site_addr, p.site_zip,
+            p.account, p.site_addr, p.site_zip, p.owner_name,
             p.lat, p.lon,
             p.appraised_val,
             f.over_pct, f.color
@@ -47,11 +47,12 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     existing_reports = {p.stem for p in REPORTS_DIR.glob("*.pdf")}
 
     parcels = []
-    for account, addr, zip_, lat, lon, val, pct, color in rows:
+    for account, addr, zip_, owner, lat, lon, val, pct, color in rows:
         parcels.append({
             "a": account,
             "d": (addr or "").strip(),
             "z": (zip_ or "").strip(),
+            "o": (owner or "").strip(),
             "c": color or "gray",
             "p": round(pct, 1) if pct is not None else None,
             "v": int(val) if val is not None else None,
