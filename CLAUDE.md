@@ -177,12 +177,27 @@ These are items that can only be resolved with the real HCAD files in hand:
    is EPSG:2278 (Texas South Central, US feet). Open `Parcels.prj` in the
    shapefile download — if it's different, update the `st_transform`
    call in `load.py → parcel_centroid`.
-3. **Smoke-test one known parcel end to end** — see §5 below.
-4. **Full production run** — ~7–8 days on Max plan; verify no weekly
+3. **Shapefile account column is hardcoded to `HCAD_NUM`.** The parcel
+   shapefile's DBF field for the account number has historically been
+   `HCAD_NUM`, but has also been seen as `hcad_num`, `Account`, or
+   `HCADACCT`. If the `parcel_centroid` CREATE fails with "column
+   HCAD_NUM does not exist", inspect the shapefile's DBF columns and
+   edit that one reference in `pipeline/load.py`. (Future follow-up:
+   move this into `COLUMN_ALIASES` like the other columns.)
+4. **`uv.lock` is not committed yet.** It is generated the first time
+   you run `uv sync` on the Mac Mini. After your first successful
+   `uv sync`, commit it so subsequent clones reproduce the same
+   dependency versions: `git add uv.lock && git commit -m "Add uv.lock"`.
+5. **GitHub Pages is not enabled yet.** On the repo, go to
+   Settings → Pages → Source: this branch (or `main` after merge),
+   folder `/ (root)`. Site URL will be
+   `https://sbezner.github.io/JVAppeals2026/`. Until the pipeline runs
+   and you push `data/parcels.json` + `reports/*.pdf`, the page will
+   load but show "No parcel data yet."
+6. **Smoke-test one known parcel end to end** — see §5 below.
+7. **Full production run** — ~7–8 days on Max plan; verify no weekly
    quota issues partway in.
-5. **Enable GitHub Pages** on the repo — Settings → Pages → Source:
-   branch `main` (or this branch), folder `/ (root)`.
-6. **After each pipeline run,** commit and push `data/parcels.json` and
+8. **After each pipeline run,** commit and push `data/parcels.json` and
    any new `reports/*.pdf` so GitHub Pages picks them up.
 
 ### ❌ Explicitly out of scope (not built)
