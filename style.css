@@ -12,6 +12,11 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+/* Use dynamic viewport height on browsers that support it so iOS Safari's
+   address-bar collapse/expand doesn't leave the map overflowing or gapping. */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+}
 body { display: flex; flex-direction: column; }
 
 header {

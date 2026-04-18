@@ -18,11 +18,19 @@ const MOBILE =
 
 const map = L.map("map", {
   preferCanvas: true,
-  renderer: L.canvas({ tolerance: MOBILE ? 15 : 0 }),
+  // Canvas renderer with a generous touch tolerance on mobile so finger
+  // taps land within a ~22px radius of a pin (effective 44×44 hit zone,
+  // matching Apple HIG). Desktop uses 0 — mouse pointer is precise.
+  renderer: L.canvas({ tolerance: MOBILE ? 22 : 0 }),
 });
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+// CartoDB Positron — muted light basemap that lets the red/yellow/green
+// pins read clearly. Retina tile URL ({r} → '@2x') keeps labels crisp
+// on high-density phone screens.
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   maxZoom: 19,
-  attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+  subdomains: "abcd",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
 }).addTo(map);
 
 // Normalize a string for fuzzy-ish substring search.
