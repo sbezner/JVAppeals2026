@@ -5,7 +5,8 @@ Emit a compact JSON file for the Leaflet front-end:
         "center": [lat, lon],
         "parcels": [
             {"a": account, "d": address, "c": "red|yellow|green|gray",
-             "p": over_pct, "v": appraised_val, "ll": [lat, lon]},
+             "p": over_pct, "v": appraised_val, "ll": [lat, lon],
+             "r": 1 if reports/{account}.pdf exists else 0},
             ...
         ]
     }
@@ -19,6 +20,7 @@ import json
 from pathlib import Path
 
 DATA_DIR = Path("data")
+REPORTS_DIR = Path("reports")
 
 
 def emit(db_path: str = "pipeline.duckdb") -> None:
@@ -42,6 +44,8 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     """).fetchone()
     con.close()
 
+    existing_reports = {p.stem for p in REPORTS_DIR.glob("*.pdf")}
+
     parcels = []
     for account, addr, zip_, lat, lon, val, pct, color in rows:
         parcels.append({
@@ -52,6 +56,7 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
             "p": round(pct, 1) if pct is not None else None,
             "v": int(val) if val is not None else None,
             "ll": [round(lat, 6), round(lon, 6)],
+            "r": 1 if account in existing_reports else 0,
         })
 
     out = DATA_DIR / "parcels.json"

@@ -6,6 +6,9 @@ __pycache__/
 # HCAD raw files (user downloads manually — see pipeline/download.py)
 hcad_raw/
 
+# Local staging for HCAD download zips (extracted into hcad_raw/)
+hcad_download/
+
 # Prose cache (regenerated per run; resumable)
 cache/
 

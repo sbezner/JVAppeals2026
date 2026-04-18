@@ -27,7 +27,7 @@ HCAD_RAW = Path("hcad_raw")
 REQUIRED = {
     "real_acct": ["real_acct.txt", "real_acct.csv"],
     "building_res": ["building_res.txt", "building_res.csv"],
-    "jurisdiction_value": ["jurisdiction_value.txt", "jurisdiction.txt"],
+    "jurisdiction_value": ["jurisdiction_value.txt", "jur_value.txt", "jurisdiction.txt"],
     "parcels_shp": ["Parcels/Parcels.shp", "parcels/Parcels.shp", "Parcels.shp"],
 }
 

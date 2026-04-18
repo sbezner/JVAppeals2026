@@ -29,12 +29,15 @@ function popupHtml(p) {
   const pct = p.p == null ? "n/a" : (p.p >= 0 ? `+${p.p}%` : `${p.p}%`);
   const val = p.v == null ? "" : `$${p.v.toLocaleString()}`;
   const cls = p.c || "gray";
+  const action = p.r
+    ? `<a class="download" href="reports/${p.a}.pdf" download>Download appeal report (PDF)</a>`
+    : `<a class="pending" href="report-pending.html?a=${encodeURIComponent(p.a)}&d=${encodeURIComponent(p.d || "")}">Report coming soon</a>`;
   return `
     <div class="parcel-popup">
       <div class="addr">${p.d || "(no address)"}</div>
       <div>HCAD ${p.a}${val ? ` · ${val}` : ""}</div>
       <div class="pct ${cls}">${pct} vs. median of 5 comps</div>
-      <a class="download" href="reports/${p.a}.pdf" download>Download appeal report (PDF)</a>
+      ${action}
     </div>`;
 }
 

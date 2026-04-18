@@ -66,10 +66,13 @@ consolidated parcels.json → git commit → GitHub Pages.
   `.env`. Rate-limited at ~50 calls/hour to stay inside subscription
   quotas. Each call is shelled out and its JSON result cached per account
   so the pipeline is fully resumable.
-- **Jersey Village = jurisdiction code 061.** HCAD's `jurisdiction_value`
-  table lists every taxing unit that levies on a parcel; "061" is the
-  City of Jersey Village. This is the legal definition of being "in JV"
-  and it's a clean tabular filter — no spatial clip needed.
+- **Jersey Village = jurisdiction code 070.** HCAD's `jur_value` table
+  (filename `jur_value.txt` in 2026, previously `jurisdiction_value.txt`)
+  lists every taxing unit that levies on a parcel; "070" is the City of
+  Jersey Village. This is the legal definition of being "in JV" and it's
+  a clean tabular filter — no spatial clip needed. (Verified 2026-04-18
+  by cross-referencing JV-addressed parcels against `tax_district`; the
+  code `061` is the City of Houston.)
 - **§41.43(b)(3) is the claim.** The report leads with unequal-appraisal
   under §41.43(b)(3), which shifts burden to HCAD to show the appraised
   value is ≤ the median of a reasonable number of appropriately-adjusted
@@ -96,6 +99,7 @@ JVAppeals2026/
 ├── index.html              Leaflet map page (served at site root)
 ├── main.js                 map + autocomplete + pin-click download
 ├── style.css               minimal styling for header, search, legend, footer
+├── report-pending.html     "coming soon" landing for parcels without PDFs yet
 │
 ├── data/
 │   └── parcels.json        emitted by the pipeline; consumed by main.js
@@ -116,7 +120,8 @@ JVAppeals2026/
 ├── scripts/
 │   └── run.sh              tmux + caffeinate wrapper for multi-day runs
 │
-├── hcad_raw/               (gitignored) you drop HCAD source files here
+├── hcad_download/          (gitignored) local staging for HCAD download zips
+├── hcad_raw/               (gitignored) extracted HCAD source files
 └── cache/prose/            (gitignored) resumable prose JSON cache
 ```
 
@@ -130,10 +135,12 @@ JVAppeals2026/
 - **Pipeline download stage** — file-existence check with a clear error
   pointing you to the HCAD download URLs
 - **Pipeline load stage** — DuckDB ingest of `real_acct.txt`,
-  `building_res.txt`, `jurisdiction_value.txt`, optional `owners.txt`, and
-  the `Parcels.shp` shapefile. Reprojects centroids to WGS84. Schema-
-  adaptive column resolution (canonical → HCAD variant). Filters to JV
-  (jurisdiction 061) + residential (state_class `A*`) + sqft > 0 + year > 1900.
+  `building_res.txt`, `jur_value.txt` (2026 filename), optional
+  `owners.txt`, and the `Parcels.shp` shapefile. Reprojects centroids to
+  WGS84. Schema-adaptive column resolution (canonical → HCAD variant).
+  Filters to JV (tax_district 070) + residential (state_class `A*`) +
+  sqft > 0 + year > 1900. Account columns in the text files are padded
+  with trailing spaces; joins TRIM to match the unpadded shapefile keys.
 - **Pipeline findings stage** — for each subject parcel: candidate comps
   are same nbhd + same grade + sqft within ±15% + year within ±10 + not
   self; top 5 by haversine distance from centroids; median appraised
@@ -160,45 +167,47 @@ JVAppeals2026/
   `pipeline.log`. Safe to reattach, tail, or kill.
 - **Static site** — `index.html`, `main.js`, `style.css`. Leaflet + OSM
   tiles, colored pins, autocomplete on address + account, keyboard nav
-  (↑/↓/Enter/Esc), pin-click popup with download link, legend, footer.
+  (↑/↓/Enter/Esc), pin-click popup, legend, footer.
   Loads from `data/parcels.json` at boot.
+- **Hybrid PDF/pending UX** — `mapdata.py` sets a per-parcel `r` flag
+  (1 if `reports/{account}.pdf` exists, else 0). The popup shows the
+  download link for parcels with `r=1` and a "Report coming soon" link
+  to `report-pending.html?a=&d=` for those with `r=0`. This lets the map
+  go live with fully-colored pins even while prose/render is still
+  grinding through the batch — re-run `mapdata` after each batch
+  completes and commit the updated `parcels.json` + new PDFs to surface
+  them.
 
-### 🟡 Not done / unverified (needs you on the Mac Mini)
+### ✅ Resolved during the 2026 smoke test (2026-04-18)
 
-These are items that can only be resolved with the real HCAD files in hand:
+- **HCAD 2026 column drift** — resolved in `COLUMN_ALIASES`. Five columns
+  had new names this year: `site_city` (→ `site_addr_2`), `site_zip`
+  (→ `site_addr_3`), `year_built` (→ `date_erected`/`eff`), `grade`
+  (→ `qa_cd`), `jurs_code` (→ `tax_district`). Old candidates are still
+  probed as fallbacks so the loader stays forward-compatible.
+- **HCAD filename drift** — `jurisdiction_value.txt` is now
+  `jur_value.txt`; alias added in `pipeline/download.py`.
+- **Shapefile CRS** — confirmed EPSG:2278
+  (`NAD_1983_StatePlane_Texas_South_Central_FIPS_4204_Feet`). Code
+  assumption correct; no change needed.
+- **Shapefile account column** — confirmed `HCAD_NUM`. Hardcoded
+  reference in `load.py → parcel_centroid` works as-is.
+- **`uv.lock`** — committed.
+- **GitHub Pages** — enabled from `main` branch root.
+- **Smoke test** — passed on account `1074400000013` (16213 Capri Dr):
+  5 comps found, 2.5% over median, yellow bucket, PDF renders cleanly.
+- **JV jurisdiction code** — was incorrectly documented as 061
+  (that's the City of Houston, 581k parcels). Correct code for the
+  City of Jersey Village in 2026 is **070** (2,338 parcels). Fixed in
+  `load.py`.
 
-1. **Confirm 2026 HCAD column names.** `pipeline/load.py → COLUMN_ALIASES`
-   has best-guess HCAD names for each canonical column. If the loader
-   raises `KeyError: Could not resolve canonical column 'X'`, add the
-   actual HCAD column name to the list for that entry. Columns most
-   likely to drift: `Neighborhood_Code` vs. `nbhd_cd`, `grade_adjustment`
-   vs. `grade`, `tot_appr_val` vs. `appr_val`.
-2. **Confirm shapefile CRS.** `pipeline/load.py` assumes HCAD's `Parcels.shp`
-   is EPSG:2278 (Texas South Central, US feet). Open `Parcels.prj` in the
-   shapefile download — if it's different, update the `st_transform`
-   call in `load.py → parcel_centroid`.
-3. **Shapefile account column is hardcoded to `HCAD_NUM`.** The parcel
-   shapefile's DBF field for the account number has historically been
-   `HCAD_NUM`, but has also been seen as `hcad_num`, `Account`, or
-   `HCADACCT`. If the `parcel_centroid` CREATE fails with "column
-   HCAD_NUM does not exist", inspect the shapefile's DBF columns and
-   edit that one reference in `pipeline/load.py`. (Future follow-up:
-   move this into `COLUMN_ALIASES` like the other columns.)
-4. **`uv.lock` is not committed yet.** It is generated the first time
-   you run `uv sync` on the Mac Mini. After your first successful
-   `uv sync`, commit it so subsequent clones reproduce the same
-   dependency versions: `git add uv.lock && git commit -m "Add uv.lock"`.
-5. **GitHub Pages is not enabled yet.** On the repo, go to
-   Settings → Pages → Source: this branch (or `main` after merge),
-   folder `/ (root)`. Site URL will be
-   `https://sbezner.github.io/JVAppeals2026/`. Until the pipeline runs
-   and you push `data/parcels.json` + `reports/*.pdf`, the page will
-   load but show "No parcel data yet."
-6. **Smoke-test one known parcel end to end** — see §5 below.
-7. **Full production run** — ~7–8 days on Max plan; verify no weekly
+### 🟡 Still open
+
+1. **Full production run** — ~7–8 days on Max plan; verify no weekly
    quota issues partway in.
-8. **After each pipeline run,** commit and push `data/parcels.json` and
-   any new `reports/*.pdf` so GitHub Pages picks them up.
+2. **After each mapdata re-run during the batch,** commit and push
+   `data/parcels.json` + any new `reports/*.pdf` so the map surfaces
+   completed reports incrementally via the `r` flag.
 
 ### ❌ Explicitly out of scope (not built)
 
@@ -238,7 +247,7 @@ Unzip into `hcad_raw/` so it looks like:
 hcad_raw/
 ├── real_acct.txt
 ├── building_res.txt
-├── jurisdiction_value.txt
+├── jur_value.txt                   (was `jurisdiction_value.txt` before 2026)
 ├── owners.txt                      (optional; improves owner block in PDF)
 └── Parcels/
     ├── Parcels.shp
@@ -352,8 +361,20 @@ touch without good reason:
   depends on the filters matching what the prose describes.
 - Don't remove the "Built by a neighbor." footer or the non-affiliation
   disclaimer in the README.
-- The Jersey Village jurisdiction code is **061** — not the city's ZIP,
-  not its school district, not the postal city string.
+- The Jersey Village jurisdiction code is **070** in `jur_value.txt`'s
+  `tax_district` column — not the city's ZIP, not its school district,
+  not the postal city string. **Do not use 061** — that's the City of
+  Houston, ~580k parcels.
+- **Axis-order trap in DuckDB spatial.** After `st_transform(..., 'EPSG:2278',
+  'EPSG:4326')`, `st_x()` returns the latitude and `st_y()` returns the
+  longitude (DuckDB honors EPSG:4326's published lat-first axis order).
+  `load.py` flips them so downstream code can treat lat/lon normally —
+  don't re-swap without re-testing a known parcel's map pin location.
+- **Account-key padding trap.** HCAD's tab-delimited text files pad
+  the account column with trailing spaces to a fixed width; the
+  shapefile's `HCAD_NUM` is unpadded. `load.py` uses `TRIM()` on every
+  account cast so the joins work — keep that in any new query that
+  joins across the text and shapefile tables.
 - The pipeline is **resumable by design**. Any change that invalidates
   the prose cache (prompt change, schema change, etc.) requires
   clearing `cache/prose/` manually — don't add auto-invalidation.

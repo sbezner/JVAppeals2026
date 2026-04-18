@@ -32,8 +32,9 @@ from pipeline import download
 COLUMN_ALIASES: dict[str, list[tuple[str, str]]] = {
     "account":       [("real_acct", "acct"), ("real_acct", "account")],
     "site_addr":     [("real_acct", "site_addr_1"), ("real_acct", "site_addr")],
-    "site_city":     [("real_acct", "site_addr_3"), ("real_acct", "site_city")],
-    "site_zip":      [("real_acct", "site_zip"), ("real_acct", "zip")],
+    "site_city":     [("real_acct", "site_addr_2"), ("real_acct", "site_city")],
+    "site_zip":      [("real_acct", "site_addr_3"), ("real_acct", "site_zip"),
+                      ("real_acct", "zip")],
     "state_class":   [("real_acct", "state_class"), ("real_acct", "state_cd")],
     "nbhd_code":     [("real_acct", "Neighborhood_Code"), ("real_acct", "nbhd_cd"),
                       ("real_acct", "neighborhood_code")],
@@ -48,13 +49,14 @@ COLUMN_ALIASES: dict[str, list[tuple[str, str]]] = {
     "owner_mail_zip":  [("real_acct", "mail_zip"), ("real_acct", "zip4")],
     "living_area":   [("building_res", "im_sq_ft"), ("building_res", "bld_ar"),
                       ("building_res", "living_area")],
-    "year_built":    [("building_res", "yr_impr"), ("building_res", "actual_age"),
+    "year_built":    [("building_res", "date_erected"), ("building_res", "eff"),
+                      ("building_res", "yr_impr"), ("building_res", "actual_age"),
                       ("building_res", "year_built")],
-    "grade":         [("building_res", "grade_adjustment"), ("building_res", "grade"),
-                      ("building_res", "class_structure")],
+    "grade":         [("building_res", "qa_cd"), ("building_res", "grade_adjustment"),
+                      ("building_res", "grade"), ("building_res", "class_structure")],
     "jurs_acct":     [("jurisdiction_value", "acct"), ("jurisdiction_value", "account")],
-    "jurs_code":     [("jurisdiction_value", "jurs_cd"), ("jurisdiction_value", "jurs_code"),
-                      ("jurisdiction_value", "jurisdiction")],
+    "jurs_code":     [("jurisdiction_value", "tax_district"), ("jurisdiction_value", "jurs_cd"),
+                      ("jurisdiction_value", "jurs_code"), ("jurisdiction_value", "jurisdiction")],
 }
 
 
@@ -117,24 +119,29 @@ def build(db_path: str = "pipeline.duckdb") -> None:
     # Centroid + lon/lat in WGS84 (HCAD ships state-plane; reproject).
     # ST_Transform signature: (geom, from_srs, to_srs). HCAD Parcels typically
     # EPSG:2278 (Texas South Central, US feet). Override if shapefile .prj says otherwise.
+    # DuckDB spatial honors EPSG:4326's published (lat, lon) axis order, so
+    # st_x() returns latitude and st_y() returns longitude after the transform.
+    # We flip them here so downstream code can treat lat/lon normally.
     con.execute("""
         CREATE OR REPLACE TABLE parcel_centroid AS
         SELECT
             CAST(HCAD_NUM AS VARCHAR) AS account,
-            st_x(st_transform(st_centroid(geom), 'EPSG:2278', 'EPSG:4326')) AS lon,
-            st_y(st_transform(st_centroid(geom), 'EPSG:2278', 'EPSG:4326')) AS lat
+            st_x(st_transform(st_centroid(geom), 'EPSG:2278', 'EPSG:4326')) AS lat,
+            st_y(st_transform(st_centroid(geom), 'EPSG:2278', 'EPSG:4326')) AS lon
         FROM parcel_geom
         WHERE geom IS NOT NULL
     """)
 
-    # Jersey Village taxing jurisdiction is code "061".
+    # Jersey Village taxing jurisdiction is code "070" in HCAD's 2026 data
+    # (code 061 is the City of Houston). Verified by cross-referencing JV-
+    # addressed parcels against jurisdiction_value.tax_district.
     acct_col = aliases["jurs_acct"][1]
     code_col = aliases["jurs_code"][1]
     con.execute(f"""
         CREATE OR REPLACE TABLE jv_accounts AS
-        SELECT DISTINCT CAST({acct_col} AS VARCHAR) AS account
+        SELECT DISTINCT TRIM(CAST({acct_col} AS VARCHAR)) AS account
         FROM jurisdiction_value
-        WHERE CAST({code_col} AS VARCHAR) IN ('061', '61', '0061')
+        WHERE CAST({code_col} AS VARCHAR) IN ('070', '70', '0070')
     """)
 
     ra = aliases
@@ -143,7 +150,7 @@ def build(db_path: str = "pipeline.duckdb") -> None:
         CREATE OR REPLACE TABLE parcels AS
         WITH ra AS (
             SELECT
-                CAST(r.{ra['account'][1]} AS VARCHAR) AS account,
+                TRIM(CAST(r.{ra['account'][1]} AS VARCHAR)) AS account,
                 r.{ra['site_addr'][1]} AS site_addr,
                 r.{ra['site_city'][1]} AS site_city,
                 CAST(r.{ra['site_zip'][1]} AS VARCHAR) AS site_zip,
@@ -160,7 +167,7 @@ def build(db_path: str = "pipeline.duckdb") -> None:
         ),
         br AS (
             SELECT
-                CAST(b.{ra['account'][1]} AS VARCHAR) AS account,
+                TRIM(CAST(b.{ra['account'][1]} AS VARCHAR)) AS account,
                 CAST(b.{ra['living_area'][1]} AS DOUBLE) AS living_area,
                 CAST(b.{ra['year_built'][1]} AS INTEGER) AS year_built,
                 CAST(b.{ra['grade'][1]} AS VARCHAR) AS grade
