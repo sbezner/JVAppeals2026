@@ -140,6 +140,51 @@ footer {
 }
 .parcel-popup a.pending:hover { background: #f2f6fb; color: var(--ink); }
 
+/* Mobile bottom sheet — shown instead of Leaflet popup on touch/narrow views.
+   Fixed at the bottom, doesn't move with the map, has room for content,
+   explicit close button, finger won't occlude the text. */
+.parcel-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1500;
+  padding: 18px 20px 24px;
+  background: #fff;
+  border-top-left-radius: 14px; border-top-right-radius: 14px;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.14);
+  transform: translateY(100%);
+  transition: transform 0.22s ease-out;
+  max-height: 60vh; overflow-y: auto;
+  font-size: 15px; line-height: 1.45; color: var(--ink);
+}
+.parcel-sheet.open { transform: translateY(0); }
+.parcel-sheet .sheet-close {
+  position: absolute; top: 10px; right: 10px;
+  width: 32px; height: 32px; padding: 0;
+  background: none; border: none;
+  font-size: 22px; line-height: 1; color: var(--mute);
+  cursor: pointer; border-radius: 50%;
+}
+.parcel-sheet .sheet-close:hover,
+.parcel-sheet .sheet-close:active { background: #f2f6fb; color: var(--ink); }
+.parcel-sheet .sheet-addr { font-weight: 600; font-size: 17px; padding-right: 36px; margin-bottom: 2px; }
+.parcel-sheet .sheet-owner { font-size: 13px; color: var(--mute); margin-bottom: 6px; }
+.parcel-sheet .sheet-meta { font-size: 13px; color: var(--mute); margin-bottom: 6px; }
+.parcel-sheet .sheet-pct { font-weight: 600; margin: 4px 0 14px; }
+.parcel-sheet .sheet-pct.red    { color: var(--red); }
+.parcel-sheet .sheet-pct.yellow { color: #a57a00; }
+.parcel-sheet .sheet-pct.green  { color: var(--green); }
+.parcel-sheet .sheet-pct.gray   { color: var(--gray); }
+.parcel-sheet .sheet-action {
+  display: block; text-align: center;
+  padding: 12px 16px; border-radius: 8px;
+  text-decoration: none; font-weight: 600; font-size: 15px;
+}
+.parcel-sheet .sheet-action.download { background: #1b6fe6; color: #fff; }
+.parcel-sheet .sheet-action.download:active { background: #155fc6; }
+.parcel-sheet .sheet-action.pending {
+  background: #fff; color: var(--mute);
+  border: 1px solid var(--rule);
+}
+.parcel-sheet .sheet-action.pending:active { background: #f2f6fb; color: var(--ink); }
+
 .pending-page header h1 a { color: var(--ink); text-decoration: none; }
 .pending-main {
   flex: 1; display: flex; align-items: flex-start; justify-content: center;
