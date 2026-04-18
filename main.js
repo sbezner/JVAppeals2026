@@ -9,7 +9,17 @@ const COLOR = {
   gray:   "#4a5058",
 };
 
-const map = L.map("map", { preferCanvas: true });
+// Detect touch / narrow-viewport layout. When true we drive a bottom sheet
+// instead of Leaflet's default popup and give the canvas renderer a generous
+// hit tolerance so fingers can actually tap 10px pins.
+const MOBILE =
+  window.matchMedia("(pointer: coarse)").matches ||
+  window.matchMedia("(max-width: 720px)").matches;
+
+const map = L.map("map", {
+  preferCanvas: true,
+  renderer: L.canvas({ tolerance: MOBILE ? 15 : 0 }),
+});
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -42,13 +52,6 @@ function popupHtml(p) {
       ${action}
     </div>`;
 }
-
-// Detect touch / narrow-viewport layout. When true we skip the Leaflet popup
-// entirely and drive a bottom sheet instead — popups overlap finger, get
-// clipped on phones, and Leaflet's auto-pan is disorienting on small screens.
-const MOBILE =
-  window.matchMedia("(pointer: coarse)").matches ||
-  window.matchMedia("(max-width: 720px)").matches;
 
 // Desktop hover: open popup on mouseover at zoom ≥ HOVER_ZOOM, 200ms grace
 // after mouseout so the user can move into the popup and click the download
@@ -133,8 +136,6 @@ function drawParcels() {
       weight: DEFAULT_STYLE.weight,
       fillColor: COLOR[p.c] || COLOR.gray,
       fillOpacity: 0.85,
-      // Keep click from bubbling to the map (the map handler closes the sheet).
-      bubblingMouseEvents: false,
     });
 
     if (MOBILE) {

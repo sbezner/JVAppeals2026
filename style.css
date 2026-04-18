@@ -106,8 +106,35 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 .info-close:hover { background: #f2f6fb; color: var(--ink); }
 
 @media (max-width: 720px) {
-  .legend-label { display: none; }
-  .info-popover { right: 8px; left: 8px; max-width: none; }
+  /* Stack the header so search gets a full row.
+     Row 1: title + (optional nudge) + ?
+     Row 2: search (full width)
+     Inline legend is hidden — the ? popover is the color reference on phones. */
+  header {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 8px 12px;
+  }
+  header h1 { flex: 1 1 auto; font-size: 14px; }
+  .search {
+    order: 3;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
+  }
+  .legend {
+    order: 2;
+    flex: 0 0 auto;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .legend-item { display: none; }
+  .intro-nudge { font-size: 11px; }
+  .info-popover {
+    top: 92px;
+    right: 8px; left: 8px;
+    max-width: none;
+  }
 }
 
 main { flex: 1; position: relative; }
