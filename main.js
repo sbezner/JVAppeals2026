@@ -155,7 +155,35 @@ function wireSearch() {
   }
 }
 
+function wireLegendInfo() {
+  const btn = document.getElementById("legend-info-btn");
+  const pop = document.getElementById("legend-info");
+  if (!btn || !pop) return;
+  const close = pop.querySelector(".info-close");
+
+  function open() {
+    pop.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+  }
+  function shut() {
+    pop.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+  }
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    pop.hidden ? open() : shut();
+  });
+  close.addEventListener("click", shut);
+  document.addEventListener("click", (e) => {
+    if (!pop.hidden && !pop.contains(e.target) && e.target !== btn) shut();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !pop.hidden) shut();
+  });
+}
+
 async function boot() {
+  wireLegendInfo();
   const resp = await fetch("data/parcels.json", { cache: "no-cache" });
   if (!resp.ok) {
     document.getElementById("map").innerHTML =
