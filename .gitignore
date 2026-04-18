@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+
+# HCAD raw files (user downloads manually — see pipeline/download.py)
+hcad_raw/
+
+# Prose cache (regenerated per run; resumable)
+cache/
+
+# DuckDB working files
+*.duckdb
+*.duckdb.wal
+
+# Pipeline logs
+pipeline.log
