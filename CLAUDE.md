@@ -10,9 +10,9 @@
 
 A static GitHub Pages site that shows every single-family parcel in Jersey
 Village, TX on a Leaflet map. Each pin is colored by how over-assessed it is
-versus the median of 5 comparable homes under the standard Texas Tax Code
-§41.43(b)(3) criteria. Clicking a pin downloads a pre-generated personalized
-PDF appeal report for that parcel.
+on a **per-square-foot basis** versus the median of 5 comparable homes under
+the standard Texas Tax Code §41.43(b)(3) criteria. Clicking a pin opens a
+client-rendered personalized appeal report for that parcel.
 
 **Intended user:** a Jersey Village homeowner who wants to know, in one click,
 whether HCAD over-assessed them for 2026 and — if so — walk into an ARB
@@ -138,9 +138,12 @@ JVAppeals2026/
   with trailing spaces; joins TRIM to match the unpadded shapefile keys.
 - **Pipeline findings stage** — for each subject parcel: candidate comps
   are same nbhd + same grade + sqft within ±15% + year within ±10 + not
-  self; top 5 by haversine distance from centroids; median appraised
-  value; over-assessment % vs. subject; color bucket (>7% red, 2–7%
-  yellow, <2% green, missing comps gray).
+  self; top 5 by haversine distance from centroids; **median $/sqft**;
+  implied fair value = median $/sqft × subject sqft; over-assessment % vs.
+  subject appraisal; color bucket (>7% red, 2–7% yellow, <2% green,
+  missing comps gray). Per-sqft normalization is the same yardstick
+  HCAD's own CAMA model uses internally and that the Texas Comptroller's
+  Property Value Study audits for uniformity.
 - **Pipeline prose stage** — shells out to `claude -p --output-format json`
   with a strict JSON prompt requiring three keys
   (executive_summary, standout_finding, reconciliation). 72s sleep between
@@ -216,15 +219,40 @@ JVAppeals2026/
   `r` flag on `parcels.json` entries is gone; `report.html` handles
   gray parcels with a "limited data — review manually" variant.
 
+### ✅ Shipped 2026-04-19 — per-sqft normalization
+
+- **Comp comparison switched from raw appraised value to $/sqft.**
+  `findings.py` now takes the median of `comp_val / comp_living_area`
+  and derives an implied fair value = `median_psf × subject_sqft`.
+  Over-assessment % is subject appraisal vs. that fair value. This
+  matches HCAD's own CAMA model and the Comptroller's PVS uniformity
+  audit, and removes the bias the raw-dollar method had when the
+  subject sat at the edges of its sqft band.
+- **Report changes.** Comp table gains a `$/sqft` column (7 total);
+  the Evidence page footer shows `median $/sqft → fair value → HCAD
+  appraisal → over-assessment`; the Page-2 hearing script reads the
+  per-sqft claim aloud; the Legal Argument paragraph now cites the
+  per-sqft normalization directly.
+- **reports.json schema changes.** Added `psf`, `med_psf`, `fair` to
+  each parcel entry and `psf` to each comp. Dropped `med` (median of
+  comp dollar values) — superseded by `med_psf`. The front-end bottom
+  line and hearing script reference the new fields; `p` (over-%) now
+  has per-sqft semantics.
+- **Pin color distribution shift.** 2026 data: red 581→529, yellow
+  331→316, green 1165→1232 (gray 36 unchanged). The new greens are
+  parcels the raw-$ method was flagging as over-assessed just because
+  the subject happened to be smaller than its comp basket.
+
 ### ❌ Explicitly out of scope (not built)
 
 - Auto-downloading HCAD source files (blocked by HCAD; manual step).
 - iFile/iSettle upload automation (homeowner action, not static-site
   function).
 - Owner-name-as-search-key in the autocomplete (privacy / stalker-proofing).
-- Adjustments to comp values (we use raw appraised_val per HCAD data; the
-  statute allows "appropriately adjusted" but an ARB panelist will accept
-  raw comps when the nbhd+grade+sqft+age filters are tight).
+- Per-feature hedonic adjustments (pool, garage count, bath count).
+  Per-sqft normalization + matched grade + matched nbhd gets us most of
+  the "appropriately adjusted" signal without re-coding HCAD's internal
+  feature schedules.
 - User accounts, saved searches, analytics, feedback form.
 
 ---
@@ -401,6 +429,16 @@ touch without good reason:
 - Don't change the comp selection rules in `findings.py` without
   updating the matching prose in `report.html` (the Legal Argument
   block and the Page-2 rebuttals both quote the filter criteria).
+- **The comparison is per-sqft, not raw dollars.** `findings.py` computes
+  `median(comp_val / comp_living_area)` and derives `fair_value =
+  median_psf × subject_sqft`; `over_pct` is against that fair value.
+  Raw-dollar medians bias the result when the subject isn't near the
+  sqft-band center — e.g., a 2,008-sqft subject compared against a
+  basket averaging 2,150 sqft looks closer to fair than it really is.
+  Don't revert to `median(comp_val)` without recomputing and retesting
+  the pin-color distribution, and expect more greens + fewer yellows
+  under the per-sqft version (the greens were hidden false-positives
+  before).
 - Don't remove the "Built by a neighbor." footer, the "NOT LEGAL
   ADVICE" banner, or the Disclaimer & Terms of Use section — they are
   the difference between a neighborly tool and unauthorized practice.

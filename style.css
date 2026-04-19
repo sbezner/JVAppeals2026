@@ -349,7 +349,12 @@ body.report-page { background: var(--bg); }
 .report table.comps th.col-num,
 .report table.comps th.col-year { text-align: center; }
 .report table.comps th.col-sqft,
+.report table.comps th.col-psf,
 .report table.comps th.col-value { text-align: right; }
+
+.report table.facts .psf-inline {
+  color: var(--mute); font-weight: 400; font-size: 12px;
+}
 .report table.comps tbody td,
 .report table.comps tfoot td {
   padding: 6px 10px; border-bottom: 1px solid var(--rule);

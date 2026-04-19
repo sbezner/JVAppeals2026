@@ -25,6 +25,11 @@ function fmtMoney(n) {
   return "$" + Math.round(n).toLocaleString();
 }
 
+function fmtPsf(n) {
+  if (n == null) return "";
+  return "$" + Number(n).toFixed(2);
+}
+
 function fmtInt(n) {
   if (n == null) return "";
   return Math.round(n).toLocaleString();
@@ -38,6 +43,9 @@ function showError(msg) {
 
 function renderFacts(p) {
   const addr = `${p.d || ""}${p.z ? `, Jersey Village, TX ${p.z}` : ", Jersey Village, TX"}`;
+  const appraisedCell = p.v != null && p.psf != null
+    ? `${fmtMoney(p.v)} <span class="psf-inline">(${fmtPsf(p.psf)}/sqft)</span>`
+    : fmtMoney(p.v);
   const rows = [
     ["HCAD Account", p.a],
     ["Site Address", addr],
@@ -45,16 +53,19 @@ function renderFacts(p) {
     ["Year Built", p.year != null ? String(p.year) : ""],
     ["Grade / Class", p.grade || ""],
     ["Neighborhood Code", p.nbhd || ""],
-    ["2026 Appraised Value", fmtMoney(p.v)],
+    ["2026 Appraised Value", appraisedCell],
   ];
   $("facts-body").innerHTML = rows
-    .map(([k, v]) => `<tr><th scope="row">${escape(k)}</th><td>${escape(v)}</td></tr>`)
+    .map(([k, v], i) =>
+      `<tr><th scope="row">${escape(k)}</th>` +
+      // Last row uses innerHTML for the inline psf span; others are text.
+      `<td>${i === rows.length - 1 ? v : escape(v)}</td></tr>`)
     .join("");
 }
 
 function renderBottomLine(p) {
   const verdict = (COLOR_LABEL[p.c] || COLOR_LABEL.gray).verdict;
-  if (p.med == null || p.p == null) {
+  if (p.med_psf == null || p.p == null) {
     $("bottomline").innerHTML =
       `HCAD's 2026 appraisal of <b>${fmtMoney(p.v)}</b>. ` +
       `No comparable properties could be matched automatically for this parcel. ${escape(verdict)}`;
@@ -62,9 +73,11 @@ function renderBottomLine(p) {
   }
   const direction = p.p > 0 ? "above" : "below";
   $("bottomline").innerHTML =
-    `HCAD's 2026 appraisal of <b>${fmtMoney(p.v)}</b> is ` +
+    `Your 2026 appraisal of <b>${fmtMoney(p.v)}</b> (<b>${fmtPsf(p.psf)}/sqft</b>) is ` +
     `<b>${Math.abs(p.p).toFixed(1)}% ${direction}</b> the median of 5 ` +
-    `comparable homes (<b>${fmtMoney(p.med)}</b>). ${escape(verdict)}`;
+    `comparable homes (<b>${fmtPsf(p.med_psf)}/sqft</b>, implying a fair value of ` +
+    `<b>${fmtMoney(p.fair)}</b> at your ${fmtInt(p.sqft)} sqft). ` +
+    escape(verdict);
 }
 
 function renderComps(p) {
@@ -77,6 +90,7 @@ function renderComps(p) {
     <td class="num">${fmtInt(p.sqft)}</td>
     <td class="num">${escape(p.year)}</td>
     <td>${escape(p.grade)}</td>
+    <td class="num">${fmtPsf(p.psf)}</td>
     <td class="num">${fmtMoney(p.v)}</td>
   </tr>`;
   // Comp rows.
@@ -86,30 +100,35 @@ function renderComps(p) {
     <td class="num">${fmtInt(c.sqft)}</td>
     <td class="num">${escape(c.year)}</td>
     <td>${escape(c.grade)}</td>
+    <td class="num">${fmtPsf(c.psf)}</td>
     <td class="num">${fmtMoney(c.v)}</td>
   </tr>`).join("");
   body.innerHTML = subjectRow + compRows;
 
-  // Target summary rows (folded into the tfoot).
-  const gap = (p.v || 0) - (p.med || 0);
+  // Summary rows (tfoot). Median $/sqft goes in the $/sqft column; the
+  // derived dollar numbers (fair value, appraisal, over-assessment) go
+  // in the Value column.
+  const gap = (p.v || 0) - (p.fair || 0);
   const gapLabel = p.p > 0 ? "Over-assessment" : "Under-assessment";
   const gapClass = p.p > 0 ? "over" : "under";
   foot.innerHTML = `
-    <tr class="summary"><td colspan="5" class="num">Median of 5 comps</td><td class="num">${fmtMoney(p.med)}</td></tr>
-    <tr class="summary"><td colspan="5" class="num">HCAD 2026 appraisal</td><td class="num">${fmtMoney(p.v)}</td></tr>
-    <tr class="summary ${gapClass}"><td colspan="5" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td></tr>
+    <tr class="summary"><td colspan="5" class="num">Median $/sqft of 5 comps</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td></tr>
+    <tr class="summary"><td colspan="6" class="num">Fair value at median $/sqft (&times; ${fmtInt(p.sqft)} sqft)</td><td class="num">${fmtMoney(p.fair)}</td></tr>
+    <tr class="summary"><td colspan="6" class="num">HCAD 2026 appraisal</td><td class="num">${fmtMoney(p.v)}</td></tr>
+    <tr class="summary ${gapClass}"><td colspan="6" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td></tr>
   `;
 }
 
 function renderHearingScript(p) {
-  if (p.med == null || p.p == null) {
+  if (p.med_psf == null || p.p == null) {
     $("hearing-script").innerHTML =
       `<p>Keep this report as your personal script for the hearing. ` +
       `Because no automatic comps were matched, you'll need to present ` +
       `your own: pick 5 neighboring properties on hcad.org that share ` +
       `your HCAD neighborhood code, grade, are within &plusmn;15% of your ` +
       `${fmtInt(p.sqft)} sqft, and within 10 years of your ${escape(p.year)} build. ` +
-      `Take their median and argue the gap against your ${fmtMoney(p.v)} appraisal.</p>`;
+      `Take the median of their <b>$/sqft</b>, multiply by your ${fmtInt(p.sqft)} sqft, ` +
+      `and argue that implied fair value against your ${fmtMoney(p.v)} appraisal.</p>`;
     return;
   }
   const dir = p.p > 0 ? "below" : "above";
@@ -117,10 +136,10 @@ function renderHearingScript(p) {
   $("hearing-script").innerHTML = `
     <p>Keep this report as your personal script for the hearing. The core of your claim is two points:</p>
     <ol class="script">
-      <li><b>"Here is the median of 5 comparable properties — ${fmtMoney(p.med)} — which is ${absPct}% ${dir} HCAD's appraisal of my home at ${fmtMoney(p.v)}."</b></li>
-      <li><b>"These 5 comps share my neighborhood code (${escape(p.nbhd)}), my HCAD grade (${escape(p.grade)}), fall within &plusmn;15% of my ${fmtInt(p.sqft)} sqft, and within 10 years of my ${escape(p.year)} build. HCAD appraised these homes themselves, so the district has already verified these values as fair."</b></li>
+      <li><b>"The median per-square-foot appraisal across 5 comparable homes in my neighborhood is ${fmtPsf(p.med_psf)}/sqft. Applied to my ${fmtInt(p.sqft)} sqft, that's a fair value of ${fmtMoney(p.fair)} &mdash; ${absPct}% ${dir} HCAD's appraisal of my home at ${fmtMoney(p.v)}."</b></li>
+      <li><b>"These 5 comps share my neighborhood code (${escape(p.nbhd)}), my HCAD grade (${escape(p.grade)}), fall within &plusmn;15% of my ${fmtInt(p.sqft)} sqft, and within 10 years of my ${escape(p.year)} build. Per-square-foot is the same yardstick HCAD's own mass-appraisal model uses, so the district has already endorsed this as the right comparison."</b></li>
     </ol>
-    <p>Stay focused on the median-of-comps gap. That is the only argument §41.43(b)(3) lets you win on &mdash; don't wander into market value, tax rates, or condition.</p>`;
+    <p>Stay focused on the per-square-foot median gap. That is the only argument &sect;41.43(b)(3) lets you win on &mdash; don't wander into market value, tax rates, or condition.</p>`;
 }
 
 function renderReport(p) {
@@ -158,8 +177,9 @@ function renderReport(p) {
       'return 5 matches inside those filters &mdash; usually because the ' +
       "parcel's grade or size is unusual for its block. If you want to " +
       'file, pick your own 5 comps on hcad.org before the hearing. Once ' +
-      'you have them, the appraisal district must prove your appraised ' +
-      'value is at or below their median.';
+      'you have them, take the median of their <b>$/sqft</b>, multiply by ' +
+      'your sqft, and compare the implied fair value to your appraisal &mdash; ' +
+      "that's the test HCAD must pass.";
   }
 
   $("report").hidden = false;
