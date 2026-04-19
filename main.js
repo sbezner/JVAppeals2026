@@ -335,6 +335,88 @@ function wireLegendInfo() {
   });
 }
 
+// Locate-me control: a small button in the map's top-right that centers
+// the map on the user's position and drops a blue dot + accuracy ring.
+// Useful on mobile — tap once and the surrounding parcels are right there.
+let locateDot = null;
+let locateRing = null;
+const LOCATE_COLOR = "#1b6fe6";
+
+function showLocateError(msg) {
+  const existing = document.querySelector(".locate-toast");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.className = "locate-toast";
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+const LocateControl = L.Control.extend({
+  options: { position: "topright" },
+  onAdd() {
+    const container = L.DomUtil.create("div", "leaflet-bar leaflet-control locate-control");
+    const btn = L.DomUtil.create("a", "locate-btn", container);
+    btn.href = "#";
+    btn.role = "button";
+    btn.title = "Show my location";
+    btn.setAttribute("aria-label", "Show my location");
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="3" fill="currentColor"/>' +
+        '<circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+        '<line x1="12" y1="1.5" x2="12" y2="4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+        '<line x1="12" y1="19.5" x2="12" y2="22.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+        '<line x1="1.5" y1="12" x2="4.5" y2="12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+        '<line x1="19.5" y1="12" x2="22.5" y2="12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+      "</svg>";
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(btn, "click", (e) => {
+      L.DomEvent.preventDefault(e);
+      if (!navigator.geolocation) {
+        showLocateError("Your browser doesn't support geolocation.");
+        return;
+      }
+      container.classList.add("loading");
+      map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true, timeout: 10000 });
+    });
+    return container;
+  },
+});
+
+function wireLocate() {
+  new LocateControl().addTo(map);
+  map.on("locationfound", (e) => {
+    document.querySelector(".locate-control")?.classList.remove("loading");
+    if (locateDot) map.removeLayer(locateDot);
+    if (locateRing) map.removeLayer(locateRing);
+    locateRing = L.circle(e.latlng, {
+      radius: e.accuracy,
+      color: LOCATE_COLOR,
+      weight: 1,
+      fillColor: LOCATE_COLOR,
+      fillOpacity: 0.10,
+      interactive: false,
+    }).addTo(map);
+    locateDot = L.circleMarker(e.latlng, {
+      radius: 7,
+      color: "#fff",
+      weight: 2,
+      fillColor: LOCATE_COLOR,
+      fillOpacity: 1,
+      interactive: false,
+    }).addTo(map);
+  });
+  map.on("locationerror", (e) => {
+    document.querySelector(".locate-control")?.classList.remove("loading");
+    const msg =
+      e.code === 1 ? "Location permission denied. Enable it in your browser and try again." :
+      e.code === 3 ? "Timed out getting your location. Try again." :
+      "Could not get your location.";
+    showLocateError(msg);
+  });
+}
+
 async function boot() {
   wireLegendInfo();
   const resp = await fetch("data/parcels.json", { cache: "no-cache" });
@@ -352,6 +434,7 @@ async function boot() {
   map.setView(center, 14);
   drawParcels();
   wireSearch();
+  wireLocate();
 }
 
 boot();
