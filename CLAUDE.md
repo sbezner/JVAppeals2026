@@ -451,6 +451,15 @@ assigns, commit there, then fast-forward merge into `main` and push
 Pages publishes from `main` root, so "merged and pushed to main" is
 the definition of "shipped." No need to ask each time.
 
+**Cache-busting (don't skip).** `index.html` and `report.html`
+reference the local assets with a version query string
+(`style.css?v=N`, `main.js?v=N`, `report.js?v=N`). Browsers cache
+those files aggressively; without the bump, users keep seeing the
+previous deploy. **Whenever you touch `main.js`, `report.js`, or
+`style.css`, bump the `v=` integer in both HTML files before
+committing.** Data JSONs (`data/*.json`) are fetched with
+`cache: "no-cache"` in `main.js` so they don't need the bump.
+
 If you're Claude reading this in a later session, here's what *not* to
 touch without good reason:
 
