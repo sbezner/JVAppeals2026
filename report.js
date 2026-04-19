@@ -138,7 +138,9 @@ function renderReport(p) {
   renderBottomLine(p);
   renderHearingScript(p);
 
-  // Comp section vs. gray variant.
+  // Comp section vs. gray variant — also swap the Legal Argument copy
+  // so the gray report doesn't promise "the five comps below" when
+  // there aren't any.
   const hasComps = Array.isArray(p.comps) && p.comps.length > 0;
   if (hasComps) {
     renderComps(p);
@@ -147,6 +149,17 @@ function renderReport(p) {
   } else {
     $("comps-section").hidden = true;
     $("gray-notice").hidden = false;
+    $("legal-argument").innerHTML =
+      'The unequal-appraisal ground under <b>Texas Tax Code ' +
+      '&sect;41.43(b)(3)</b> is still available to you, but it requires a ' +
+      'set of 5 comparable properties that share your HCAD neighborhood ' +
+      'code and grade, fall within &plusmn;15% of your living area, and ' +
+      'within 10 years of your year built. The automatic search did not ' +
+      'return 5 matches inside those filters &mdash; usually because the ' +
+      "parcel's grade or size is unusual for its block. If you want to " +
+      'file, pick your own 5 comps on hcad.org before the hearing. Once ' +
+      'you have them, the appraisal district must prove your appraised ' +
+      'value is at or below their median.';
   }
 
   $("report").hidden = false;
