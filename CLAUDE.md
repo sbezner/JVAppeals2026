@@ -444,6 +444,13 @@ the expected candidates, and you add the new HCAD name to the list.
 
 ## 7. Operating notes for future Claude Code sessions
 
+**Shipping workflow (standing instruction from the owner):** every
+change goes to `main`. Work on whatever feature branch the harness
+assigns, commit there, then fast-forward merge into `main` and push
+`main` — don't leave commits sitting on a branch waiting for a PR.
+Pages publishes from `main` root, so "merged and pushed to main" is
+the definition of "shipped." No need to ask each time.
+
 If you're Claude reading this in a later session, here's what *not* to
 touch without good reason:
 
