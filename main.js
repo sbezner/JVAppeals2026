@@ -110,6 +110,8 @@ function openSheet(p, marker) {
   const sheet = document.getElementById("parcel-sheet");
   if (!sheet) return;
   sheet.innerHTML = sheetHtml(p);
+  // Reset then re-apply so the bucket color reflects the tapped parcel.
+  sheet.className = "parcel-sheet " + (p.c || "gray");
   sheet.hidden = false;
   // Force reflow then add .open so the transition runs.
   void sheet.offsetWidth;
