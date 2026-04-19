@@ -386,6 +386,58 @@ const LocateControl = L.Control.extend({
   },
 });
 
+// Map-overlay legend (bottom-left). Compact action-verb key that
+// mirrors the verdict banner in the report: File / Consider / Skip /
+// Don't file / Review. Collapsible — starts open on desktop, closed
+// on mobile to preserve pin real estate.
+const LEGEND_ROWS = [
+  { cls: "red",    label: "File",       desc: "more than 7% over median" },
+  { cls: "yellow", label: "Consider",   desc: "2\u20137% over" },
+  { cls: "green",  label: "Skip",       desc: "within noise band" },
+  { cls: "purple", label: "Don't file", desc: "more than 5% under" },
+  { cls: "gray",   label: "Review",     desc: "no comps" },
+];
+
+const LegendControl = L.Control.extend({
+  options: { position: "bottomleft" },
+  onAdd() {
+    const container = L.DomUtil.create("div", "leaflet-bar legend-control");
+    const header = L.DomUtil.create("button", "legend-header", container);
+    header.type = "button";
+    header.setAttribute("aria-expanded", "true");
+    header.innerHTML =
+      '<span class="legend-title">Legend</span>' +
+      '<span class="legend-toggle" aria-hidden="true">&#8722;</span>';
+    const body = L.DomUtil.create("div", "legend-body", container);
+    body.innerHTML = LEGEND_ROWS.map((r) =>
+      `<div class="legend-row">` +
+        `<span class="dot ${r.cls}"></span>` +
+        `<b>${r.label}</b>` +
+        `<span class="legend-desc">${r.desc}</span>` +
+      `</div>`
+    ).join("");
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+    L.DomEvent.on(header, "click", (e) => {
+      L.DomEvent.preventDefault(e);
+      const collapsed = container.classList.toggle("collapsed");
+      header.setAttribute("aria-expanded", String(!collapsed));
+      header.querySelector(".legend-toggle").innerHTML =
+        collapsed ? "+" : "&#8722;";
+    });
+    if (MOBILE) {
+      container.classList.add("collapsed");
+      header.setAttribute("aria-expanded", "false");
+      header.querySelector(".legend-toggle").innerHTML = "+";
+    }
+    return container;
+  },
+});
+
+function wireLegend() {
+  new LegendControl().addTo(map);
+}
+
 function wireLocate() {
   new LocateControl().addTo(map);
   map.on("locationfound", (e) => {
@@ -436,6 +488,7 @@ async function boot() {
   map.setView(center, 14);
   drawParcels();
   wireSearch();
+  wireLegend();
   wireLocate();
 }
 
