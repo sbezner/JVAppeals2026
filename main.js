@@ -1,11 +1,13 @@
 // Jersey Village 2026 HCAD Appeals — map + autocomplete.
 // Static page: loads data/parcels.json, draws pins, wires search, and on
-// pin click links to the pre-generated reports/{account}.pdf.
+// pin click navigates to report.html?a=<account> for the client-rendered
+// two-page playbook.
 
 const COLOR = {
   red:    "#d93a3a",
   yellow: "#e6b422",
   green:  "#2f9e44",
+  purple: "#7c3aed",  // under-assessed — do not file (ARB can adjust up)
   gray:   "#4a5058",
 };
 

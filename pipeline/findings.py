@@ -27,9 +27,18 @@ Findings per parcel:
     fair_value        implied fair value = median_comp_psf × subject living_area
     over_pct          100 * (subject.appraised_val - fair_value) / fair_value
                       (equivalent to 100 * (subject_psf - median_psf) / median_psf)
+    cv_pct            100 * stdev(comp_psf) / mean(comp_psf) — basket spread.
+                      Lower = tighter cluster of comps = more confident median.
     color             'red'    if over_pct >  7.0
                       'yellow' if 2.0 <= over_pct <= 7.0
-                      'green'  if over_pct <  2.0
+                      'green'  if -5.0 <= over_pct < 2.0
+                      'purple' if over_pct < -5.0   (under-assessed; do not file)
+                      'gray'   if no comps available
+
+    Why the asymmetric -5/+2 green band: mild under-assessment (-5..-2)
+    carries effectively no upward-adjustment risk at the ARB, so flagging it
+    as "don't file" would over-warn. -5% is where the practical risk of an
+    ARB-initiated upward correction begins.
     comp_accounts     list of 5 comp account numbers (for the PDF comp table)
 
 Output tables:
@@ -94,45 +103,58 @@ def compute(db_path: str = "pipeline.duckdb") -> None:
                 count(*) AS n_comps,
                 median(comp_val) AS median_comp_val,
                 median(comp_psf) AS median_comp_psf,
+                avg(comp_psf) AS mean_comp_psf,
+                stddev_samp(comp_psf) AS stdev_comp_psf,
                 list(comp_account ORDER BY rank) AS comp_accounts
             FROM finding_comps
             GROUP BY account
+        ),
+        derived AS (
+            SELECT
+                p.account,
+                p.appraised_val,
+                p.living_area,
+                a.median_comp_val,
+                a.median_comp_psf,
+                a.median_comp_psf * p.living_area AS fair_value,
+                a.n_comps,
+                a.comp_accounts,
+                CASE
+                    WHEN a.mean_comp_psf IS NULL OR a.mean_comp_psf = 0
+                      OR a.stdev_comp_psf IS NULL THEN NULL
+                    ELSE 100.0 * a.stdev_comp_psf / a.mean_comp_psf
+                END AS cv_pct,
+                CASE
+                    WHEN a.median_comp_psf IS NULL OR a.median_comp_psf = 0
+                      OR p.living_area IS NULL OR p.living_area = 0 THEN NULL
+                    ELSE 100.0 * (p.appraised_val - a.median_comp_psf * p.living_area)
+                         / (a.median_comp_psf * p.living_area)
+                END AS over_pct
+            FROM parcels p
+            LEFT JOIN agg a USING (account)
         )
         SELECT
-            p.account,
-            p.appraised_val,
-            p.living_area,
-            a.median_comp_val,
-            a.median_comp_psf,
-            a.median_comp_psf * p.living_area AS fair_value,
-            a.n_comps,
-            a.comp_accounts,
+            account, appraised_val, living_area,
+            median_comp_val, median_comp_psf, fair_value,
+            n_comps, comp_accounts, cv_pct, over_pct,
             CASE
-                WHEN a.median_comp_psf IS NULL OR a.median_comp_psf = 0
-                  OR p.living_area IS NULL OR p.living_area = 0 THEN NULL
-                ELSE 100.0 * (p.appraised_val - a.median_comp_psf * p.living_area)
-                     / (a.median_comp_psf * p.living_area)
-            END AS over_pct,
-            CASE
-                WHEN a.median_comp_psf IS NULL OR a.median_comp_psf = 0
-                  OR p.living_area IS NULL OR p.living_area = 0 THEN 'gray'
-                WHEN 100.0 * (p.appraised_val - a.median_comp_psf * p.living_area)
-                     / (a.median_comp_psf * p.living_area) > 7.0 THEN 'red'
-                WHEN 100.0 * (p.appraised_val - a.median_comp_psf * p.living_area)
-                     / (a.median_comp_psf * p.living_area) >= 2.0 THEN 'yellow'
-                ELSE 'green'
+                WHEN over_pct IS NULL THEN 'gray'
+                WHEN over_pct >  7.0 THEN 'red'
+                WHEN over_pct >= 2.0 THEN 'yellow'
+                WHEN over_pct >= -5.0 THEN 'green'
+                ELSE 'purple'
             END AS color
-        FROM parcels p
-        LEFT JOIN agg a USING (account)
+        FROM derived
     """)
 
-    red, yellow, green, gray = con.execute("""
+    red, yellow, green, purple, gray = con.execute("""
         SELECT
             sum(case when color='red' then 1 else 0 end),
             sum(case when color='yellow' then 1 else 0 end),
             sum(case when color='green' then 1 else 0 end),
+            sum(case when color='purple' then 1 else 0 end),
             sum(case when color='gray' then 1 else 0 end)
         FROM findings
     """).fetchone()
-    print(f"findings: red={red} yellow={yellow} green={green} gray={gray}")
+    print(f"findings: red={red} yellow={yellow} green={green} purple={purple} gray={gray}")
     con.close()

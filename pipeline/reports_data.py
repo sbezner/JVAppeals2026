@@ -25,7 +25,8 @@ Per-parcel schema (short keys to keep the file small):
     med_psf  median $/sqft across the 5 comps
     fair     implied fair value = med_psf × sqft (dollars)
     p        over-% of appraisal vs. fair value
-    c        color bucket: red / yellow / green / gray
+    cv       coefficient of variation of comp $/sqft (basket spread, %)
+    c        color bucket: red / yellow / green / purple / gray
     comps    list of {a, sqft, year, grade, v, psf}
 """
 from __future__ import annotations
@@ -45,7 +46,7 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
             p.account, p.site_addr, p.site_zip, p.owner_name,
             p.living_area, p.year_built, p.grade, p.nbhd_code,
             p.appraised_val,
-            f.median_comp_psf, f.fair_value, f.over_pct, f.color
+            f.median_comp_psf, f.fair_value, f.over_pct, f.cv_pct, f.color
         FROM parcels p
         LEFT JOIN findings f USING (account)
         ORDER BY p.account
@@ -56,7 +57,7 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     n_gray = 0
     for row in subjects:
         (account, addr, zip_, owner, sqft, year, grade, nbhd, val,
-         med_psf, fair, pct, color) = row
+         med_psf, fair, pct, cv, color) = row
         subject_psf = (val / sqft) if val and sqft else None
         entry: dict = {
             "a": account,
@@ -72,6 +73,7 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
             "med_psf": round(med_psf, 2) if med_psf is not None else None,
             "fair": int(fair) if fair is not None else None,
             "p": round(pct, 1) if pct is not None else None,
+            "cv": round(cv, 1) if cv is not None else None,
             "c": color or "gray",
             "comps": [],
         }

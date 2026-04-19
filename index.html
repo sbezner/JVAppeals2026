@@ -20,6 +20,7 @@
     <span class="legend-item"><span class="dot red"></span> strong</span>
     <span class="legend-item"><span class="dot yellow"></span> consider</span>
     <span class="legend-item"><span class="dot green"></span> skip</span>
+    <span class="legend-item"><span class="dot purple"></span> don't file</span>
     <span class="legend-item"><span class="dot gray"></span> no comps</span>
     <button id="intro-nudge" class="intro-nudge" type="button" hidden>New here? Read this first →</button>
     <button id="legend-info-btn" class="info-btn" type="button" aria-label="About this map" aria-expanded="false" aria-controls="legend-info">?</button>
@@ -38,9 +39,17 @@
       <ul>
         <li><span class="dot red"></span><strong>Strong case</strong> — more than 7% over the per-sqft median. Under <a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.41.htm" target="_blank" rel="noopener">Tex. Tax Code §41.43(b)(3)</a>, the ARB is required to lower your appraisal to that median if your comps hold up.</li>
         <li><span class="dot yellow"></span><strong>Consider filing</strong> — 2–7% over. A reduction is possible, but the ARB panel may push back on individual comp choices.</li>
-        <li><span class="dot green"></span><strong>Skip</strong> — less than 2% over. Within the noise of comp selection; not worth filing.</li>
+        <li><span class="dot green"></span><strong>Skip</strong> — within the noise band (between 5% under and 2% over the median). Mild under-assessment carries no real risk; not worth filing in either direction.</li>
+        <li><span class="dot purple"></span><strong>Don't file</strong> — more than 5% <em>under</em> the median. The ARB has authority to adjust values <em>upward</em> as well as downward, so filing here risks a real increase. Stay quiet for this year and re-check next April.</li>
         <li><span class="dot gray"></span><strong>No comps</strong> — fewer than 5 neighbors matched the filters. Usually an unusually old, new, large, or atypically-graded home. No automatic case — review comps by hand if it matters to you.</li>
       </ul>
+      <p class="info-relative">
+        Comparison is <em>relative</em>: each parcel is measured against the
+        median of similar HCAD-appraised neighbors, not absolute market value.
+        That's the test the §41.43(b)(3) statute applies, but it means the tool
+        cannot detect district-wide over- or under-appraisal — if all your
+        neighbors are appraised low, your "fair" value will look low too.
+      </p>
     </section>
     <section id="info-howto">
       <h3>How to use this site</h3>

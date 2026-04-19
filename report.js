@@ -7,8 +7,20 @@ const COLOR_LABEL = {
   red:    { verdict: "You have statutory grounds to appeal under §41.43(b)(3).", css: "red" },
   yellow: { verdict: "The appeal case is thin but presentable under §41.43(b)(3).", css: "yellow" },
   green:  { verdict: "This is within the normal noise of comp selection; filing is unlikely to change the value.", css: "green" },
+  purple: { verdict: "Your appraisal is well below the median of similar homes — the ARB has authority to adjust values UPWARD as well as downward, so filing here risks an increase. Strongly recommend NOT filing.", css: "purple" },
   gray:   { verdict: "No unequal-appraisal case is available from the standard filters — review by hand if it matters to you.", css: "gray" },
 };
+
+// Comp-basket coefficient of variation (CV) → verbal confidence label.
+// CV = stdev/mean of comp $/sqft. Lower = comps cluster tightly → median is
+// trustworthy. Wider spread → median is shaky and any one comp could swing
+// the case.
+function confidenceLabel(cv) {
+  if (cv == null) return null;
+  if (cv < 10) return { label: "tight", desc: "comps cluster within a few percent — the median is solid." };
+  if (cv < 15) return { label: "moderate", desc: "comps vary modestly — the median is reasonable but not airtight." };
+  return { label: "wide", desc: "comps vary widely — the median is less reliable; review individual comp choices before filing." };
+}
 
 function $(id) { return document.getElementById(id); }
 
@@ -107,12 +119,17 @@ function renderComps(p) {
 
   // Summary rows (tfoot). Median $/sqft goes in the $/sqft column; the
   // derived dollar numbers (fair value, appraisal, over-assessment) go
-  // in the Value column.
+  // in the Value column. Optional comp-spread badge appears next to the
+  // median row so the reader knows how confident this median is.
   const gap = (p.v || 0) - (p.fair || 0);
   const gapLabel = p.p > 0 ? "Over-assessment" : "Under-assessment";
   const gapClass = p.p > 0 ? "over" : "under";
+  const conf = confidenceLabel(p.cv);
+  const confBadge = conf
+    ? ` <span class="conf-badge conf-${conf.label}" title="Comp-basket coefficient of variation: ${p.cv}%. ${escape(conf.desc)}">spread: ${conf.label}</span>`
+    : "";
   foot.innerHTML = `
-    <tr class="summary"><td colspan="5" class="num">Median $/sqft of 5 comps</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td></tr>
+    <tr class="summary"><td colspan="5" class="num">Median $/sqft of 5 comps${confBadge}</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td></tr>
     <tr class="summary"><td colspan="6" class="num">Fair value at median $/sqft (&times; ${fmtInt(p.sqft)} sqft)</td><td class="num">${fmtMoney(p.fair)}</td></tr>
     <tr class="summary"><td colspan="6" class="num">HCAD 2026 appraisal</td><td class="num">${fmtMoney(p.v)}</td></tr>
     <tr class="summary ${gapClass}"><td colspan="6" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td></tr>
@@ -129,6 +146,27 @@ function renderHearingScript(p) {
       `${fmtInt(p.sqft)} sqft, and within 10 years of your ${escape(p.year)} build. ` +
       `Take the median of their <b>$/sqft</b>, multiply by your ${fmtInt(p.sqft)} sqft, ` +
       `and argue that implied fair value against your ${fmtMoney(p.v)} appraisal.</p>`;
+    return;
+  }
+  if (p.c === "purple") {
+    const absPct = Math.abs(p.p).toFixed(1);
+    $("hearing-script").innerHTML = `
+      <div class="purple-warning">
+        <p><b>Do not file this protest.</b> Your 2026 appraisal of <b>${fmtMoney(p.v)}</b>
+        (${fmtPsf(p.psf)}/sqft) is already <b>${absPct}% below</b> the
+        per-square-foot median of 5 comparable homes
+        (${fmtPsf(p.med_psf)}/sqft, implying a fair value of ${fmtMoney(p.fair)}
+        at your ${fmtInt(p.sqft)} sqft).</p>
+        <p>The Appraisal Review Board has the statutory authority to adjust
+        appraised values <b>upward as well as downward</b>. If you file an
+        unequal-appraisal protest with these numbers, the panel may apply the
+        same &sect;41.43(b)(3) median test to <em>your</em> case and conclude
+        the appraisal should be raised toward ${fmtMoney(p.fair)}, costing you
+        roughly ${fmtMoney(p.fair - p.v)} in additional taxable value.</p>
+        <p>The remaining playbook below (deadlines, iFile, hearing scripts)
+        applies if you ever face a future year where your appraisal moves
+        above the median &mdash; bookmark this page and re-check next April.</p>
+      </div>`;
     return;
   }
   const dir = p.p > 0 ? "below" : "above";

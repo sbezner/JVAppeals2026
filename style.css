@@ -2,6 +2,7 @@
   --red: #d93a3a;
   --yellow: #e6b422;
   --green: #2f9e44;
+  --purple: #7c3aed;
   --gray: #4a5058;
   --ink: #1b1d1e;
   --mute: #5a6067;
@@ -54,6 +55,7 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 .dot.red    { background: var(--red); }
 .dot.yellow { background: var(--yellow); }
 .dot.green  { background: var(--green); }
+.dot.purple { background: var(--purple); }
 .dot.gray   { background: var(--gray); }
 
 .info-btn {
@@ -102,6 +104,11 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 .info-disclaimer { margin-top: 14px !important; padding-top: 10px;
   border-top: 1px solid var(--rule);
   font-size: 11px; color: var(--mute); }
+.info-relative {
+  margin-top: 10px !important; padding: 8px 10px;
+  background: #f3eefe; border-left: 3px solid var(--purple);
+  font-size: 12px; color: var(--ink); border-radius: 4px;
+}
 .info-close {
   margin-top: 6px; padding: 6px 12px;
   background: #fff; color: var(--mute);
@@ -178,6 +185,7 @@ footer {
 .parcel-popup .pct.red    { color: var(--red); }
 .parcel-popup .pct.yellow { color: #a57a00; }
 .parcel-popup .pct.green  { color: var(--green); }
+.parcel-popup .pct.purple { color: var(--purple); }
 .parcel-popup .pct.gray   { color: var(--gray); }
 .parcel-popup a.download {
   display: inline-block; margin-top: 6px; padding: 5px 9px;
@@ -213,6 +221,7 @@ footer {
 .parcel-sheet.red::before    { background: var(--red); }
 .parcel-sheet.yellow::before { background: var(--yellow); }
 .parcel-sheet.green::before  { background: var(--green); }
+.parcel-sheet.purple::before { background: var(--purple); }
 .parcel-sheet.gray::before   { background: var(--gray); }
 /* Pull-handle pill — standard mobile affordance for a draggable/
    dismissible sheet. Purely visual here; dismissal is via close button
@@ -241,6 +250,7 @@ footer {
 .parcel-sheet .sheet-pct.red    { color: var(--red); }
 .parcel-sheet .sheet-pct.yellow { color: #a57a00; }
 .parcel-sheet .sheet-pct.green  { color: var(--green); }
+.parcel-sheet .sheet-pct.purple { color: var(--purple); }
 .parcel-sheet .sheet-pct.gray   { color: var(--gray); }
 .parcel-sheet .sheet-action {
   display: block; text-align: center;
@@ -367,6 +377,35 @@ body.report-page { background: var(--bg); }
   background: #F4F7FB;
   font-weight: 600;
 }
+
+/* Comp-spread confidence badge (next to "Median $/sqft of 5 comps").
+   Reads as a tiny pill so it doesn't dominate the median number itself. */
+.report .conf-badge {
+  display: inline-block; margin-left: 8px;
+  padding: 1px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; vertical-align: middle;
+  border: 1px solid currentColor;
+  cursor: help;
+}
+.report .conf-badge.conf-tight    { color: var(--green); background: #ecf9ef; }
+.report .conf-badge.conf-moderate { color: #a57a00;     background: #fff8e1; }
+.report .conf-badge.conf-wide     { color: var(--red);   background: #fdecec; }
+
+/* Purple "do not file" warning box (replaces hearing script for under-
+   assessed parcels). High-contrast border + background so it can't be
+   skimmed past — this is a safety message. */
+.report .purple-warning {
+  margin: 12px 0 18px;
+  padding: 14px 18px;
+  background: #f3eefe;
+  border-left: 4px solid var(--purple);
+  border-radius: 4px;
+  color: var(--ink);
+}
+.report .purple-warning p { margin: 6px 0; }
+.report .purple-warning p:first-child { margin-top: 0; font-size: 15px; }
+.report .purple-warning p:last-child { margin-bottom: 0; font-size: 12px; color: var(--mute); }
 .report table.comps tfoot tr.summary:first-child td {
   border-top: 1px solid #000;
 }
@@ -495,6 +534,14 @@ body.report-page { background: var(--bg); }
   .report table.comps tfoot tr.summary td { background: #f4f4f4; }
   .report table.comps tfoot tr.summary.over td:last-child { color: #000; font-weight: 700; }
   .report table.comps tfoot tr.summary.under td:last-child { color: #000; font-weight: 700; }
+  .report .conf-badge {
+    background: #fff !important; color: #000 !important;
+    border: 1px solid #000;
+  }
+  .report .purple-warning {
+    background: #fff; border: 2px solid #000; border-left-width: 4px;
+    color: #000;
+  }
   a { color: #000; text-decoration: none; }
   @page { margin: 0.75in; }
 }

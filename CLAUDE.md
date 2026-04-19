@@ -140,10 +140,16 @@ JVAppeals2026/
   are same nbhd + same grade + sqft within ±15% + year within ±10 + not
   self; top 5 by haversine distance from centroids; **median $/sqft**;
   implied fair value = median $/sqft × subject sqft; over-assessment % vs.
-  subject appraisal; color bucket (>7% red, 2–7% yellow, <2% green,
+  subject appraisal; comp-basket coefficient of variation (`cv_pct =
+  100·stdev/mean of comp $/sqft`, surfaced as a "tight/moderate/wide"
+  spread badge in the report); 5-bucket color (>+7% red, +2..+7% yellow,
+  −5..+2% green, <−5% purple "don't file — ARB can adjust upward",
   missing comps gray). Per-sqft normalization is the same yardstick
   HCAD's own CAMA model uses internally and that the Texas Comptroller's
-  Property Value Study audits for uniformity.
+  Property Value Study audits for uniformity. The asymmetric −5/+2 green
+  band reflects ARB risk asymmetry: mild under-assessment carries no
+  practical upward-adjustment risk, so flagging it as "don't file" would
+  over-warn.
 - **Pipeline prose stage** — shells out to `claude -p --output-format json`
   with a strict JSON prompt requiring three keys
   (executive_summary, standout_finding, reconciliation). 72s sleep between
@@ -242,6 +248,34 @@ JVAppeals2026/
   331→316, green 1165→1232 (gray 36 unchanged). The new greens are
   parcels the raw-$ method was flagging as over-assessed just because
   the subject happened to be smaller than its comp basket.
+
+### ✅ Shipped 2026-04-19 — under-assessed bucket + comp-spread badge
+
+- **5th color: purple "don't file" bucket** for parcels >5% under their
+  per-sqft median (`#7c3aed`). Threshold tuned to where ARB upward-
+  adjustment risk becomes practically non-zero — −2% under was tested
+  but flagged 856 parcels (41%) including many with no real risk; −5%
+  scopes the warning to 583 parcels (27%) that genuinely shouldn't
+  file. Green band stays asymmetric (−5..+2%) for the same reason.
+  COLOR_LABEL.purple in `report.js` carries an explicit "ARB has
+  authority to adjust upward" warning; `renderHearingScript` swaps
+  the standard hearing script for a `.purple-warning` callout that
+  quantifies the risk in dollars.
+- **Comp-basket confidence badge.** `findings.py` emits
+  `cv_pct = 100 · stdev/mean of comp $/sqft` per basket; the report's
+  Median row gets a "spread: tight / moderate / wide" pill (CV<10/<15/
+  ≥15) so the reader knows whether the median is solid (~58% of
+  baskets have CV<10) or shaky.
+- **Final 2026 distribution.** red 526 (24%), yellow 324 (15%),
+  green 644 (30%), purple 583 (27%), gray 36 (2%). Surfacing under-
+  assessment is the bigger reveal of the two-step migration: under
+  the original raw-$ green-only model, 856 of those purple parcels
+  were silently bucketed as "skip — filing unlikely to change" when
+  they actually carry real risk of an upward correction.
+- **Relative-not-absolute caveat** added to the legend popover so
+  homeowners understand the test compares against neighbors HCAD also
+  appraised, not absolute market value — the tool can't detect
+  district-wide systematic over- or under-appraisal.
 
 ### ❌ Explicitly out of scope (not built)
 
