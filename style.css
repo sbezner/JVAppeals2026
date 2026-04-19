@@ -306,6 +306,51 @@ body.report-page { background: var(--bg); }
   margin: 0 0 20px; padding-bottom: 14px;
   border-bottom: 1px solid var(--rule);
 }
+
+/* Verdict banner — immediate file/don't-file signal at the top of Page 1.
+   Big label + small subtitle, tinted by bucket. Deliberately attention-
+   grabbing for the "FILE" / "DO NOT FILE" variants; muted for skip. */
+.report .verdict-banner {
+  display: flex; align-items: baseline; gap: 14px;
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border-radius: 6px;
+  border-left: 6px solid var(--gray);
+  background: #f4f6f8;
+}
+.report .verdict-label {
+  font-size: 22px; font-weight: 800; letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.report .verdict-subtitle {
+  font-size: 13px; color: var(--ink); line-height: 1.4;
+}
+.report .verdict-banner.verdict-red {
+  background: #fde8e8; border-left-color: var(--red);
+}
+.report .verdict-banner.verdict-red .verdict-label { color: var(--red); }
+.report .verdict-banner.verdict-yellow {
+  background: #fff5d6; border-left-color: var(--yellow);
+}
+.report .verdict-banner.verdict-yellow .verdict-label { color: #8a6500; }
+.report .verdict-banner.verdict-green {
+  background: #e8f5ec; border-left-color: var(--green);
+}
+.report .verdict-banner.verdict-green .verdict-label { color: var(--green); }
+.report .verdict-banner.verdict-purple {
+  background: #f3eefe; border-left-color: var(--purple);
+}
+.report .verdict-banner.verdict-purple .verdict-label { color: var(--purple); }
+.report .verdict-banner.verdict-gray {
+  background: #f1f3f5; border-left-color: var(--gray);
+}
+.report .verdict-banner.verdict-gray .verdict-label { color: var(--gray); }
+
+@media (max-width: 560px) {
+  .report .verdict-banner { flex-direction: column; gap: 4px; padding: 12px 14px; }
+  .report .verdict-label { font-size: 18px; }
+}
+
 .report .report-title {
   margin: 0 0 2px; font-size: 22px; font-weight: 700;
 }
@@ -523,6 +568,13 @@ body.report-page { background: var(--bg); }
   .report .legal-notice {
     border-bottom: 1px solid #999; font-size: 9pt;
   }
+  .report .verdict-banner {
+    background: #fff !important;
+    border: 1px solid #000; border-left-width: 4px !important;
+    border-left-color: #000 !important;
+    page-break-inside: avoid;
+  }
+  .report .verdict-banner .verdict-label { color: #000 !important; }
   .report .bottomline {
     background: #fff; border-left: 2px solid #000;
     padding: 8px 10px; font-size: 11pt;

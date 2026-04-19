@@ -4,11 +4,16 @@
 // facts table, comp table, and hearing script.
 
 const COLOR_LABEL = {
-  red:    { verdict: "You have statutory grounds to appeal under §41.43(b)(3).", css: "red" },
-  yellow: { verdict: "The appeal case is thin but presentable under §41.43(b)(3).", css: "yellow" },
-  green:  { verdict: "This is within the normal noise of comp selection; filing is unlikely to change the value.", css: "green" },
-  purple: { verdict: "Your appraisal is well below the median of similar homes — the ARB has authority to adjust values UPWARD as well as downward, so filing here risks an increase. Strongly recommend NOT filing.", css: "purple" },
-  gray:   { verdict: "No unequal-appraisal case is available from the standard filters — review by hand if it matters to you.", css: "gray" },
+  red:    { verdict: "You have statutory grounds to appeal under §41.43(b)(3).", css: "red",
+            banner: "FILE", bannerSub: "Strong unequal-appraisal case under §41.43(b)(3)." },
+  yellow: { verdict: "The appeal case is thin but presentable under §41.43(b)(3).", css: "yellow",
+            banner: "Consider filing", bannerSub: "Marginal case — a reduction is possible but not guaranteed." },
+  green:  { verdict: "This is within the normal noise of comp selection; filing is unlikely to change the value.", css: "green",
+            banner: "Skip", bannerSub: "Within the noise band — not worth filing in either direction." },
+  purple: { verdict: "Your appraisal is well below the median of similar homes — the ARB has authority to adjust values UPWARD as well as downward, so filing here risks an increase. Strongly recommend NOT filing.", css: "purple",
+            banner: "DO NOT FILE", bannerSub: "Your appraisal is below the median — the ARB can adjust values upward." },
+  gray:   { verdict: "No unequal-appraisal case is available from the standard filters — review by hand if it matters to you.", css: "gray",
+            banner: "Review manually", bannerSub: "Fewer than 5 comparable homes matched — hand-pick comps on hcad.org." },
 };
 
 // Comp-basket coefficient of variation (CV) → verbal confidence label.
@@ -180,6 +185,15 @@ function renderHearingScript(p) {
     <p>Stay focused on the per-square-foot median gap. That is the only argument &sect;41.43(b)(3) lets you win on &mdash; don't wander into market value, tax rates, or condition.</p>`;
 }
 
+function renderVerdictBanner(p) {
+  const info = COLOR_LABEL[p.c] || COLOR_LABEL.gray;
+  const banner = $("verdict-banner");
+  banner.className = `verdict-banner verdict-${info.css}`;
+  $("verdict-label").textContent = info.banner;
+  $("verdict-subtitle").textContent = info.bannerSub;
+  banner.hidden = false;
+}
+
 function renderReport(p) {
   const addrLine = p.d
     ? `${p.d}, Jersey Village, TX — HCAD ${p.a}`
@@ -191,6 +205,7 @@ function renderReport(p) {
   // Apply bucket color class to the body so the bottom line can style it.
   document.body.classList.add(`bucket-${(COLOR_LABEL[p.c] || COLOR_LABEL.gray).css}`);
 
+  renderVerdictBanner(p);
   renderFacts(p);
   renderBottomLine(p);
   renderHearingScript(p);
