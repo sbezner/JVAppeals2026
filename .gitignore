@@ -9,15 +9,6 @@ hcad_raw/
 # Local staging for HCAD download zips (extracted into hcad_raw/)
 hcad_download/
 
-# Ad-hoc PDF comparison scratch folder
-compare-pdfs/
-
-# Prose cache (regenerated per run; resumable)
-cache/
-
 # DuckDB working files
 *.duckdb
 *.duckdb.wal
-
-# Pipeline logs
-pipeline.log

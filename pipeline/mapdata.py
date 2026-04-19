@@ -4,15 +4,19 @@ Emit a compact JSON file for the Leaflet front-end:
     data/parcels.json = {
         "center": [lat, lon],
         "parcels": [
-            {"a": account, "d": address, "c": "red|yellow|green|gray",
-             "p": over_pct, "v": appraised_val, "ll": [lat, lon],
-             "r": 1 if reports/{account}.pdf exists else 0},
+            {"a": account, "d": address, "o": owner, "z": zip,
+             "c": "red|yellow|green|gray",
+             "p": over_pct, "v": appraised_val, "ll": [lat, lon]},
             ...
         ]
     }
 
-Short keys to keep the file small — there are ~3,000 parcels and this file
-loads on every map visit. Gzipped by GitHub Pages automatically.
+Short keys to keep the file small — there are ~2,100 parcels and this file
+loads on every map visit. Gzipped by GitHub Pages automatically. The map
+links every pin to report.html?a={account}; the report page loads
+data/reports.json lazily to populate the full report content, so no "has
+report" flag is needed here — every account maps to a valid report
+(gray parcels render a "limited data — review manually" variant).
 """
 from __future__ import annotations
 import duckdb
@@ -20,7 +24,6 @@ import json
 from pathlib import Path
 
 DATA_DIR = Path("data")
-REPORTS_DIR = Path("reports")
 
 
 def emit(db_path: str = "pipeline.duckdb") -> None:
@@ -44,8 +47,6 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     """).fetchone()
     con.close()
 
-    existing_reports = {p.stem for p in REPORTS_DIR.glob("*.pdf")}
-
     parcels = []
     for account, addr, zip_, owner, lat, lon, val, pct, color in rows:
         parcels.append({
@@ -57,7 +58,6 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
             "p": round(pct, 1) if pct is not None else None,
             "v": int(val) if val is not None else None,
             "ll": [round(lat, 6), round(lon, 6)],
-            "r": 1 if account in existing_reports else 0,
         })
 
     out = DATA_DIR / "parcels.json"

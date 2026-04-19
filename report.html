@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 HCAD Appeal Report</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="report-page">
+
+<div class="report-toolbar">
+  <a class="toolbar-btn back" href="index.html">&larr; Back to map</a>
+  <button class="toolbar-btn print" type="button" onclick="window.print()">Print</button>
+</div>
+
+<main id="report" class="report" hidden>
+
+  <!-- ============ PAGE 1 — THE EVIDENCE ============ -->
+  <section class="report-sheet page-1">
+    <p class="legal-notice">
+      <b>NOT LEGAL ADVICE:</b> This report is provided for informational
+      and self-help purposes by a neighbor. It is not a substitute for
+      the advice of a licensed attorney or a registered property tax
+      consultant.
+    </p>
+
+    <h1 class="report-title">2026 HCAD Appeal Report</h1>
+    <p class="report-subtitle" id="subtitle-1"></p>
+
+    <p class="bottomline" id="bottomline"></p>
+
+    <h2>Subject Property</h2>
+    <table class="facts">
+      <tbody id="facts-body"></tbody>
+    </table>
+
+    <h2>The Legal Argument</h2>
+    <p>
+      This protest is filed under <b>Texas Tax Code &sect;41.43(b)(3)</b>,
+      the unequal-appraisal ground. Under this section, the appraisal
+      district must prove that your appraised value is at or below the
+      median appraised value of a reasonable number of appropriately-
+      adjusted comparable properties. The five comps below share your
+      HCAD neighborhood code and grade, fall within &plusmn;15% of your
+      living area, and within 10 years of your year built &mdash; the
+      standard filters for a &sect;41.43(b)(3) showing.
+    </p>
+
+    <section id="comps-section">
+      <h2>Comparable Properties</h2>
+      <table class="comps">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th class="col-acct">HCAD Account</th>
+            <th class="col-sqft">Living Area (sqft)</th>
+            <th class="col-year">Year</th>
+            <th class="col-grade">Grade</th>
+            <th class="col-value">Appraised Value</th>
+          </tr>
+        </thead>
+        <tbody id="comps-body"></tbody>
+        <tfoot id="comps-foot"></tfoot>
+      </table>
+    </section>
+
+    <section id="gray-notice" hidden>
+      <h2>No Comparable Properties Found</h2>
+      <p>
+        The standard &sect;41.43(b)(3) filter (same HCAD neighborhood,
+        same grade, &plusmn;15% living area, &plusmn;10 years of age)
+        did not return 5 matching properties for this parcel. That
+        usually means an unusually old, new, large, or atypically-
+        graded home.
+      </p>
+      <p>
+        You can still file an unequal-appraisal protest, but you'll
+        need to hand-pick your own comparable properties on
+        <a href="https://hcad.org" target="_blank" rel="noopener">hcad.org</a>
+        before the hearing. The Playbook on Page 2 still applies once
+        you have your comps in hand.
+      </p>
+    </section>
+  </section>
+
+  <!-- ============ PAGE 2 — THE PLAYBOOK ============ -->
+  <section class="report-sheet page-2">
+    <h1 class="report-title">How to Use This Report</h1>
+    <p class="report-subtitle" id="subtitle-2"></p>
+
+    <p class="deadline-banner">
+      <b>File by May 15, 2026</b>, or within 30 days of your Notice of
+      Appraised Value &mdash; whichever is later. Missing this deadline
+      waives your right to appeal for the 2026 tax year.
+    </p>
+
+    <h3>Step 1 &mdash; File the Protest</h3>
+    <p>
+      Log in to <b>owners.hcad.org</b> using your iFile number (it's on
+      the Notice of Appraised Value HCAD mailed you). When choosing
+      your grounds for protest, select
+      <b>&ldquo;Value is unequal compared with other properties.&rdquo;</b>
+      You can attach this report as supporting evidence, but don't
+      rely on HCAD reading it in detail &mdash; they won't.
+    </p>
+
+    <h3>Step 2 &mdash; Understand the iSettle Offer</h3>
+    <p>
+      After filing, HCAD will likely respond with an <b>iSettle
+      offer</b> &mdash; a small reduction, often in the $2,000&ndash;$10,000
+      range. This offer is <b>not a ceiling</b>. If the reduction is
+      smaller than the gap shown on Page 1, reject it and request a
+      formal <b>Appraisal Review Board (ARB) hearing</b>, where you'll
+      present this report in person (or by video). Most of the value
+      in filing comes at the ARB, not from the iSettle offer.
+    </p>
+
+    <h3>Step 3 &mdash; Your Hearing Script</h3>
+    <div id="hearing-script"></div>
+
+    <h3>If the Appraiser Pushes Back</h3>
+    <p>
+      The district's appraiser may try one of these pushbacks. Have
+      the scripted response ready:
+    </p>
+    <table class="rebuttals">
+      <thead>
+        <tr><th>The appraiser may say&hellip;</th><th>Your response</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><em>&ldquo;Those comps aren't appropriate.&rdquo;</em></td>
+          <td>
+            They share my neighborhood code, grade, sqft band, and age
+            band &mdash; the same filters HCAD uses internally. They meet
+            the reasonable-number-of-appropriately-adjusted test.
+          </td>
+        </tr>
+        <tr>
+          <td><em>&ldquo;Your home has features those don't.&rdquo;</em></td>
+          <td>
+            &sect;41.43(b)(3) requires appropriately-adjusted comps,
+            not identical ones. HCAD's own appraisals of these homes
+            already reflect the adjustments the district made for
+            their features.
+          </td>
+        </tr>
+        <tr>
+          <td><em>&ldquo;Market value supports our number.&rdquo;</em></td>
+          <td>
+            &sect;41.43(b)(3) is an unequal-appraisal claim, not a
+            market-value claim. The median of comparable appraisals
+            is the standard this panel is asked to apply.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>What NOT to Argue</h3>
+    <ul class="not-to-argue">
+      <li><b>Market value or recent sale prices.</b> Different statute,
+        different argument. Save for &sect;42.26(a)(3) judicial review.</li>
+      <li><b>&ldquo;My taxes went up too much.&rdquo;</b> Irrelevant &mdash;
+        the ARB panel sets the appraised value, not the tax rate.</li>
+      <li><b>Repair costs or damage.</b> That is a condition argument
+        under &sect;41.44, not an unequal-appraisal argument under
+        &sect;41.43(b)(3).</li>
+      <li><b>What your neighbor paid when they bought.</b> Panels
+        distrust anecdotes; stick to the comp table.</li>
+    </ul>
+
+    <h3>If You Want to Escalate &mdash; &sect;42.26(a)(3)</h3>
+    <p>
+      If the ARB denies your protest, you have 60 days to file for
+      judicial review in district court under <b>Texas Tax Code
+      &sect;42.26(a)(3)</b>. That statute prohibits the district from
+      presenting &mdash; and the court from considering &mdash;
+      market-value evidence as a response to your median-of-comps
+      showing. It is a stronger procedural posture than the ARB, but
+      requires a lawyer and filing fee. Mention it at the ARB hearing
+      to signal that you understand the full legal ladder.
+    </p>
+
+    <h3>Disclaimer &amp; Terms of Use</h3>
+    <ul class="disclaimer-list">
+      <li><b>Not an Agent.</b> The author of this report is not your
+        authorized representative and is not filing this protest on
+        your behalf. You are responsible for all filings.</li>
+      <li><b>No Guarantee.</b> This data is provided as-is based on
+        public records. The author makes no claim as to the absolute
+        accuracy of this information or the outcome of any appeal.</li>
+      <li><b>Deadlines.</b> You are solely responsible for meeting the
+        HCAD filing deadline (typically May 15, 2026).</li>
+      <li><b>Risk of Increase.</b> The Appraisal Review Board (ARB)
+        has the authority to adjust property values upward, downward,
+        or keep them unchanged.</li>
+      <li><b>Non-Commercial.</b> This report is provided free of
+        charge as a community resource and may not be sold or used
+        for commercial purposes.</li>
+    </ul>
+
+    <p class="report-footer">Built by a neighbor.</p>
+  </section>
+
+</main>
+
+<div id="report-error" class="report-error" hidden>
+  <h1>Report not found</h1>
+  <p id="report-error-msg"></p>
+  <p><a href="index.html">&larr; Back to the map</a></p>
+</div>
+
+<script src="report.js"></script>
+</body>
+</html>

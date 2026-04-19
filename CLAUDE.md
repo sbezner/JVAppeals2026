@@ -28,15 +28,11 @@ Village. No legal advice.
 ```
   ┌──────────────────────────── OFFLINE PIPELINE (Mac Mini) ───────────────────────────┐
   │                                                                                    │
-  │  hcad_raw/            load.py             findings.py          prose.py            │
-  │  (HCAD files,  ─►  DuckDB ingest  ─►   5-comp median,      ─► claude -p            │
-  │   downloaded       + residential       over-assessment %,     (rate-limited,       │
-  │   manually)        + jurisdiction     red/yellow/green          cached per         │
-  │                    061 filter)         color bucket              account)           │
-  │                                                                       │            │
-  │                                        render.py  ◄──────────────────┘            │
-  │                                   ReportLab PDF                                    │
-  │                                   reports/{account}.pdf                            │
+  │  hcad_raw/            load.py             findings.py         reports_data.py      │
+  │  (HCAD files,  ─►  DuckDB ingest  ─►   5-comp median,      ─► data/reports.json    │
+  │   downloaded       + residential       over-assessment %,     (subject + 5 comps   │
+  │   manually)        + jurisdiction     red/yellow/green          per parcel)        │
+  │                    070 filter)         color bucket                                │
   │                                                                                    │
   │                                        mapdata.py  ─►  data/parcels.json           │
   └────────────────────────────────────────────────────────────────────────────────────┘
@@ -44,31 +40,36 @@ Village. No legal advice.
                                                  ▼
   ┌────────────────────────── STATIC SITE (GitHub Pages, repo root) ───────────────────┐
   │                                                                                    │
-  │  index.html + main.js + style.css                                                  │
-  │    ├─ reads  data/parcels.json                                                     │
-  │    ├─ draws  Leaflet CircleMarkers on OSM tiles                                    │
-  │    ├─ offers autocomplete search over address + HCAD account                       │
-  │    └─ on pin click  ─►  reports/{account}.pdf   (committed to repo)                │
+  │  index.html + main.js + style.css          report.html + report.js                 │
+  │    ├─ reads  data/parcels.json                ├─ reads  ?a=<account>               │
+  │    ├─ Leaflet CircleMarkers on Positron       ├─ lazy-loads data/reports.json      │
+  │    ├─ autocomplete: address + HCAD            ├─ renders two-page playbook         │
+  │    └─ on pin click ─► report.html?a=X         └─ Print btn + @media print CSS      │
   └────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Data flow:** HCAD tab-delimited tables + Parcels shapefile → DuckDB →
-per-parcel findings → per-parcel prose JSON (cached) → per-parcel PDF +
-consolidated parcels.json → git commit → GitHub Pages.
+**Data flow:** HCAD tables + Parcels shapefile → DuckDB → per-parcel
+findings → `reports_data.py` emits `data/reports.json` (subject facts +
+5 comps per account, ~2,100 parcels, ~140KB gzipped) + `mapdata.py`
+emits `data/parcels.json` → git commit → GitHub Pages. `report.html`
+fetches `reports.json` lazily and renders the playbook client-side; no
+per-parcel HTML or PDF files are generated.
 
 **Key design decisions (do not undo without a reason):**
 
 - **DuckDB, not pandas/geopandas.** DuckDB's built-in `spatial` extension
   reads shapefiles via `st_read` and does centroid reprojection in SQL.
   Avoids the geopandas/shapely/pyogrio wheel lag on Python 3.14.
-- **Deterministic template, no AI.** `render.py` generates the whole
-  two-page playbook from the parcel's numbers via pure string formatting.
-  There is no `claude -p` call in the production path. The earlier
-  plan (`pipeline/prose.py`) used the Claude Code CLI headlessly to
-  write three warm prose paragraphs per parcel, but the redesigned
-  playbook format has no slot that warmth helps with. That module
-  remains on disk for reference but is not invoked by `render` or the
-  `all` CLI flow.
+- **One HTML template + one data file, not ~2,100 rendered pages.**
+  `report.html` is a single client-rendered template. It reads
+  `?a=<account>` from the URL and populates itself from
+  `data/reports.json`. Both `pipeline/prose.py` (AI prose) and
+  `pipeline/render.py` (ReportLab PDFs) have been deleted — a
+  deterministic JSON object plus a ~300-line `report.js` produces the
+  same playbook that used to ship as 2,077 PDFs, with a visible Print
+  button and proper `@media print` styling for paper. Share URLs are a
+  first-class feature: `…/report.html?a=1074400000013` is a stable
+  link to a specific parcel's report.
 - **Jersey Village = jurisdiction code 070.** HCAD's `jur_value` table
   (filename `jur_value.txt` in 2026, previously `jurisdiction_value.txt`)
   lists every taxing unit that levies on a parcel; "070" is the City of
@@ -80,9 +81,6 @@ consolidated parcels.json → git commit → GitHub Pages.
   under §41.43(b)(3), which shifts burden to HCAD to show the appraised
   value is ≤ the median of a reasonable number of appropriately-adjusted
   comparables. §42.26(a)(3) is reserved as the judicial-review fallback.
-- **PDFs live in the repo.** `reports/{account}.pdf` is committed to git
-  and served by GitHub Pages at a relative path. ~3,000 small PDFs ≈
-  300MB — within GitHub's 1GB soft repo limit.
 - **Schema-adaptive column resolution.** HCAD renames columns year to
   year. `pipeline/load.py` defines `COLUMN_ALIASES` — canonical name →
   list of likely HCAD variants. Loader probes each alias and fails loudly
@@ -100,32 +98,26 @@ JVAppeals2026/
 ├── .gitignore
 │
 ├── index.html              Leaflet map page (served at site root)
-├── main.js                 map + autocomplete + pin-click download
-├── style.css               minimal styling for header, search, legend, footer
-├── report-pending.html     "coming soon" landing for parcels without PDFs yet
+├── main.js                 map + autocomplete + pin-click navigation
+├── style.css               styles for map, popup, sheet, report, @media print
+├── report.html             one template, rendered by JS from ?a=<account>
+├── report.js               fetches data/reports.json, populates the template
 │
 ├── data/
-│   └── parcels.json        emitted by the pipeline; consumed by main.js
-│
-├── reports/
-│   └── {account}.pdf       one pre-generated PDF per JV single-family parcel
+│   ├── parcels.json        ~300KB; consumed by main.js on map load
+│   └── reports.json        ~1MB / ~140KB gzipped; lazy-loaded by report.js
 │
 ├── pipeline/
 │   ├── __init__.py
-│   ├── __main__.py         CLI: python -m pipeline {load|findings|prose|render|mapdata|all}
+│   ├── __main__.py         CLI: python -m pipeline {load|findings|reports|mapdata|all}
 │   ├── download.py         manual-download instructions + existence check
 │   ├── load.py             DuckDB ingest, schema-adaptive column resolution
 │   ├── findings.py         5-comp selection, median, over-assessment %, color
-│   ├── prose.py            `claude -p --output-format json` with rate limit + cache
-│   ├── render.py           ReportLab PDF template
+│   ├── reports_data.py     emits data/reports.json (subject + comps per parcel)
 │   └── mapdata.py          emits data/parcels.json
 │
-├── scripts/
-│   └── run.sh              tmux + caffeinate wrapper for multi-day runs
-│
 ├── hcad_download/          (gitignored) local staging for HCAD download zips
-├── hcad_raw/               (gitignored) extracted HCAD source files
-└── cache/prose/            (gitignored) resumable prose JSON cache
+└── hcad_raw/               (gitignored) extracted HCAD source files
 ```
 
 ---
@@ -155,31 +147,26 @@ JVAppeals2026/
   calls. Each successful result cached as `cache/prose/{account}.json` —
   restarts skip completed parcels. Malformed responses are logged and
   skipped (they'll be retried on the next run).
-- **Pipeline render stage** — ReportLab PDF with: title, subtitle, exec
-  summary, facts table (account, owner, address, sqft, year, grade,
-  nbhd, appraised value), owner mailing address, §41.43(b)(3) grounds
-  paragraph, comp table (subject row highlighted + 5 comps + median +
-  over-assessment), standout finding, §42.26(a)(3) fallback, reconciliation,
-  "Built by a neighbor." footer.
+- **Pipeline reports_data stage** — emits `data/reports.json`, keyed
+  by HCAD account. Each entry carries subject facts (address, sqft,
+  year, grade, nbhd, appraised value), the computed median + over-
+  assessment + color bucket, and a 5-entry comps array. Gray parcels
+  appear with `med: null` and `comps: []` so the front-end can render
+  a "limited data" variant.
 - **Pipeline mapdata stage** — emits compact `data/parcels.json` with
-  short keys (`a` account, `d` address, `c` color, `p` pct, `v` value,
-  `ll` [lat, lon]) + a computed map center.
-- **CLI entry point** — `python -m pipeline <stage> [--accounts CSV]`.
-- **Run script** — `scripts/run.sh` starts a detached tmux session
-  running `caffeinate -is uv run python -m pipeline all` and tees to
-  `pipeline.log`. Safe to reattach, tail, or kill.
-- **Static site** — `index.html`, `main.js`, `style.css`. Leaflet + OSM
-  tiles, colored pins, autocomplete on address + account, keyboard nav
-  (↑/↓/Enter/Esc), pin-click popup, legend, footer.
-  Loads from `data/parcels.json` at boot.
-- **Hybrid PDF/pending UX** — `mapdata.py` sets a per-parcel `r` flag
-  (1 if `reports/{account}.pdf` exists, else 0). The popup shows the
-  download link for parcels with `r=1` and a "Report coming soon" link
-  to `report-pending.html?a=&d=` for those with `r=0`. This lets the map
-  go live with fully-colored pins even while prose/render is still
-  grinding through the batch — re-run `mapdata` after each batch
-  completes and commit the updated `parcels.json` + new PDFs to surface
-  them.
+  short keys (`a` account, `d` address, `o` owner, `z` zip, `c` color,
+  `p` pct, `v` value, `ll` [lat, lon]) + a computed map center. No
+  per-PDF flag — every account routes to `report.html?a=X`.
+- **CLI entry point** — `python -m pipeline {load|findings|reports|mapdata|all}`.
+- **Static site** — `index.html` + `main.js` + `style.css` serve the
+  map (Leaflet + CartoDB Positron tiles, colored pins, autocomplete
+  on address + account, keyboard nav, hover/click popup on desktop,
+  bottom sheet on mobile). `report.html` + `report.js` serve the
+  client-rendered two-page playbook, navigated to via
+  `report.html?a=<account>`; renders from `data/reports.json` which is
+  fetched only on first report view and cached by the browser after
+  that. Print button up top is hidden via `@media print`, which also
+  forces a page break between the Evidence and Playbook sheets.
 
 ### ✅ Resolved during the 2026 smoke test (2026-04-18)
 
@@ -204,21 +191,30 @@ JVAppeals2026/
   City of Jersey Village in 2026 is **070** (2,338 parcels). Fixed in
   `load.py`.
 
-### ✅ Shipped 2026-04-19 (commit b8b10bf)
+### ✅ Shipped 2026-04-19 — initial playbook (commit b8b10bf)
 
-- **Full production run** — 2,077 two-page playbook PDFs for every
-  non-gray JV parcel, committed to `reports/` and served via Pages.
-- **Deterministic template** — every report is generated by
-  `pipeline/render.py`'s string formatting. No AI call, no prose
-  cache, no multi-day run. Full regenerate is ~5 minutes.
-- **AI prose dropped.** The earlier three-paragraph Claude-written
-  prose (`pipeline/prose.py`) is no longer wired into the standard
-  flow. The code remains for reference but is not called by `render`.
-  Rationale: the new playbook layout has no slot warmth helps with —
-  facts tables, statute text, and a parcel-specific hearing script
-  cover everything the prose paragraphs used to cover, deterministic
-  output is faster and cheaper, and a "tool" framing beats a "letter"
-  framing for an ARB appeal.
+- 2,077 two-page playbook PDFs generated by `pipeline/render.py` for
+  every non-gray JV parcel, committed to `reports/` and served via
+  Pages. No AI prose; deterministic string formatting.
+
+### ✅ Shipped 2026-04-19 — HTML refactor (this revision)
+
+- **PDFs replaced by one HTML template + one data file.** Deleted
+  `reports/*.pdf` (2,077 files, ~24MB), `pipeline/render.py`,
+  `pipeline/prose.py`, `report-pending.html`, `scripts/run.sh`, and
+  `cache/`. Added `report.html` + `report.js` + `pipeline/reports_data.py`
+  which emits `data/reports.json`.
+- **Same playbook content, now rendered client-side.** The full
+  two-page layout (Evidence + Playbook) is now in `report.html` with
+  slots that `report.js` populates from `reports.json` based on
+  `?a=<account>` in the URL. Visible Print button and Back-to-map link
+  up top; both hidden via `@media print`.
+- **Share URLs.** `…/report.html?a=1074400000013` is a stable URL you
+  can text a neighbor directly.
+- **Map changes.** Popup / bottom-sheet button now says "View report"
+  and links to `report.html?a=X` for every pin (gray included). The
+  `r` flag on `parcels.json` entries is gone; `report.html` handles
+  gray parcels with a "limited data — review manually" variant.
 
 ### ❌ Explicitly out of scope (not built)
 
@@ -238,12 +234,11 @@ JVAppeals2026/
 ### 5.1 First-time setup (Mac Mini, Python 3.14)
 
 ```bash
-# Install Python dependencies via uv.
 uv sync
-
-# Verify claude headless is available (uses your subscription auth).
-claude -p "hello" --output-format json | head -20
 ```
+
+That's it. No API keys, no headless-claude auth to verify — the
+pipeline is pure DuckDB + JSON emit, no AI calls.
 
 ### 5.2 Download HCAD 2026 source files
 
@@ -272,18 +267,16 @@ accepts common aliases; add more there if yours differ.
 
 ### 5.3 Smoke-test on ONE parcel first
 
-Use an account number you know (yours, or a neighbor's — HCAD
-account numbers are public on hcad.org). This takes ~2 minutes total.
+Run the full pipeline (it's fast, ~1 minute), then visit
+`report.html?a=<your-account>` locally to eyeball the output.
 
 ```bash
-uv run python -m pipeline load
-uv run python -m pipeline findings
-uv run python -m pipeline prose   --accounts 1234567890123
-uv run python -m pipeline render  --accounts 1234567890123
-open reports/1234567890123.pdf
+uv run python -m pipeline all           # load → findings → reports → mapdata
+python3 -m http.server 8765             # serve the static site locally
+open "http://localhost:8765/report.html?a=1234567890123"
 ```
 
-Eyeball the PDF. Check Page 1 (Evidence):
+Eyeball the HTML report. Check Page 1 (Evidence):
 - "NOT LEGAL ADVICE" italic notice at the top
 - One-sentence "bottom line" with the right appraisal, median, and %
 - Facts table — address, sqft, year, grade, nbhd, 2026 value match
@@ -299,25 +292,23 @@ Page 2 (Playbook):
 - §42.26(a)(3) escalation
 - Disclaimer & Terms of Use
 
-Footer on every page: "Built by a neighbor."
+Footer on Page 2: "Built by a neighbor."
 
-If anything's wrong, fix before running the full 2,077.
+If anything's wrong, fix before pushing. Also sanity-check Print
+preview in the browser — `@media print` should hide the toolbar,
+force a page break between Page 1 and Page 2, and produce a clean
+black-and-white layout suitable for the ARB hearing.
 
-### 5.4 Full production run (~5–10 minutes)
+### 5.4 Full production run (~1 minute)
 
-The current pipeline is fully deterministic — `render.py` emits the
-two-page playbook PDF from the parcel's numbers, no AI call. A full
-regeneration takes about five minutes total, not seven days. The
-`prose` stage and `scripts/run.sh` (tmux + caffeinate) exist in the
-tree but are no longer part of the normal flow.
-
-Full rebuild from scratch, after a fresh HCAD download:
+The pipeline is pure DuckDB + JSON emit — no AI, no HTML/PDF
+rendering per parcel. Full run from a fresh HCAD download:
 
 ```bash
-uv run python -m pipeline load        # ingest real_acct/building_res/jur_value/shapefile into DuckDB
+uv run python -m pipeline load        # ingest HCAD files into DuckDB
 uv run python -m pipeline findings    # compute comps, median, over-assessment %, color
-uv run python -m pipeline render      # 2,077 playbook PDFs (skips 36 gray parcels with no comps)
-uv run python -m pipeline mapdata     # emit data/parcels.json with r flags per parcel
+uv run python -m pipeline reports     # emit data/reports.json (~1MB, ~140KB gzipped)
+uv run python -m pipeline mapdata     # emit data/parcels.json (~300KB, ~60KB gzipped)
 ```
 
 Or run all four at once:
@@ -328,42 +319,49 @@ uv run python -m pipeline all
 
 ### 5.5 Publish
 
-After any rebuild:
+After any rebuild, commit the two JSON files and push:
 
 ```bash
-git add data/parcels.json reports/
-git commit -m "Regenerate 2026 parcel data and PDFs"
+git add data/parcels.json data/reports.json
+git commit -m "Regenerate 2026 parcel data"
 git push
 ```
 
-GitHub Pages re-publishes within ~1–2 minutes. Visit:
+GitHub Pages re-publishes within ~1 minute. Visit:
 `https://sbezner.github.io/JVAppeals2026/`
 
 ### 5.6 Common re-run scenarios
 
 Tweaked the PDF template in `pipeline/render.py`, want to re-render
-everything without re-ingesting HCAD:
+**Tweaked the report template** (`report.html`, `report.js`, or
+`style.css`) — no pipeline run needed. The static template is the
+template; just commit and push:
 
 ```bash
-uv run python -m pipeline render          # ~5 min for all 2,077 PDFs
-uv run python -m pipeline mapdata         # refresh parcels.json (r flags)
-git add reports/ data/parcels.json
-git commit -m "Refresh PDFs after template edit"
+git add report.html report.js style.css
+git commit -m "Refresh report template"
 git push
 ```
 
-Re-render just one parcel to preview a change before the bulk run:
+**Regenerated data from DuckDB** (edited `reports_data.py` or
+`findings.py`, for example) — re-emit the JSONs and commit:
 
 ```bash
-uv run python -m pipeline render --accounts 1074400000013
-open reports/1074400000013.pdf
+uv run python -m pipeline reports
+uv run python -m pipeline mapdata
+git add data/
+git commit -m "Refresh 2026 parcel data"
+git push
 ```
 
-After HCAD posts 2027 data — repeat the full §5.2 download, drop into
-`hcad_raw/`, then:
+**After HCAD posts 2027 data** — download into `hcad_raw/` per §5.2,
+then:
 
 ```bash
 uv run python -m pipeline all
+git add data/
+git commit -m "Regenerate 2027 parcel data"
+git push
 ```
 
 `load.py`'s `COLUMN_ALIASES` is designed to survive HCAD's annual
@@ -372,7 +370,7 @@ the expected candidates, and you add the new HCAD name to the list.
 
 ---
 
-## 6. Statutory references (used in the PDF)
+## 6. Statutory references (used in the report)
 
 - **Tex. Tax Code §41.43(b)(3)** — primary claim. Burden is on HCAD to
   show appraised value ≤ median of a reasonable number of appropriately-
@@ -390,13 +388,22 @@ touch without good reason:
 - Don't swap DuckDB for pandas/geopandas. DuckDB's spatial extension
   handles the shapefile, centroid, and transform; the Python stack for
   3.14 is intentionally minimal.
-- Don't swap `claude -p` for the Anthropic SDK. The user deliberately
-  chose subscription-auth headless mode to avoid API billing.
-- Don't change the comp selection rules without updating the statute
-  paragraph in `render.py → GROUNDS_4143`. The report's legal claim
-  depends on the filters matching what the prose describes.
-- Don't remove the "Built by a neighbor." footer or the non-affiliation
-  disclaimer in the README.
+- **Don't re-introduce AI prose generation.** `pipeline/prose.py` was
+  deleted on 2026-04-19. The report is a structured evidence sheet +
+  hearing script, not a letter; warmth adds nothing. If a future
+  session proposes regenerating prose per parcel, re-read `report.html`
+  first — the "bottom line" sentence at the top of Page 1 already does
+  the one-sentence-summary job deterministically.
+- **Don't re-introduce per-parcel file output.** The 2,077 PDFs were
+  deleted in favor of one `report.html` + one `reports.json`. If you
+  catch yourself generating `reports/{account}.html`, stop — that's
+  undoing the architectural shift documented in §2.
+- Don't change the comp selection rules in `findings.py` without
+  updating the matching prose in `report.html` (the Legal Argument
+  block and the Page-2 rebuttals both quote the filter criteria).
+- Don't remove the "Built by a neighbor." footer, the "NOT LEGAL
+  ADVICE" banner, or the Disclaimer & Terms of Use section — they are
+  the difference between a neighborly tool and unauthorized practice.
 - The Jersey Village jurisdiction code is **070** in `jur_value.txt`'s
   `tax_district` column — not the city's ZIP, not its school district,
   not the postal city string. **Do not use 061** — that's the City of
@@ -411,6 +418,6 @@ touch without good reason:
   shapefile's `HCAD_NUM` is unpadded. `load.py` uses `TRIM()` on every
   account cast so the joins work — keep that in any new query that
   joins across the text and shapefile tables.
-- The pipeline is **resumable by design**. Any change that invalidates
-  the prose cache (prompt change, schema change, etc.) requires
-  clearing `cache/prose/` manually — don't add auto-invalidation.
+- The pipeline is **idempotent and fast** (~1 minute end-to-end).
+  Re-run freely; every stage is `CREATE OR REPLACE` under the hood
+  and the JSON emitters are write-in-place.
