@@ -80,21 +80,36 @@ function renderFacts(p) {
     .join("");
 }
 
+// Three evaluation states:
+//   - isEvaluable: has comps AND a 2026 appraisal AND a computed over_pct → full report
+//   - hasCompsButNoValue: comps were found but HCAD hasn't posted tot_appr_val yet
+//   - no comps at all: subject filter matched fewer than 5 neighbors
+function hasComps(p) { return Array.isArray(p.comps) && p.comps.length > 0; }
+function isEvaluable(p) { return hasComps(p) && p.v != null && p.p != null; }
+function hasCompsButNoValue(p) { return hasComps(p) && p.v == null; }
+
 function renderBottomLine(p) {
   const verdict = (COLOR_LABEL[p.c] || COLOR_LABEL.gray).verdict;
-  if (p.med_psf == null || p.p == null) {
+  if (isEvaluable(p)) {
+    const direction = p.p > 0 ? "above" : "below";
     $("bottomline").innerHTML =
-      `HCAD's 2026 appraisal of <b>${fmtMoney(p.v)}</b>. ` +
-      `No comparable properties could be matched automatically for this parcel. ${escape(verdict)}`;
+      `Your 2026 appraisal of <b>${fmtMoney(p.v)}</b> (<b>${fmtPsf(p.psf)}/sqft</b>) is ` +
+      `<b>${Math.abs(p.p).toFixed(1)}% ${direction}</b> the median of 5 ` +
+      `comparable homes (<b>${fmtPsf(p.med_psf)}/sqft</b>, implying a fair value of ` +
+      `<b>${fmtMoney(p.fair)}</b> at your ${fmtInt(p.sqft)} sqft). ` +
+      escape(verdict);
     return;
   }
-  const direction = p.p > 0 ? "above" : "below";
+  if (hasCompsButNoValue(p)) {
+    $("bottomline").innerHTML =
+      "HCAD has not yet posted a 2026 appraised value for this parcel, so " +
+      "the comparison to the comp median cannot be computed yet. When HCAD " +
+      "updates its records, this report will refresh automatically.";
+    return;
+  }
   $("bottomline").innerHTML =
-    `Your 2026 appraisal of <b>${fmtMoney(p.v)}</b> (<b>${fmtPsf(p.psf)}/sqft</b>) is ` +
-    `<b>${Math.abs(p.p).toFixed(1)}% ${direction}</b> the median of 5 ` +
-    `comparable homes (<b>${fmtPsf(p.med_psf)}/sqft</b>, implying a fair value of ` +
-    `<b>${fmtMoney(p.fair)}</b> at your ${fmtInt(p.sqft)} sqft). ` +
-    escape(verdict);
+    `HCAD's 2026 appraisal of <b>${fmtMoney(p.v)}</b>. ` +
+    `No comparable properties could be matched automatically for this parcel. ${escape(verdict)}`;
 }
 
 function renderComps(p) {
@@ -142,7 +157,16 @@ function renderComps(p) {
 }
 
 function renderHearingScript(p) {
-  if (p.med_psf == null || p.p == null) {
+  if (hasCompsButNoValue(p)) {
+    $("hearing-script").innerHTML =
+      `<p>HCAD has not yet published a 2026 appraised value for this ` +
+      `parcel, so the numbers for your hearing script aren't available ` +
+      `yet. Refresh this page after HCAD updates and the script will ` +
+      `populate automatically. In the meantime, the Playbook steps below ` +
+      `(deadline, iFile, iSettle, rebuttals) still apply.</p>`;
+    return;
+  }
+  if (!isEvaluable(p)) {
     $("hearing-script").innerHTML =
       `<p>Keep this report as your personal script for the hearing. ` +
       `Because no automatic comps were matched, you'll need to present ` +
@@ -210,29 +234,49 @@ function renderReport(p) {
   renderBottomLine(p);
   renderHearingScript(p);
 
-  // Comp section vs. gray variant — also swap the Legal Argument copy
-  // so the gray report doesn't promise "the five comps below" when
-  // there aren't any.
-  const hasComps = Array.isArray(p.comps) && p.comps.length > 0;
-  if (hasComps) {
+  // Three paths, keyed off isEvaluable / hasCompsButNoValue / (neither).
+  if (isEvaluable(p)) {
     renderComps(p);
     $("comps-section").hidden = false;
     $("gray-notice").hidden = true;
   } else {
     $("comps-section").hidden = true;
     $("gray-notice").hidden = false;
-    $("legal-argument").innerHTML =
-      'The unequal-appraisal ground under <b>Texas Tax Code ' +
-      '&sect;41.43(b)(3)</b> is still available to you, but it requires a ' +
-      'set of 5 comparable properties that share your HCAD neighborhood ' +
-      'code and grade, fall within &plusmn;15% of your living area, and ' +
-      'within 10 years of your year built. The automatic search did not ' +
-      'return 5 matches inside those filters &mdash; usually because the ' +
-      "parcel's grade or size is unusual for its block. If you want to " +
-      'file, pick your own 5 comps on hcad.org before the hearing. Once ' +
-      'you have them, take the median of their <b>$/sqft</b>, multiply by ' +
-      'your sqft, and compare the implied fair value to your appraisal &mdash; ' +
-      "that's the test HCAD must pass.";
+    if (hasCompsButNoValue(p)) {
+      // HCAD data gap: 5 comps matched, but no 2026 appraisal posted yet.
+      $("gray-notice").innerHTML =
+        '<h2>No 2026 Appraised Value Yet</h2>' +
+        '<p>HCAD has not yet posted a 2026 appraised value for this parcel. ' +
+        'Five comparable homes were found that match the &sect;41.43(b)(3) ' +
+        'filters (same neighborhood code, same grade, within &plusmn;15% ' +
+        'living area, within 10 years of age), but without your own ' +
+        'appraisal to compare against, no case can be computed. When HCAD ' +
+        'posts the value, this report will refresh automatically.</p>' +
+        '<p>The Playbook on Page 2 still applies &mdash; review it now so ' +
+        "you're ready to act as soon as the value is posted.</p>";
+      $("legal-argument").innerHTML =
+        'This protest will be filed under <b>Texas Tax Code &sect;41.43(b)(3)</b>, ' +
+        'the unequal-appraisal ground. Once HCAD posts your 2026 appraised ' +
+        'value, the district must prove it is at or below the median per-square-' +
+        'foot appraisal of a reasonable number of appropriately-adjusted ' +
+        'comparable properties. Five such comparables already match the ' +
+        'standard filters for this parcel; they will appear here once the ' +
+        'appraisal is posted and this report can compute a median.';
+    } else {
+      // No comps at all — hand-pick on hcad.org.
+      $("legal-argument").innerHTML =
+        'The unequal-appraisal ground under <b>Texas Tax Code ' +
+        '&sect;41.43(b)(3)</b> is still available to you, but it requires a ' +
+        'set of 5 comparable properties that share your HCAD neighborhood ' +
+        'code and grade, fall within &plusmn;15% of your living area, and ' +
+        'within 10 years of your year built. The automatic search did not ' +
+        'return 5 matches inside those filters &mdash; usually because the ' +
+        "parcel's grade or size is unusual for its block. If you want to " +
+        'file, pick your own 5 comps on hcad.org before the hearing. Once ' +
+        'you have them, take the median of their <b>$/sqft</b>, multiply by ' +
+        'your sqft, and compare the implied fair value to your appraisal &mdash; ' +
+        "that's the test HCAD must pass.";
+    }
   }
 
   $("report").hidden = false;
