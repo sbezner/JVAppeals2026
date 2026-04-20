@@ -135,13 +135,31 @@ def build(db_path: str = "pipeline.duckdb") -> None:
     # Jersey Village taxing jurisdiction is code "070" in HCAD's 2026 data
     # (code 061 is the City of Houston). Verified by cross-referencing JV-
     # addressed parcels against jurisdiction_value.tax_district.
+    #
+    # Fallback: HCAD's jur_value.txt is missing rows entirely for a small
+    # number of accounts each year (~61 JV-addressed parcels in 2026,
+    # including 15509 Jersey Dr). For those, fall through to the postal
+    # city on real_acct — the best signal available when HCAD itself has
+    # none. We only apply the fallback to accounts absent from jur_value
+    # entirely; parcels that appear in jur_value with the WRONG
+    # tax_district are treated as authoritatively non-JV.
     acct_col = aliases["jurs_acct"][1]
     code_col = aliases["jurs_code"][1]
+    acct_real_col = aliases["account"][1]
+    site_city_col = aliases["site_city"][1]
     con.execute(f"""
         CREATE OR REPLACE TABLE jv_accounts AS
         SELECT DISTINCT TRIM(CAST({acct_col} AS VARCHAR)) AS account
         FROM jurisdiction_value
         WHERE CAST({code_col} AS VARCHAR) IN ('070', '70', '0070')
+        UNION
+        SELECT DISTINCT TRIM(CAST(r.{acct_real_col} AS VARCHAR)) AS account
+        FROM real_acct r
+        WHERE UPPER(TRIM(r.{site_city_col})) = 'JERSEY VILLAGE'
+          AND TRIM(CAST(r.{acct_real_col} AS VARCHAR)) NOT IN (
+              SELECT DISTINCT TRIM(CAST({acct_col} AS VARCHAR))
+              FROM jurisdiction_value
+          )
     """)
 
     ra = aliases
