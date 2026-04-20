@@ -289,19 +289,28 @@ function wireSearch() {
 function wireLegendInfo() {
   const btn = document.getElementById("legend-info-btn");
   const pop = document.getElementById("legend-info");
+  const nudge = document.getElementById("intro-nudge");
   if (!btn || !pop) return;
   const close = pop.querySelector(".info-close");
   const INTRO_SEEN_KEY = "jv-seen-intro-v1";
 
   let introSeen = false;
   try { introSeen = !!localStorage.getItem(INTRO_SEEN_KEY); } catch (e) {}
+  if (nudge && !introSeen) nudge.hidden = false;
 
   function markIntroSeen() {
     try { localStorage.setItem(INTRO_SEEN_KEY, "1"); } catch (e) {}
+    if (nudge) nudge.hidden = true;
   }
-  function open() {
+  function open(scrollToHowto) {
     pop.hidden = false;
     btn.setAttribute("aria-expanded", "true");
+    if (scrollToHowto) {
+      requestAnimationFrame(() => {
+        const sec = document.getElementById("info-howto");
+        if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }
   function shut() {
     pop.hidden = true;
@@ -310,8 +319,15 @@ function wireLegendInfo() {
 
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
-    if (pop.hidden) { open(); markIntroSeen(); } else { shut(); }
+    if (pop.hidden) { open(false); markIntroSeen(); } else { shut(); }
   });
+  if (nudge) {
+    nudge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      open(true);
+      markIntroSeen();
+    });
+  }
   close.addEventListener("click", shut);
   document.addEventListener("click", (e) => {
     if (!pop.hidden && !pop.contains(e.target) && e.target !== btn) shut();
@@ -319,16 +335,6 @@ function wireLegendInfo() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !pop.hidden) shut();
   });
-
-  // First-time visitors: auto-open the popover so they get the context
-  // (what the colors mean, how to use the site) before seeing 2,113 pins
-  // with no explanation. Mark as seen immediately so it doesn't re-open
-  // on every reload — returning visitors go straight to the map, and can
-  // always tap "?" to reopen.
-  if (!introSeen) {
-    open();
-    markIntroSeen();
-  }
 }
 
 // Locate-me control: a small button in the map's top-right that centers
@@ -457,11 +463,6 @@ async function boot() {
   state.parcels = doc.parcels;
   for (const p of state.parcels) state.byAccount.set(p.a, p);
   buildSearchIndex();
-
-  // Fill in the live parcel count in the deadline strip (so the number
-  // auto-tracks new/removed parcels next year without a code change).
-  const countEl = document.getElementById("parcel-count");
-  if (countEl) countEl.textContent = state.parcels.length.toLocaleString();
 
   const center = doc.center || [29.889, -95.567];
   map.setView(center, 14);

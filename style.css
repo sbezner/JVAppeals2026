@@ -69,29 +69,12 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 .info-btn:hover { background: #f2f6fb; color: var(--ink); border-color: #c3cad2; }
 .info-btn[aria-expanded="true"] { background: #1b6fe6; color: #fff; border-color: #1b6fe6; }
 
-/* Stakes-setting strip under the header: the May 15 deadline, the count of
-   mapped homes, and the CTA. Gives cold visitors the "why is this here"
-   context before they scan the map. */
-.deadline-strip {
-  display: flex; justify-content: center; align-items: center;
-  flex-wrap: wrap; gap: 4px 10px;
-  padding: 7px 14px;
-  background: #fff8e1; border-bottom: 1px solid #e6b422;
-  color: var(--ink);
-  font-size: 13px; line-height: 1.4;
+.intro-nudge {
+  background: none; border: none; padding: 0 2px; margin: 0;
+  font: inherit; color: #1b6fe6; font-size: 12px;
+  text-decoration: none; cursor: pointer; white-space: nowrap;
 }
-.deadline-strip b { color: var(--ink); }
-.deadline-strip .deadline-sep {
-  color: var(--mute); font-weight: 300;
-}
-
-@media (max-width: 560px) {
-  .deadline-strip { font-size: 12px; padding: 6px 10px; }
-  /* Drop the longest line on very narrow screens — the first two stats
-     are the important ones. */
-  .deadline-strip .deadline-stat:nth-child(5),
-  .deadline-strip .deadline-sep:nth-child(4) { display: none; }
-}
+.intro-nudge:hover { text-decoration: underline; }
 
 .info-popover {
   position: fixed; top: 52px; right: 16px; z-index: 1002;
@@ -158,6 +141,7 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
     margin-left: auto;
   }
   .legend-item { display: none; }
+  .intro-nudge { font-size: 11px; }
   .info-popover {
     top: 92px;
     right: 8px; left: 8px;
