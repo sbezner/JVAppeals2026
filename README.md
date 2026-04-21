@@ -1,37 +1,59 @@
 # JVAppeals2026
 
 A static map of every Jersey Village, TX single-family parcel, with a
-pre-generated §41.43(b)(3) HCAD appeal PDF behind every pin.
+client-rendered §41.43(b)(3) HCAD appeal report behind every pin.
 
-- **Live site** — served from GitHub Pages off the repo root.
-- **Pins** are colored by over-assessment vs. the median of 5 comparable homes
-  (same HCAD neighborhood code + grade, ±15% sqft, ±10 years age, geographically
-  closest): **red** > 7%, **yellow** 2–7%, **green** < 2%.
-- **Click a pin** → downloads the pre-generated PDF appeal report for that
-  parcel.
+- **Live site** — [jvtaxappeal.com](https://jvtaxappeal.com), served
+  from GitHub Pages (custom domain proxied via Cloudflare).
+- **Pins** are colored by over-assessment vs. the median of 5 comparable
+  homes (same HCAD neighborhood code + grade, ±15% sqft, ±10 years age,
+  geographically closest). Per-sqft normalization:
+  - **red** >7% over median (strong unequal-appraisal case)
+  - **yellow** 2–7% over (consider filing)
+  - **green** within noise band (skip)
+  - **purple** >5% under (do not file — ARB could raise)
+  - **gray** no comps matched (review manually)
+- **Orange ring** on a pin = possible §23.23 homestead cap claim
+  (homesteaded home with >10% year-over-year appraisal increase).
+- **Click a pin** → opens a two-page report at
+  `report.html?a=<account>`. Page 1 is the evidence (facts table,
+  comps, median with fair-value math, raw-dollar alt view); Page 2 is
+  the playbook (May 15 deadline, iFile steps, hearing script,
+  rebuttals, §42.26 escalation, disclaimer). Fully printable; share by
+  URL.
 
 ## How it's built
 
-Offline pipeline on the Mac Mini:
+All data is deterministic — no AI, no per-parcel rendered files. One
+HTML template + two JSON data files drive the whole site.
+
+Offline pipeline (runs in ~1 minute):
 
 1. You download HCAD 2026 source files to `hcad_raw/` (see
-   `pipeline/download.py` for filenames and URLs — HCAD blocks automated
-   fetches, so this step is manual).
-2. `python -m pipeline load` — DuckDB ingests the tab-delimited property
-   tables and the parcel shapefile, filters to jurisdiction 061 (City of
-   Jersey Village) and residential state classes.
-3. `python -m pipeline findings` — for each parcel, DuckDB picks 5 comps and
-   computes the median + over-assessment %.
-4. `python -m pipeline prose` — the three personalized prose blocks
-   (executive summary, standout finding, reconciliation) are generated via
-   `claude -p --output-format json` in Claude Code headless mode. Rate-limited
-   to ~50 calls/hour; each result cached as `cache/prose/{account}.json` so
-   restarts skip completed parcels.
-5. `python -m pipeline render` — ReportLab writes `reports/{account}.pdf`.
-6. `python -m pipeline mapdata` — emits `data/parcels.json` for the Leaflet
-   front-end.
+   `pipeline/download.py` for filenames and URLs — HCAD blocks
+   automated fetches, so this step is manual).
+2. `python -m pipeline load` — DuckDB ingests the tab-delimited
+   property tables and the parcel shapefile, filters to the City of
+   Jersey Village (`jur_value.tax_district='070'`, with a postal-city
+   fallback for parcels HCAD left out of `jur_value`) plus residential
+   state classes.
+3. `python -m pipeline findings` — for each parcel, DuckDB picks 5
+   comps and computes per-sqft median, raw-dollar median, fair value,
+   comp-basket coefficient of variation, homestead-cap excess, and
+   bucket color.
+4. `python -m pipeline reports` — emits `data/reports.json`
+   (~1MB / ~140KB gzipped), keyed by HCAD account, with subject facts
+   + 5 comp details for every parcel.
+5. `python -m pipeline mapdata` — emits `data/parcels.json`
+   (~300KB / ~60KB gzipped), the compact payload the map loads on
+   boot.
 
-## Setup (Mac Mini, Python 3.14)
+Or the shortcut: `python -m pipeline all`.
+
+`report.html` and `report.js` then render the report client-side from
+`reports.json` when a visitor hits `report.html?a=<account>`.
+
+## Setup (Python 3.14)
 
 ```bash
 # 1. Install dependencies
@@ -39,31 +61,35 @@ uv sync
 
 # 2. Download HCAD 2026 files into ./hcad_raw/ (see pipeline/download.py)
 
-# 3. Smoke-test on one known parcel
-uv run python -m pipeline load
-uv run python -m pipeline findings
-uv run python -m pipeline prose   --accounts 1234567890123
-uv run python -m pipeline render  --accounts 1234567890123
-open reports/1234567890123.pdf
+# 3. Run the full pipeline (~1 minute)
+uv run python -m pipeline all
 
-# 4. Full run, detached, with the screen kept awake
-./scripts/run.sh
-# (reattach any time: tmux attach -t jvappeals)
+# 4. Preview locally
+python3 -m http.server 8765
+# then open http://localhost:8765/
+
+# 5. Publish
+git add data/ && git commit -m "Regenerate parcel data" && git push
 ```
-
-Expected full-run time: ~7–8 days at 50 calls/hour for ~3,000 parcels, then
-minutes for PDF rendering and map data emission.
 
 ## Layout
 
 ```
-index.html, main.js, style.css    Leaflet map + search UI (served by Pages)
-data/parcels.json                 emitted by the pipeline; front-end reads this
-reports/{account}.pdf             emitted by the pipeline; committed to git
+index.html, main.js, style.css    Leaflet map + search UI
+report.html, report.js            two-page appeal report template
+data/parcels.json                 map pins + flags
+data/reports.json                 per-parcel report data (lazy-loaded)
 pipeline/                         Python pipeline modules
-scripts/run.sh                    tmux + caffeinate wrapper for full runs
+  load.py                           DuckDB ingest + JV filter
+  findings.py                       5-comp selection, medians, buckets
+  reports_data.py                   emits data/reports.json
+  mapdata.py                        emits data/parcels.json
+  download.py                       HCAD file check
+featurelist.md                    backlog of features under consideration
+CLAUDE.md                         deeper design notes + runbook
 hcad_raw/                         (gitignored) your HCAD source files
-cache/prose/{account}.json        (gitignored) resumable prose cache
+hcad_download/                    (gitignored) original HCAD zips
 ```
 
 Built by a neighbor. Not affiliated with HCAD or the City of Jersey Village.
+No legal advice.
