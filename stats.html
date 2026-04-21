@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jersey Village 2026 appraisals — by the numbers</title>
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body class="stats-page">
 
@@ -48,6 +48,19 @@
     </div>
   </div>
 
+  <section class="stats-chart-section">
+    <h2>How over-assessed is Jersey Village?</h2>
+    <p class="stats-chart-intro">
+      Every parcel with matched comps, binned by how its 2026 HCAD
+      appraisal compares to the per-sqft median of its 5 closest
+      neighbors. Bar colors match the map. Dashed vertical lines
+      mark the bucket cutoffs (&minus;5%, +2%, +7%); the blue
+      dotted line marks the city-wide median.
+    </p>
+    <div class="stats-chart" id="chart"></div>
+    <p class="stats-chart-caption" id="chart-caption"></p>
+  </section>
+
   <h2>By the &sect;41.43(b)(3) per-sqft median test</h2>
   <table class="stats-buckets">
     <tbody id="buckets-body"></tbody>
@@ -89,6 +102,6 @@
   Built by a neighbor.
 </footer>
 
-<script src="stats.js?v=3"></script>
+<script src="stats.js?v=4"></script>
 </body>
 </html>

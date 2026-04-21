@@ -878,6 +878,66 @@ table.stats-buckets .bucket-pct {
 }
 table.stats-buckets .bucket-label { color: var(--ink); line-height: 1.4; }
 
+/* Distribution histogram. Inline SVG; colors come from CSS so they
+   flip cleanly in print mode. */
+.stats-chart-section { margin: 28px 0 4px; }
+.stats-chart-section h2 { margin-bottom: 8px; }
+.stats-chart-intro {
+  font-size: 13px; line-height: 1.5;
+  color: var(--mute);
+  margin: 0 0 12px;
+}
+.stats-chart {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 12px;
+}
+.stats-chart .chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.stats-chart-caption {
+  font-size: 12px; color: var(--mute);
+  margin: 8px 0 0;
+  text-align: center;
+}
+.stats-chart-caption b { color: var(--ink); }
+.chart-empty { color: var(--mute); font-size: 13px; text-align: center; margin: 0; }
+
+/* SVG element styling */
+.chart-bar { opacity: 0.88; }
+.chart-bar-red    { fill: var(--red); }
+.chart-bar-yellow { fill: var(--yellow); }
+.chart-bar-green  { fill: var(--green); }
+.chart-bar-purple { fill: var(--purple); }
+
+.chart-baseline {
+  stroke: #111; stroke-width: 1;
+}
+.chart-cutoff {
+  stroke: #9ca3af; stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.chart-median {
+  stroke: #1b6fe6; stroke-width: 1.5;
+  stroke-dasharray: 2 3;
+}
+.chart-median-label {
+  fill: #1b6fe6;
+  font-size: 10px; font-weight: 600;
+  font-family: inherit;
+}
+.chart-axis-tick {
+  stroke: #6b7280; stroke-width: 1;
+}
+.chart-axis-label {
+  fill: var(--mute);
+  font-size: 10px;
+  font-family: inherit;
+}
+
 ul.stats-notable {
   list-style: none; padding: 0; margin: 0;
   font-size: 14px; line-height: 1.5;
@@ -993,6 +1053,15 @@ ul.stats-notable li:last-child { border-bottom: none; }
      screen-only. */
   .report .hcad-link { color: #000 !important; text-decoration: none !important; }
   .report .hcad-arrow { display: none; }
+  /* Distribution chart in B&W — keep bars distinguishable as grays
+     (darker = more extreme bucket). */
+  .chart-bar-red    { fill: #333 !important; }
+  .chart-bar-yellow { fill: #888 !important; }
+  .chart-bar-green  { fill: #bbb !important; }
+  .chart-bar-purple { fill: #555 !important; }
+  .chart-cutoff { stroke: #000 !important; }
+  .chart-median { stroke: #000 !important; }
+  .chart-median-label { fill: #000 !important; }
   a { color: #000; text-decoration: none; }
   @page { margin: 0.75in; }
 }

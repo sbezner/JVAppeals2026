@@ -42,6 +42,108 @@ function median(nums) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+// Bucket a single over-% into its CSS class (matches findings.py).
+function overPctBucket(pct) {
+  if (pct > 7) return "red";
+  if (pct >= 2) return "yellow";
+  if (pct >= -5) return "green";
+  return "purple";
+}
+
+// Build an inline-SVG histogram of over-% values across the whole JV
+// dataset. Pure SVG — no chart library. 2.5% bin width gives ~44 bars
+// across the -40..+70% range (covers >99.9% of parcels). Each bar is
+// colored by the bucket its left-edge sits in, so the histogram
+// visually explains the same bucket ladder that appears below it.
+function buildDistributionSVG(pcts) {
+  const LO = -40, HI = 70, BIN_WIDTH = 2.5;
+  const bins = [];
+  for (let left = LO; left < HI; left += BIN_WIDTH) {
+    bins.push({ left, right: left + BIN_WIDTH, count: 0 });
+  }
+  for (const p of pcts) {
+    if (p < LO || p >= HI) continue;
+    const idx = Math.floor((p - LO) / BIN_WIDTH);
+    if (idx >= 0 && idx < bins.length) bins[idx].count++;
+  }
+  const maxCount = Math.max(1, ...bins.map((b) => b.count));
+  const med = median(pcts);
+
+  // Coordinate space. Using a wide viewBox so the bars stay rectangular
+  // at letterbox aspect ratios; the CSS width: 100% scales it to the
+  // available card width.
+  const VB_W = 660, VB_H = 220;
+  const PAD_L = 20, PAD_R = 20, PAD_T = 28, PAD_B = 42;
+  const CHART_W = VB_W - PAD_L - PAD_R;
+  const CHART_H = VB_H - PAD_T - PAD_B;
+
+  const xScale = (pct) => PAD_L + ((pct - LO) / (HI - LO)) * CHART_W;
+  const yScale = (count) => PAD_T + CHART_H - (count / maxCount) * CHART_H;
+  const barW = CHART_W / bins.length;
+
+  // Bars (one <rect> per bin).
+  const bars = bins.map((b) => {
+    const x = xScale(b.left);
+    const y = yScale(b.count);
+    const h = PAD_T + CHART_H - y;
+    if (b.count === 0) return "";
+    return (
+      `<rect class="chart-bar chart-bar-${overPctBucket(b.left)}" ` +
+      `x="${(x + 0.5).toFixed(1)}" y="${y.toFixed(1)}" ` +
+      `width="${(barW - 1).toFixed(1)}" height="${h.toFixed(1)}"/>`
+    );
+  }).join("");
+
+  // Bucket-cutoff dashed verticals at the statutory thresholds.
+  const cutoffs = [-5, 2, 7];
+  const cutoffLines = cutoffs.map((c) => {
+    const x = xScale(c).toFixed(1);
+    return `<line class="chart-cutoff" x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T + CHART_H}"/>`;
+  }).join("");
+
+  // City-wide median marker + label.
+  const medX = xScale(med).toFixed(1);
+  const medLabel = `median ${med >= 0 ? "+" : ""}${med.toFixed(1)}%`;
+  const medianEls =
+    `<line class="chart-median" x1="${medX}" y1="${PAD_T - 4}" x2="${medX}" y2="${PAD_T + CHART_H}"/>` +
+    `<text class="chart-median-label" x="${medX}" y="${(PAD_T - 8).toFixed(1)}" text-anchor="middle">${medLabel}</text>`;
+
+  // Baseline (x-axis line).
+  const baseline = `<line class="chart-baseline" x1="${PAD_L}" y1="${PAD_T + CHART_H}" x2="${PAD_L + CHART_W}" y2="${PAD_T + CHART_H}"/>`;
+
+  // X-axis ticks + labels every 10%.
+  const ticks = [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70];
+  const xAxis = ticks.map((t) => {
+    const x = xScale(t).toFixed(1);
+    const label = (t > 0 ? "+" : "") + t + "%";
+    return (
+      `<line class="chart-axis-tick" x1="${x}" y1="${PAD_T + CHART_H}" x2="${x}" y2="${PAD_T + CHART_H + 4}"/>` +
+      `<text class="chart-axis-label" x="${x}" y="${PAD_T + CHART_H + 18}" text-anchor="middle">${label}</text>`
+    );
+  }).join("");
+
+  return (
+    `<svg class="chart-svg" viewBox="0 0 ${VB_W} ${VB_H}" ` +
+    `preserveAspectRatio="xMidYMid meet" role="img" ` +
+    `aria-label="Distribution of over-assessment percentages across ${fmtInt(pcts.length)} Jersey Village parcels, ranging from ${LO}% to ${HI}%, with a median of ${med.toFixed(1)}%.">` +
+      bars + cutoffLines + baseline + xAxis + medianEls +
+    `</svg>`
+  );
+}
+
+function renderDistributionChart(parcels) {
+  const pcts = parcels.map((p) => p.p).filter((p) => p != null);
+  if (!pcts.length) {
+    $("chart").innerHTML = `<p class="chart-empty">No comp-matched parcels available to chart.</p>`;
+    return;
+  }
+  $("chart").innerHTML = buildDistributionSVG(pcts);
+  const med = median(pcts);
+  $("chart-caption").innerHTML =
+    `<b>median: ${med >= 0 ? "+" : ""}${med.toFixed(1)}%</b> &middot; ` +
+    `${fmtInt(pcts.length)} parcels with matched comps`;
+}
+
 // Ordering of the bucket rows. Matches the map-overlay legend so the
 // two reads consistently.
 const BUCKETS = [
@@ -78,6 +180,10 @@ function renderStats(parcels) {
 
   const yoys = parcels.map((p) => p.yoy).filter((y) => y != null);
   $("stat-yoy").textContent = fmtPct(median(yoys), 1);
+
+  // Distribution histogram (renders after the trio, before the bucket
+  // ladder — the visual speaks the same language as the ladder below).
+  renderDistributionChart(parcels);
 
   // Bucket ladder.
   const counts = {};
