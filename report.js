@@ -88,8 +88,21 @@ function hasComps(p) { return Array.isArray(p.comps) && p.comps.length > 0; }
 function isEvaluable(p) { return hasComps(p) && p.v != null && p.p != null; }
 function hasCompsButNoValue(p) { return hasComps(p) && p.v == null; }
 
+function capBottomNote(p) {
+  // One-sentence coda appended to every bottom line when the parcel has a
+  // homestead-cap claim. Keeps the §41.43 message intact and layers the
+  // §23.23 ground on top of it.
+  if (!p.cap) return "";
+  return (
+    ` <span class="cap-note">Plus: a separate <b>§23.23 homestead cap</b> ` +
+    `claim of <b>${fmtMoney(p.cap_excess)}</b> is available &mdash; ` +
+    `see Alternate Ground below.</span>`
+  );
+}
+
 function renderBottomLine(p) {
   const verdict = (COLOR_LABEL[p.c] || COLOR_LABEL.gray).verdict;
+  const capNote = capBottomNote(p);
   if (isEvaluable(p)) {
     const direction = p.p > 0 ? "above" : "below";
     $("bottomline").innerHTML =
@@ -97,19 +110,20 @@ function renderBottomLine(p) {
       `<b>${Math.abs(p.p).toFixed(1)}% ${direction}</b> the median of 5 ` +
       `comparable homes (<b>${fmtPsf(p.med_psf)}/sqft</b>, implying a fair value of ` +
       `<b>${fmtMoney(p.fair)}</b> at your ${fmtInt(p.sqft)} sqft). ` +
-      escape(verdict);
+      escape(verdict) + capNote;
     return;
   }
   if (hasCompsButNoValue(p)) {
     $("bottomline").innerHTML =
       "HCAD has not yet posted a 2026 appraised value for this parcel, so " +
       "the comparison to the comp median cannot be computed yet. When HCAD " +
-      "updates its records, this report will refresh automatically.";
+      "updates its records, this report will refresh automatically." + capNote;
     return;
   }
   $("bottomline").innerHTML =
     `HCAD's 2026 appraisal of <b>${fmtMoney(p.v)}</b>. ` +
-    `No comparable properties could be matched automatically for this parcel. ${escape(verdict)}`;
+    `No comparable properties could be matched automatically for this parcel. ${escape(verdict)}` +
+    capNote;
 }
 
 function renderComps(p) {
@@ -148,40 +162,95 @@ function renderComps(p) {
   const confBadge = conf
     ? ` <span class="conf-badge conf-${conf.label}" title="Comp-basket coefficient of variation: ${p.cv}%. ${escape(conf.desc)}">spread: ${conf.label}</span>`
     : "";
+
+  // Alternate view: raw-dollar comp median with no size normalization.
+  // This is what Chronicle shows and what most ARB panels compare against
+  // at the hearing. Rendered as a muted appendix beneath the primary
+  // per-sqft summary so homeowners can walk in with both numbers.
+  let altRows = "";
+  if (p.med_val != null && p.raw_p != null) {
+    const rawGap = (p.v || 0) - p.med_val;
+    const rawGapLabel = p.raw_p > 0 ? "Over-assessment" : "Under-assessment";
+    const rawGapClass = p.raw_p > 0 ? "over" : "under";
+    altRows = `
+      <tr class="alt-head"><td colspan="7" class="num">Alternate view: raw-dollar median (no size adjustment) &mdash; method most ARB panels default to</td></tr>
+      <tr class="alt-summary"><td colspan="6" class="num">Median of 5 comp appraisals</td><td class="num">${fmtMoney(p.med_val)}</td></tr>
+      <tr class="alt-summary ${rawGapClass}"><td colspan="6" class="num">${escape(rawGapLabel)} vs. raw median</td><td class="num">${fmtMoney(Math.abs(rawGap))} (${p.raw_p > 0 ? "+" : ""}${p.raw_p.toFixed(1)}%)</td></tr>
+    `;
+  }
+
   foot.innerHTML = `
     <tr class="summary"><td colspan="5" class="num">Median $/sqft of 5 comps${confBadge}</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td></tr>
     <tr class="summary"><td colspan="6" class="num">Fair value at median $/sqft (&times; ${fmtInt(p.sqft)} sqft)</td><td class="num">${fmtMoney(p.fair)}</td></tr>
     <tr class="summary"><td colspan="6" class="num">HCAD 2026 appraisal</td><td class="num">${fmtMoney(p.v)}</td></tr>
     <tr class="summary ${gapClass}"><td colspan="6" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td></tr>
+    ${altRows}
   `;
 }
 
+function capScriptHtml(p) {
+  if (!p.cap) return "";
+  const ceiling = Math.round(p.prior_v * 1.10);
+  const purpleNote = p.c === "purple"
+    ? `<p class="cap-script-caution"><b>Tactical note:</b> because your ` +
+      `2026 appraisal is <em>below</em> the median of comparable homes, ` +
+      `the ARB panel has room to adjust upward under §41.43. Stay strictly ` +
+      `on §23.23 at the hearing &mdash; do not volunteer comps, market ` +
+      `value, or anything that invites the panel to evaluate your ` +
+      `unequal-appraisal case. The cap argument is mechanical: prior ` +
+      `value × 1.10 vs. posted value. That's the only ground you raise.</p>`
+    : "";
+  return `
+    <div class="cap-script">
+      <p><b>Primary claim: §23.23 homestead cap.</b> This is a mechanical
+      argument &mdash; no comps, no adjustments, just the numbers. At the
+      hearing, say:</p>
+      <ol class="script">
+        <li><b>"My home has an active residence homestead exemption on HCAD record."</b></li>
+        <li><b>"Under Texas Tax Code §23.23, my appraised value cannot increase more than 10% year-over-year (plus the value of any new improvements)."</b></li>
+        <li><b>"HCAD's prior-year appraisal was ${fmtMoney(p.prior_v)}. The 10% cap ceiling is ${fmtMoney(ceiling)}. HCAD's 2026 appraisal is ${fmtMoney(p.v)}, which exceeds the cap by ${fmtMoney(p.cap_excess)}."</b></li>
+        <li><b>"I'm requesting a reduction to ${fmtMoney(ceiling)}, the statutory cap."</b></li>
+      </ol>
+      <p>The ARB can deny only by showing the excess reflects new improvements (additions, new construction, major remodels). If you haven't done any, this is a straightforward win.</p>
+      ${purpleNote}
+    </div>`;
+}
+
 function renderHearingScript(p) {
+  const capHtml = capScriptHtml(p);
+  let primaryHtml;
+
   if (hasCompsButNoValue(p)) {
-    $("hearing-script").innerHTML =
+    primaryHtml =
       `<p>HCAD has not yet published a 2026 appraised value for this ` +
-      `parcel, so the numbers for your hearing script aren't available ` +
-      `yet. Refresh this page after HCAD updates and the script will ` +
-      `populate automatically. In the meantime, the Playbook steps below ` +
-      `(deadline, iFile, iSettle, rebuttals) still apply.</p>`;
-    return;
-  }
-  if (!isEvaluable(p)) {
-    $("hearing-script").innerHTML =
-      `<p>Keep this report as your personal script for the hearing. ` +
-      `Because no automatic comps were matched, you'll need to present ` +
-      `your own: pick 5 neighboring properties on hcad.org that share ` +
-      `your HCAD neighborhood code, grade, are within &plusmn;15% of your ` +
-      `${fmtInt(p.sqft)} sqft, and within 10 years of your ${escape(p.year)} build. ` +
-      `Take the median of their <b>$/sqft</b>, multiply by your ${fmtInt(p.sqft)} sqft, ` +
-      `and argue that implied fair value against your ${fmtMoney(p.v)} appraisal.</p>`;
-    return;
-  }
-  if (p.c === "purple") {
+      `parcel, so the numbers for your §41.43 hearing script aren't ` +
+      `available yet. Refresh this page after HCAD updates and the script ` +
+      `will populate automatically. In the meantime, the Playbook steps ` +
+      `below (deadline, iFile, iSettle, rebuttals) still apply.</p>`;
+  } else if (!isEvaluable(p)) {
+    // No comps path. If cap also applies, the cap script above IS the
+    // primary claim and the §41.43 "hand-pick your own" path is optional.
+    primaryHtml = p.cap
+      ? `<p><b>Secondary claim: §41.43 unequal appraisal.</b> The automatic ` +
+        `comp search did not return 5 matches, so a §41.43 case isn't ` +
+        `pre-computed for this parcel. If you want to add it on top of the ` +
+        `cap claim, hand-pick 5 neighboring properties on hcad.org that ` +
+        `share your HCAD neighborhood code, grade, are within &plusmn;15% ` +
+        `of your ${fmtInt(p.sqft)} sqft, and within 10 years of your ` +
+        `${escape(p.year)} build.</p>`
+      : `<p>Keep this report as your personal script for the hearing. ` +
+        `Because no automatic comps were matched, you'll need to present ` +
+        `your own: pick 5 neighboring properties on hcad.org that share ` +
+        `your HCAD neighborhood code, grade, are within &plusmn;15% of your ` +
+        `${fmtInt(p.sqft)} sqft, and within 10 years of your ${escape(p.year)} build. ` +
+        `Take the median of their <b>$/sqft</b>, multiply by your ${fmtInt(p.sqft)} sqft, ` +
+        `and argue that implied fair value against your ${fmtMoney(p.v)} appraisal.</p>`;
+  } else if (p.c === "purple") {
     const absPct = Math.abs(p.p).toFixed(1);
-    $("hearing-script").innerHTML = `
+    primaryHtml = `
       <div class="purple-warning">
-        <p><b>Do not file this protest.</b> Your 2026 appraisal of <b>${fmtMoney(p.v)}</b>
+        <p><b>${p.cap ? "§41.43 context (do not raise at hearing)" : "Do not file this protest"}.</b>
+        Your 2026 appraisal of <b>${fmtMoney(p.v)}</b>
         (${fmtPsf(p.psf)}/sqft) is already <b>${absPct}% below</b> the
         per-square-foot median of 5 comparable homes
         (${fmtPsf(p.med_psf)}/sqft, implying a fair value of ${fmtMoney(p.fair)}
@@ -192,29 +261,130 @@ function renderHearingScript(p) {
         same &sect;41.43(b)(3) median test to <em>your</em> case and conclude
         the appraisal should be raised toward ${fmtMoney(p.fair)}, costing you
         roughly ${fmtMoney(p.fair - p.v)} in additional taxable value.</p>
-        <p>The remaining playbook below (deadlines, iFile, hearing scripts)
-        applies if you ever face a future year where your appraisal moves
-        above the median &mdash; bookmark this page and re-check next April.</p>
+        <p>${p.cap
+          ? "Proceed with the §23.23 cap script above and do not mention comps or market value at the hearing."
+          : "The remaining playbook below (deadlines, iFile, hearing scripts) applies if you ever face a future year where your appraisal moves above the median — bookmark this page and re-check next April."}</p>
       </div>`;
+  } else {
+    const dir = p.p > 0 ? "below" : "above";
+    const absPct = Math.abs(p.p).toFixed(1);
+    primaryHtml = `
+      <p>${p.cap ? "<b>Secondary claim: §41.43 unequal appraisal.</b> " : ""}Keep this report as your personal script for the hearing. The core of your ${p.cap ? "§41.43 " : ""}claim is two points:</p>
+      <ol class="script">
+        <li><b>"The median per-square-foot appraisal across 5 comparable homes in my neighborhood is ${fmtPsf(p.med_psf)}/sqft. Applied to my ${fmtInt(p.sqft)} sqft, that's a fair value of ${fmtMoney(p.fair)} &mdash; ${absPct}% ${dir} HCAD's appraisal of my home at ${fmtMoney(p.v)}."</b></li>
+        <li><b>"These 5 comps share my neighborhood code (${escape(p.nbhd)}), my HCAD grade (${escape(p.grade)}), fall within &plusmn;15% of my ${fmtInt(p.sqft)} sqft, and within 10 years of my ${escape(p.year)} build. Per-square-foot is the same yardstick HCAD's own mass-appraisal model uses, so the district has already endorsed this as the right comparison."</b></li>
+      </ol>
+      <p>Stay focused on the per-square-foot median gap. That is the only argument &sect;41.43(b)(3) lets you win on &mdash; don't wander into market value, tax rates, or condition.</p>`;
+  }
+
+  $("hearing-script").innerHTML = capHtml + primaryHtml;
+}
+
+function renderMethodsNote(p) {
+  // Only fire on directional disagreements (map says file, raw says skip,
+  // or vice versa). These flagged parcels are 20% of the map; the other
+  // ~24% bucket disagreements are minor and don't change the decision.
+  if (!p.dis) {
+    $("methods-note").hidden = true;
     return;
   }
-  const dir = p.p > 0 ? "below" : "above";
-  const absPct = Math.abs(p.p).toFixed(1);
-  $("hearing-script").innerHTML = `
-    <p>Keep this report as your personal script for the hearing. The core of your claim is two points:</p>
-    <ol class="script">
-      <li><b>"The median per-square-foot appraisal across 5 comparable homes in my neighborhood is ${fmtPsf(p.med_psf)}/sqft. Applied to my ${fmtInt(p.sqft)} sqft, that's a fair value of ${fmtMoney(p.fair)} &mdash; ${absPct}% ${dir} HCAD's appraisal of my home at ${fmtMoney(p.v)}."</b></li>
-      <li><b>"These 5 comps share my neighborhood code (${escape(p.nbhd)}), my HCAD grade (${escape(p.grade)}), fall within &plusmn;15% of my ${fmtInt(p.sqft)} sqft, and within 10 years of my ${escape(p.year)} build. Per-square-foot is the same yardstick HCAD's own mass-appraisal model uses, so the district has already endorsed this as the right comparison."</b></li>
-    </ol>
-    <p>Stay focused on the per-square-foot median gap. That is the only argument &sect;41.43(b)(3) lets you win on &mdash; don't wander into market value, tax rates, or condition.</p>`;
+  const fileByPsf = p.c === "red" || p.c === "yellow";
+  const fileByRaw = p.raw_c === "red" || p.raw_c === "yellow";
+  const psfPct = Math.abs(p.p).toFixed(1);
+  const rawPct = Math.abs(p.raw_p).toFixed(1);
+  const psfDir = p.p > 0 ? "over" : "under";
+  const rawDir = p.raw_p > 0 ? "over" : "under";
+  let body;
+  if (fileByPsf && !fileByRaw) {
+    // Per-sqft suggests filing; raw-dollar doesn't.
+    // Filing is the HIGH-RISK direction: ARB may use raw and raise the value.
+    body =
+      `The two methods disagree on what to do here. By the per-square-foot ` +
+      `method (the primary analysis above), your appraisal is ${psfPct}% ` +
+      `${psfDir} median &mdash; a filable case. By the raw-dollar method ` +
+      `(what most ARB panels default to at a hearing), your appraisal is ` +
+      `${rawPct}% ${rawDir} median &mdash; <b>no case, and potential ` +
+      `upward-adjustment risk</b>. Your home is ${p.p > 0 ? "smaller" : "larger"} than the ` +
+      `average of its comp band, which is why the two numbers diverge. ` +
+      `Before filing, consider how the ARB panel is likely to compare your ` +
+      `appraisal &mdash; if raw-dollar is their default, the case above ` +
+      `may not hold.`;
+  } else {
+    // Raw-dollar says file; per-sqft doesn't.
+    // Not filing is the LOW-RISK direction, but homeowner may miss a case.
+    body =
+      `The two methods disagree on what to do here. By the per-square-foot ` +
+      `method (the primary analysis above), your appraisal is ${psfPct}% ` +
+      `${psfDir} median &mdash; the recommendation is to skip. By the ` +
+      `raw-dollar method (what most ARB panels default to at a hearing), ` +
+      `your appraisal is ${rawPct}% ${rawDir} median &mdash; <b>a case ` +
+      `does exist by that methodology</b>. Your home is ` +
+      `${p.p > 0 ? "larger" : "smaller"} than the average of its comp ` +
+      `band, which is why the two numbers diverge. If the ARB panel is ` +
+      `likely to use raw-dollar medians (most do), the case above is ` +
+      `stronger than the primary analysis suggests.`;
+  }
+  $("methods-note-body").innerHTML = body;
+  $("methods-note").hidden = false;
+}
+
+function renderCapSection(p) {
+  if (!p.cap) {
+    $("cap-section").hidden = true;
+    return;
+  }
+  const ceiling = Math.round(p.prior_v * 1.10);
+  $("cap-explanation").innerHTML =
+    `This parcel has an <b>HCAD residence homestead exemption</b>, which ` +
+    `entitles the owner to a statutory <b>10% cap</b> on year-over-year ` +
+    `appraisal increases under <b>Texas Tax Code &sect;23.23</b>. HCAD ` +
+    `raised this appraisal <b>${p.yoy.toFixed(1)}%</b> from the prior ` +
+    `year &mdash; above the 10% cap &mdash; so the owner is entitled to ` +
+    `have the excess removed, independent of the &sect;41.43(b)(3) ` +
+    `unequal-appraisal case above.`;
+  $("cap-body").innerHTML = `
+    <tr><th>Prior-year appraisal</th><td>${fmtMoney(p.prior_v)}</td></tr>
+    <tr><th>10% cap ceiling (prior &times; 1.10)</th><td>${fmtMoney(ceiling)}</td></tr>
+    <tr><th>2026 appraisal as posted</th><td>${fmtMoney(p.v)}</td></tr>
+    <tr class="cap-excess">
+      <th>Excess above the cap</th>
+      <td>${fmtMoney(p.cap_excess)} (+${p.yoy.toFixed(1)}% YoY)</td>
+    </tr>`;
+  $("cap-section").hidden = false;
 }
 
 function renderVerdictBanner(p) {
   const info = COLOR_LABEL[p.c] || COLOR_LABEL.gray;
   const banner = $("verdict-banner");
-  banner.className = `verdict-banner verdict-${info.css}`;
-  $("verdict-label").textContent = info.banner;
-  $("verdict-subtitle").textContent = info.bannerSub;
+  let cls = `verdict-${info.css}`;
+  let label = info.banner;
+  let sub = info.bannerSub;
+
+  // Cap overrides. The §23.23 cap is a separate statutory ground, and for
+  // most §41.43 buckets it is the dominant signal ("File, regardless of
+  // what §41.43 says"). The exception is purple — under-assessed parcels
+  // where filing any protest could invite the ARB to adjust upward toward
+  // the comp median, which conflicts with the cap win.
+  if (p.cap) {
+    const excess = fmtMoney(p.cap_excess);
+    if (p.c === "purple") {
+      cls = "verdict-cap-conflict";
+      label = "Mixed — read carefully";
+      sub = `§23.23 cap claim worth ${excess}, but §41.43 risks an upward adjustment at the ARB. Details below.`;
+    } else if (p.c === "red") {
+      cls = "verdict-cap";
+      label = "FILE — two grounds";
+      sub = `§41.43 over-assessment AND §23.23 cap claim (${excess} excess).`;
+    } else {
+      cls = "verdict-cap";
+      label = "FILE — §23.23 cap";
+      sub = `Excess above the 10% homestead cap: ${excess}.`;
+    }
+  }
+
+  banner.className = `verdict-banner ${cls}`;
+  $("verdict-label").textContent = label;
+  $("verdict-subtitle").textContent = sub;
   banner.hidden = false;
 }
 
@@ -233,6 +403,8 @@ function renderReport(p) {
   renderFacts(p);
   renderBottomLine(p);
   renderHearingScript(p);
+  renderMethodsNote(p);
+  renderCapSection(p);
 
   // Three paths, keyed off isEvaluable / hasCompsButNoValue / (neither).
   if (isEvaluable(p)) {

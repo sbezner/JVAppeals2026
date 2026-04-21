@@ -40,6 +40,9 @@ COLUMN_ALIASES: dict[str, list[tuple[str, str]]] = {
                       ("real_acct", "neighborhood_code")],
     "appraised_val": [("real_acct", "tot_appr_val"), ("real_acct", "total_appraised_value"),
                       ("real_acct", "appr_val")],
+    "prior_appraised_val":
+                     [("real_acct", "prior_tot_appr_val"),
+                      ("real_acct", "prior_total_appraised_value")],
     "owner_name":    [("real_acct", "mailto"), ("real_acct", "owner_name"),
                       ("owners", "name")],
     "owner_mail_1":  [("real_acct", "mail_addr_1"), ("real_acct", "mail_line_1")],
@@ -104,6 +107,19 @@ def build(db_path: str = "pipeline.duckdb") -> None:
             [str(files["owners"])],
         )
 
+    if "jurisdiction_exempt" in files:
+        con.execute(
+            "CREATE OR REPLACE TABLE jurisdiction_exempt AS "
+            "SELECT * FROM read_csv(?, delim='\\t', header=true, auto_detect=true, "
+            "ignore_errors=true, strict_mode=false)",
+            [str(files["jurisdiction_exempt"])],
+        )
+    else:
+        # Empty stub so downstream SQL doesn't fail on EXISTS lookups.
+        con.execute(
+            "CREATE OR REPLACE TABLE jurisdiction_exempt (acct VARCHAR, exempt_cat VARCHAR)"
+        )
+
     # Parcel geometry. DuckDB spatial can read shapefile via st_read.
     con.execute(
         "CREATE OR REPLACE TABLE parcel_geom AS "
@@ -163,6 +179,16 @@ def build(db_path: str = "pipeline.duckdb") -> None:
     """)
 
     ra = aliases
+    # Residence-homestead flag: any jur_exempt row with exempt_cat='RES' means
+    # the parcel has a residence homestead, which triggers the §23.23 10% cap
+    # on year-over-year appraisal increases.
+    con.execute("""
+        CREATE OR REPLACE TABLE homestead_accounts AS
+        SELECT DISTINCT TRIM(CAST(acct AS VARCHAR)) AS account
+        FROM jurisdiction_exempt
+        WHERE UPPER(TRIM(exempt_cat)) = 'RES'
+    """)
+
     # Residential single-family = state_class beginning with 'A' (HCAD convention).
     con.execute(f"""
         CREATE OR REPLACE TABLE parcels AS
@@ -175,6 +201,7 @@ def build(db_path: str = "pipeline.duckdb") -> None:
                 r.{ra['state_class'][1]} AS state_class,
                 CAST(r.{ra['nbhd_code'][1]} AS VARCHAR) AS nbhd_code,
                 CAST(r.{ra['appraised_val'][1]} AS DOUBLE) AS appraised_val,
+                CAST(r.{ra['prior_appraised_val'][1]} AS DOUBLE) AS prior_appraised_val,
                 r.{ra['owner_name'][1]} AS owner_name,
                 r.{ra['owner_mail_1'][1]} AS owner_mail_1,
                 r.{ra['owner_mail_2'][1]} AS owner_mail_2,
@@ -204,11 +231,13 @@ def build(db_path: str = "pipeline.duckdb") -> None:
             ra.state_class,
             ra.nbhd_code,
             ra.appraised_val,
+            ra.prior_appraised_val,
             br.living_area,
             br.year_built,
             br.grade,
             pc.lon, pc.lat,
-            (ra.account IN (SELECT account FROM jv_accounts)) AS in_jv
+            (ra.account IN (SELECT account FROM jv_accounts)) AS in_jv,
+            (ra.account IN (SELECT account FROM homestead_accounts)) AS homestead
         FROM ra
         JOIN br USING (account)
         JOIN parcel_centroid pc USING (account)

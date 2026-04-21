@@ -45,8 +45,10 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
         SELECT
             p.account, p.site_addr, p.site_zip, p.owner_name,
             p.living_area, p.year_built, p.grade, p.nbhd_code,
-            p.appraised_val,
-            f.median_comp_psf, f.fair_value, f.over_pct, f.cv_pct, f.color
+            p.appraised_val, p.prior_appraised_val, p.homestead,
+            f.median_comp_psf, f.fair_value, f.over_pct, f.cv_pct, f.color,
+            f.yoy_pct, f.cap_excess_val, f.cap_violation,
+            f.median_comp_val, f.raw_over_pct, f.raw_color
         FROM parcels p
         LEFT JOIN findings f USING (account)
         ORDER BY p.account
@@ -56,9 +58,21 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     n_with_comps = 0
     n_gray = 0
     for row in subjects:
-        (account, addr, zip_, owner, sqft, year, grade, nbhd, val,
-         med_psf, fair, pct, cv, color) = row
+        (account, addr, zip_, owner, sqft, year, grade, nbhd,
+         val, prior_val, homestead,
+         med_psf, fair, pct, cv, color,
+         yoy, cap_excess, cap_violation,
+         med_val, raw_pct_db, raw_color) = row
         subject_psf = (val / sqft) if val and sqft else None
+        # raw_pct_db comes from findings.py; reuse it as the canonical value.
+        raw_over_pct = raw_pct_db
+        # Directional disagreement only — see mapdata.py for the rationale.
+        file_verdicts = {"red", "yellow"}
+        skip_verdicts = {"green", "purple"}
+        methods_disagree = (
+            (color in file_verdicts and raw_color in skip_verdicts)
+            or (color in skip_verdicts and raw_color in file_verdicts)
+        )
         entry: dict = {
             "a": account,
             "d": (addr or "").strip(),
@@ -69,12 +83,27 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
             "grade": (grade or "").strip(),
             "nbhd": (nbhd or "").strip(),
             "v": int(val) if val is not None else None,
+            "prior_v": int(prior_val) if prior_val is not None else None,
             "psf": round(subject_psf, 2) if subject_psf is not None else None,
             "med_psf": round(med_psf, 2) if med_psf is not None else None,
             "fair": int(fair) if fair is not None else None,
             "p": round(pct, 1) if pct is not None else None,
             "cv": round(cv, 1) if cv is not None else None,
             "c": color or "gray",
+            # §23.23 homestead cap fields:
+            "hs": bool(homestead) if homestead is not None else False,
+            "yoy": round(yoy, 1) if yoy is not None else None,
+            "cap_excess": int(cap_excess) if cap_excess is not None else None,
+            "cap": bool(cap_violation) if cap_violation is not None else False,
+            # Raw-dollar (unadjusted) median + gap. Alongside the per-sqft
+            # fair value, lets homeowners see both methodologies side-by-side.
+            "med_val": int(med_val) if med_val is not None else None,
+            "raw_p": round(raw_over_pct, 1) if raw_over_pct is not None else None,
+            "raw_c": raw_color or "gray",
+            # True when the two methodologies put the parcel in different
+            # buckets — the front-end uses this to surface a methodology
+            # note in the report and a short tag in the map popup.
+            "dis": bool(methods_disagree),
             "comps": [],
         }
         if med_psf is not None:

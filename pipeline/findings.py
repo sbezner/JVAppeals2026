@@ -113,6 +113,8 @@ def compute(db_path: str = "pipeline.duckdb") -> None:
             SELECT
                 p.account,
                 p.appraised_val,
+                p.prior_appraised_val,
+                p.homestead,
                 p.living_area,
                 a.median_comp_val,
                 a.median_comp_psf,
@@ -129,21 +131,57 @@ def compute(db_path: str = "pipeline.duckdb") -> None:
                       OR p.living_area IS NULL OR p.living_area = 0 THEN NULL
                     ELSE 100.0 * (p.appraised_val - a.median_comp_psf * p.living_area)
                          / (a.median_comp_psf * p.living_area)
-                END AS over_pct
+                END AS over_pct,
+                -- §23.23 homestead cap fields. Year-over-year appraisal change;
+                -- cap_excess is the dollar amount over the 10% cap a residence
+                -- homestead is statutorily entitled to have removed. Positive
+                -- only when the parcel has a homestead AND YoY > 10%.
+                CASE
+                    WHEN p.prior_appraised_val IS NULL OR p.prior_appraised_val = 0
+                      OR p.appraised_val IS NULL THEN NULL
+                    ELSE 100.0 * (p.appraised_val - p.prior_appraised_val)
+                         / p.prior_appraised_val
+                END AS yoy_pct,
+                CASE
+                    WHEN NOT p.homestead THEN NULL
+                    WHEN p.prior_appraised_val IS NULL OR p.prior_appraised_val = 0
+                      OR p.appraised_val IS NULL THEN NULL
+                    WHEN p.appraised_val <= p.prior_appraised_val * 1.10 THEN NULL
+                    ELSE p.appraised_val - (p.prior_appraised_val * 1.10)
+                END AS cap_excess_val
             FROM parcels p
             LEFT JOIN agg a USING (account)
         )
         SELECT
-            account, appraised_val, living_area,
+            account, appraised_val, prior_appraised_val, homestead, living_area,
             median_comp_val, median_comp_psf, fair_value,
             n_comps, comp_accounts, cv_pct, over_pct,
+            yoy_pct, cap_excess_val,
+            (cap_excess_val IS NOT NULL) AS cap_violation,
+            CASE
+                WHEN median_comp_val IS NULL OR median_comp_val = 0
+                  OR appraised_val IS NULL THEN NULL
+                ELSE 100.0 * (appraised_val - median_comp_val) / median_comp_val
+            END AS raw_over_pct,
             CASE
                 WHEN over_pct IS NULL THEN 'gray'
                 WHEN over_pct >  7.0 THEN 'red'
                 WHEN over_pct >= 2.0 THEN 'yellow'
                 WHEN over_pct >= -5.0 THEN 'green'
                 ELSE 'purple'
-            END AS color
+            END AS color,
+            -- Same bucket thresholds applied to the raw-dollar methodology.
+            -- When this differs from the primary color, the two methods
+            -- disagree on the verdict — a signal worth surfacing on the
+            -- map popup and in the report.
+            CASE
+                WHEN median_comp_val IS NULL OR median_comp_val = 0
+                  OR appraised_val IS NULL THEN 'gray'
+                WHEN 100.0 * (appraised_val - median_comp_val) / median_comp_val >  7.0 THEN 'red'
+                WHEN 100.0 * (appraised_val - median_comp_val) / median_comp_val >= 2.0 THEN 'yellow'
+                WHEN 100.0 * (appraised_val - median_comp_val) / median_comp_val >= -5.0 THEN 'green'
+                ELSE 'purple'
+            END AS raw_color
         FROM derived
     """)
 
@@ -157,4 +195,12 @@ def compute(db_path: str = "pipeline.duckdb") -> None:
         FROM findings
     """).fetchone()
     print(f"findings: red={red} yellow={yellow} green={green} purple={purple} gray={gray}")
+
+    cap_stats = con.execute("""
+        SELECT
+            sum(case when cap_violation then 1 else 0 end) AS cap_hits,
+            sum(case when homestead then 1 else 0 end) AS homesteads
+        FROM findings
+    """).fetchone()
+    print(f"homestead cap: {cap_stats[0]} violations across {cap_stats[1]} homesteaded parcels")
     con.close()

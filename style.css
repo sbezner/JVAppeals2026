@@ -177,6 +177,19 @@ main { flex: 1; position: relative; }
   white-space: nowrap;
   text-align: right;
 }
+.legend-control .legend-cap {
+  margin-top: 4px; padding-top: 4px;
+  border-top: 1px solid var(--rule);
+}
+/* Legend preview for a cap-violation pin. Mirrors the actual map pin:
+   a bucket-colored dot (we use red here as an exemplar) with a thick
+   orange ring. */
+.legend-control .dot.ring-cap {
+  background: var(--red);
+  box-shadow: 0 0 0 2px #ff7a00;
+  width: 10px; height: 10px;
+  margin-right: 4px;
+}
 
 .locate-control .locate-btn {
   display: flex; align-items: center; justify-content: center;
@@ -219,6 +232,30 @@ footer {
   text-decoration: none; font-weight: 600; font-size: 12px;
 }
 .parcel-popup a.download:hover { background: #155fc6; }
+.parcel-popup .cap-flag,
+.parcel-sheet .sheet-cap {
+  margin: 6px 0;
+  padding: 4px 8px;
+  background: #fff3e0;
+  border-left: 3px solid #ff7a00;
+  font-size: 12px; font-weight: 600; color: #b85300;
+  border-radius: 3px;
+}
+.parcel-sheet .sheet-cap { font-size: 13px; margin: 6px 0 10px; }
+
+/* Methods-differ tag — surfaces a directional bucket disagreement so a
+   homeowner doesn't trust the primary pin color blindly. Muted blue to
+   keep it distinct from the orange §23.23 cap flag. */
+.parcel-popup .disagree-flag,
+.parcel-sheet .sheet-disagree {
+  margin: 6px 0;
+  padding: 4px 8px;
+  background: #eef2f7;
+  border-left: 3px solid #5a6067;
+  font-size: 12px; font-weight: 500; color: var(--ink);
+  border-radius: 3px;
+}
+.parcel-sheet .sheet-disagree { font-size: 13px; margin: 6px 0 10px; }
 
 /* Mobile bottom sheet — shown instead of Leaflet popup on touch/narrow views.
    Fixed at the bottom, doesn't move with the map, has room for content,
@@ -367,6 +404,14 @@ body.report-page { background: var(--bg); }
   background: #f3eefe; border-left-color: var(--purple);
 }
 .report .verdict-banner.verdict-purple .verdict-label { color: var(--purple); }
+.report .verdict-banner.verdict-cap {
+  background: #fff3e0; border-left-color: #ff7a00;
+}
+.report .verdict-banner.verdict-cap .verdict-label { color: #b85300; }
+.report .verdict-banner.verdict-cap-conflict {
+  background: #fff8ef; border-left-color: #b85300;
+}
+.report .verdict-banner.verdict-cap-conflict .verdict-label { color: #b85300; }
 .report .verdict-banner.verdict-gray {
   background: #f1f3f5; border-left-color: var(--gray);
 }
@@ -401,6 +446,12 @@ body.report-page { background: var(--bg); }
   border-radius: 4px;
   font-size: 15px; line-height: 1.5;
 }
+.report .bottomline .cap-note {
+  display: block; margin-top: 8px;
+  padding-top: 8px; border-top: 1px dashed var(--rule);
+  color: #b85300;
+}
+.report .bottomline .cap-note b { color: #b85300; }
 
 /* Facts table */
 .report table.facts {
@@ -483,6 +534,28 @@ body.report-page { background: var(--bg); }
 .report table.comps tfoot tr.summary.over td:last-child { color: #C03030; }
 .report table.comps tfoot tr.summary.under td:last-child { color: var(--green); }
 
+/* Alternate-view rows: raw-dollar comp median, shown below the primary
+   per-sqft summary. Muted and smaller so readers see this as a
+   cross-reference to the Chronicle-style / ARB-panel-default method, not
+   a competing primary conclusion. */
+.report table.comps tfoot tr.alt-head td {
+  padding-top: 10px;
+  border-top: 1px dashed var(--rule);
+  background: transparent;
+  font-size: 11px; font-weight: 600;
+  font-style: italic;
+  color: var(--mute);
+  text-align: left;
+}
+.report table.comps tfoot tr.alt-summary td {
+  background: transparent;
+  font-size: 12px; font-weight: 500;
+  color: var(--mute);
+  padding-top: 3px; padding-bottom: 3px;
+}
+.report table.comps tfoot tr.alt-summary.over td:last-child { color: #c04040; }
+.report table.comps tfoot tr.alt-summary.under td:last-child { color: #3a7a3a; }
+
 /* Gray-parcel "no comps" notice takes the place of the comp table */
 #gray-notice p { margin: 10px 0; }
 
@@ -543,6 +616,83 @@ body.report-page { background: var(--bg); }
   border-top: 1px solid var(--rule);
   font-size: 12px; color: var(--mute); text-align: center;
   font-style: italic;
+}
+
+/* Methodology note — shown only on directional-disagreement parcels
+   (per-sqft and raw-dollar methods recommend different actions). Sits
+   between the comp table and the §23.23 cap section on Page 1. Neutral
+   gray accent, no competing semantics with the orange cap section. */
+.report .methods-note {
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: #f3f5f8;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--mute);
+  border-radius: 6px;
+}
+.report .methods-note h2 {
+  border-bottom: none;
+  margin-top: 0;
+  color: var(--ink);
+  font-size: 14px;
+}
+.report .methods-note p { margin: 6px 0 0; font-size: 13px; }
+
+/* §23.23 hearing-script block on Page 2 — pre-pended to the primary
+   §41.43 script when the parcel has a cap claim. Orange accent matches
+   the map pin ring and the Page-1 Alternate Ground section. */
+.report .cap-script {
+  margin-bottom: 14px; padding: 12px 14px;
+  background: #fff7ee;
+  border-left: 4px solid #ff7a00;
+  border-radius: 4px;
+}
+.report .cap-script p:first-child { margin-top: 0; }
+.report .cap-script p:last-child { margin-bottom: 0; }
+.report .cap-script-caution {
+  margin-top: 8px; padding: 8px 10px;
+  background: #fff;
+  border: 1px dashed #b85300;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+/* §23.23 Homestead Cap section — an alternate statutory ground that sits
+   alongside the §41.43 unequal-appraisal case on Page 1. Orange accent
+   matches the pin ring on the map so the connection is obvious. */
+.report .cap-section {
+  margin-top: 18px;
+  padding: 16px 18px;
+  background: #fff7ee;
+  border: 1px solid #ffcfa3;
+  border-left: 4px solid #ff7a00;
+  border-radius: 6px;
+}
+.report .cap-section h2 {
+  border-bottom: none;
+  color: #b85300;
+  margin-top: 0;
+}
+.report table.cap-table {
+  width: 100%; border-collapse: collapse;
+  margin: 8px 0; font-size: 13px;
+}
+.report table.cap-table th,
+.report table.cap-table td {
+  padding: 6px 10px; border-bottom: 1px solid var(--rule);
+}
+.report table.cap-table th { text-align: left; font-weight: 600; width: 55%; }
+.report table.cap-table td { text-align: right; font-variant-numeric: tabular-nums; }
+.report table.cap-table tr.cap-excess td,
+.report table.cap-table tr.cap-excess th {
+  font-weight: 700; color: #b85300;
+  border-top: 1px solid #000;
+}
+.report .cap-caveat {
+  margin-top: 10px !important;
+  font-size: 12px; color: var(--mute);
+  border-top: 1px dashed var(--rule);
+  padding-top: 8px;
 }
 
 /* Error state (bad ?a= or missing data) */
@@ -612,6 +762,10 @@ body.report-page { background: var(--bg); }
   .report table.comps tfoot tr.summary td { background: #f4f4f4; }
   .report table.comps tfoot tr.summary.over td:last-child { color: #000; font-weight: 700; }
   .report table.comps tfoot tr.summary.under td:last-child { color: #000; font-weight: 700; }
+  .report table.comps tfoot tr.alt-head td,
+  .report table.comps tfoot tr.alt-summary td {
+    background: transparent; color: #444;
+  }
   .report .conf-badge {
     background: #fff !important; color: #000 !important;
     border: 1px solid #000;

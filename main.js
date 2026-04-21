@@ -50,6 +50,8 @@ function popupHtml(p) {
   const val = p.v == null ? "" : `$${p.v.toLocaleString()}`;
   const cls = p.c || "gray";
   const owner = p.o ? `<div class="owner">${p.o}</div>` : "";
+  const cap = p.cap ? `<div class="cap-flag">Possible §23.23 homestead cap claim</div>` : "";
+  const disagree = p.dis ? `<div class="disagree-flag">Methods differ — see report</div>` : "";
   const action = `<a class="download" href="report.html?a=${encodeURIComponent(p.a)}">View report</a>`;
   return `
     <div class="parcel-popup">
@@ -57,6 +59,8 @@ function popupHtml(p) {
       ${owner}
       <div>HCAD ${p.a}${val ? ` · ${val}` : ""}</div>
       <div class="pct ${cls}">${pct} vs. median of 5 comps</div>
+      ${cap}
+      ${disagree}
       ${action}
     </div>`;
 }
@@ -78,13 +82,25 @@ function scheduleHoverClose(marker) {
 // Selected-marker ring (mobile sheet selection indicator).
 const SELECTED_STYLE = { weight: 2.5, color: "#1b6fe6" };
 const DEFAULT_STYLE = { weight: 0.5, color: "#00000033" };
+// Ring treatment for homestead-cap violations (§23.23). A pin with p.cap
+// wears a bright orange ring on top of its §41.43 color — and renders a
+// notch larger than a normal pin so it's legible at city-wide zoom.
+const CAP_STYLE = { weight: 3, color: "#ff7a00" };
+const CAP_RADIUS = 7;
+const DEFAULT_RADIUS = 5;
 let selectedMarker = null;
-function setSelected(marker) {
+function restingStyle(parcel) {
+  return parcel && parcel.cap ? CAP_STYLE : DEFAULT_STYLE;
+}
+function setSelected(marker, parcel) {
   if (selectedMarker && selectedMarker !== marker) {
-    selectedMarker.setStyle(DEFAULT_STYLE);
+    selectedMarker.setStyle(restingStyle(selectedMarker.__parcel));
   }
   selectedMarker = marker || null;
-  if (selectedMarker) selectedMarker.setStyle(SELECTED_STYLE);
+  if (selectedMarker) {
+    if (parcel) selectedMarker.__parcel = parcel;
+    selectedMarker.setStyle(SELECTED_STYLE);
+  }
 }
 
 function sheetHtml(p) {
@@ -92,6 +108,8 @@ function sheetHtml(p) {
   const val = p.v == null ? "" : `$${p.v.toLocaleString()}`;
   const cls = p.c || "gray";
   const owner = p.o ? `<div class="sheet-owner">${p.o}</div>` : "";
+  const cap = p.cap ? `<div class="sheet-cap">Possible §23.23 homestead cap claim</div>` : "";
+  const disagree = p.dis ? `<div class="sheet-disagree">Methods differ — see report</div>` : "";
   const action = `<a class="sheet-action download" href="report.html?a=${encodeURIComponent(p.a)}">View report</a>`;
   return `
     <button class="sheet-close" type="button" aria-label="Close">&times;</button>
@@ -99,6 +117,8 @@ function sheetHtml(p) {
     ${owner}
     <div class="sheet-meta">HCAD ${p.a}${val ? ` · ${val}` : ""}</div>
     <div class="sheet-pct ${cls}">${pct} vs. median of 5 comps</div>
+    ${cap}
+    ${disagree}
     ${action}
   `;
 }
@@ -116,7 +136,7 @@ function openSheet(p, marker) {
   sheet.classList.add("open");
   const closeBtn = sheet.querySelector(".sheet-close");
   if (closeBtn) closeBtn.addEventListener("click", closeSheet);
-  setSelected(marker);
+  setSelected(marker, p);
   // Canvas-rendered markers can still bubble a click to the map in some
   // Leaflet versions; swallow the very next map click so the sheet doesn't
   // close itself on the same tap that opened it.
@@ -138,13 +158,15 @@ function closeSheet() {
 
 function drawParcels() {
   for (const p of state.parcels) {
+    const resting = restingStyle(p);
     const m = L.circleMarker(p.ll, {
-      radius: 5,
-      color: DEFAULT_STYLE.color,
-      weight: DEFAULT_STYLE.weight,
+      radius: p.cap ? CAP_RADIUS : DEFAULT_RADIUS,
+      color: resting.color,
+      weight: resting.weight,
       fillColor: COLOR[p.c] || COLOR.gray,
       fillOpacity: 0.85,
     });
+    m.__parcel = p;
 
     if (MOBILE) {
       m.on("click", () => openSheet(p, m));
@@ -401,13 +423,22 @@ const LegendControl = L.Control.extend({
   options: { position: "bottomleft" },
   onAdd() {
     const container = L.DomUtil.create("div", "leaflet-bar legend-control");
-    container.innerHTML = LEGEND_ROWS.map((r) =>
+    const rows = LEGEND_ROWS.map((r) =>
       `<div class="legend-row">` +
         `<span class="dot ${r.cls}"></span>` +
         `<b>${r.label}</b>` +
         `<span class="legend-desc">${r.desc}</span>` +
       `</div>`
     ).join("");
+    // Extra row explaining the orange ring — a secondary statutory ground
+    // that can apply on top of any §41.43 bucket color.
+    const capRow =
+      `<div class="legend-row legend-cap">` +
+        `<span class="dot ring-cap" aria-hidden="true"></span>` +
+        `<b>Cap</b>` +
+        `<span class="legend-desc">orange ring = homestead +10% YoY</span>` +
+      `</div>`;
+    container.innerHTML = rows + capRow;
     L.DomEvent.disableClickPropagation(container);
     L.DomEvent.disableScrollPropagation(container);
     return container;

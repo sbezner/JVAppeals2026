@@ -33,6 +33,10 @@ REQUIRED = {
 
 OPTIONAL = {
     "owners": ["owners.txt", "owner.txt"],
+    # Per-parcel, per-jurisdiction exemption rows. Used to detect residence
+    # homesteads for the §23.23 10% cap check. Optional — without it, the
+    # homestead-cap ground is simply not surfaced in reports.
+    "jurisdiction_exempt": ["jurisdiction_exempt.txt", "jur_exempt.txt"],
 }
 
 
