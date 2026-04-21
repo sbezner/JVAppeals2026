@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jersey Village 2026 appraisals — by the numbers</title>
+<link rel="stylesheet" href="style.css?v=11">
+</head>
+<body class="stats-page">
+
+<div class="stats-toolbar">
+  <a class="toolbar-btn back" href="index.html">&larr; Back to map</a>
+</div>
+
+<main class="stats-container" id="stats" hidden>
+  <h1 class="stats-title">Jersey Village 2026 appraisals — by the numbers.</h1>
+
+  <div class="stats-hero">
+    <div class="stats-hero-number" id="hero-total"></div>
+    <div class="stats-hero-label">
+      Total HCAD 2026 appraised value across
+      <b id="hero-count"></b> single-family parcels.
+    </div>
+  </div>
+
+  <h2>By the &sect;41.43(b)(3) per-sqft median test</h2>
+  <table class="stats-buckets">
+    <tbody id="buckets-body"></tbody>
+  </table>
+
+  <h2>Also on the map</h2>
+  <ul class="stats-notable" id="notable"></ul>
+
+  <h2>How this was computed</h2>
+  <p class="stats-method">
+    Every single-family parcel in Jersey Village (HCAD tax district 070)
+    is compared against the median $/sqft of its 5 closest comparable
+    neighbors &mdash; same HCAD neighborhood code, same grade, within
+    &plusmn;15% of its living area, and within &plusmn;10 years of its
+    build year. The resulting over-assessment percentage drives the
+    color bucket and every headline figure above. Full methodology
+    lives in
+    <a href="https://github.com/sbezner/JVAppeals2026/blob/main/CLAUDE.md" target="_blank" rel="noopener">CLAUDE.md</a>
+    alongside the source code.
+  </p>
+
+  <p class="stats-disclaimer">
+    <b>Aggregate figures only.</b> Individual outcomes depend on
+    hearings; not every protest wins. This is not legal advice.
+    Built by a neighbor &mdash; not affiliated with HCAD or the City
+    of Jersey Village.
+  </p>
+</main>
+
+<div id="stats-error" class="stats-error" hidden>
+  <h1>Could not load data</h1>
+  <p id="stats-error-msg"></p>
+  <p><a href="index.html">&larr; Back to the map</a></p>
+</div>
+
+<footer class="stats-footer">
+  <a href="index.html">&larr; Back to the map</a>
+  &nbsp;&middot;&nbsp;
+  Built by a neighbor.
+</footer>
+
+<script src="stats.js?v=1"></script>
+</body>
+</html>
