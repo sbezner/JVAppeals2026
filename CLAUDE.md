@@ -94,6 +94,8 @@ per-parcel HTML or PDF files are generated.
 JVAppeals2026/
 ├── CLAUDE.md               this file — project context for Claude Code & humans
 ├── README.md               public-facing project readme (for GitHub visitors)
+├── featurelist.md          backlog; ranks shipped vs. pending work
+├── CNAME                   custom-domain pointer for GitHub Pages (jvtaxappeal.com)
 ├── pyproject.toml          uv-managed Python 3.14 project
 ├── .gitignore
 │
@@ -277,6 +279,56 @@ JVAppeals2026/
   appraised, not absolute market value — the tool can't detect
   district-wide systematic over- or under-appraisal.
 
+### ✅ Shipped 2026-04-20 — cap + alt view + methods-differ + JV-filter fix (commit ac27938)
+
+- **§23.23 homestead cap detection.** New optional input
+  `jur_exempt.txt` lets `load.py` build a `homestead_accounts` table
+  (accounts with `exempt_cat='RES'`) and attach a `homestead` bool +
+  `prior_appraised_val` to every parcel. `findings.py` computes
+  `yoy_pct`, `cap_excess_val`, and `cap_violation` (homestead AND YoY
+  > 10%). 23 JV parcels flagged in 2026. Map pins get an **orange 3px
+  ring at radius 7** (vs default radius 5, weight 0.5), legible at
+  city-wide zoom. Popup/sheet show a "Possible §23.23 homestead cap
+  claim" line. Report gets a dedicated "Alternate Ground" section on
+  Page 1 with prior-year / 10%-ceiling / excess math + a caveat about
+  the new-improvement exclusion; verdict banner overrides to "FILE —
+  §23.23 cap" (or "Mixed — read carefully" for purple+cap). A
+  §23.23-first hearing script prepends to the standard §41.43 script.
+- **Raw-dollar alt view.** `reports_data.py` exposes `med_val` (raw
+  median of comp appraisals) + `raw_p` (gap vs that median).
+  `report.js` renders a muted appendix in the comp table footer so
+  homeowners can walk in with both the per-sqft fair value and the
+  Chronicle / ARB-panel-default raw-dollar number. Primary verdict
+  stays per-sqft.
+- **Methods-differ note.** `findings.py` emits `raw_color` using the
+  same bucket thresholds applied to `raw_over_pct`. When the per-sqft
+  color and raw color span the file/skip line (red/yellow vs
+  green/purple — a *directional* flip, not a minor bucket shift),
+  emit `dis=1`. 449 parcels in 2026 (20.7%). Map popup/sheet show a
+  muted "Methods differ — see report" tag; report renders a full
+  Methodology Note explaining the divergence with directional
+  guidance. Within-side bucket differences (e.g., red↔yellow, both
+  "file") don't trigger — they'd add noise without changing the
+  homeowner's decision.
+- **Widen JV filter for HCAD data gaps.** HCAD's `jur_value.txt`
+  silently omitted 61 JV-addressed residential parcels in 2026
+  (including 15509 Jersey Dr, which a neighbor flagged). `load.py`'s
+  `jv_accounts` now UNIONs in parcels with
+  `site_addr_2='JERSEY VILLAGE'` that have no row in `jur_value` at
+  all — the postal city is the best-available fallback when HCAD
+  itself has no tax_district signal. Parcels that appear in
+  `jur_value` with a different tax_district are still treated as
+  authoritatively non-JV. Net add: 59 parcels (`loaded 2172 JV
+  single-family parcels`, up from 2113).
+- **Cache-bust convention.** Any change to `main.js`, `report.js`, or
+  `style.css` requires incrementing the `?v=N` query in both
+  `index.html` and `report.html` so returning visitors pick up the
+  new code without a manual hard-refresh. Currently `?v=7`.
+- **Analytics.** Handled externally by Cloudflare Web Analytics
+  (privacy-respecting, zero-config on the proxied domain). No tracker
+  in the repo. Do not add Google Analytics or any other cookie-based
+  tracker — see `featurelist.md`'s out-of-scope section.
+
 ### ❌ Explicitly out of scope (not built)
 
 - Auto-downloading HCAD source files (blocked by HCAD; manual step).
@@ -316,7 +368,8 @@ hcad_raw/
 ├── real_acct.txt
 ├── building_res.txt
 ├── jur_value.txt                   (was `jurisdiction_value.txt` before 2026)
-├── owners.txt                      (optional; improves owner block in PDF)
+├── jur_exempt.txt                  (optional; required for §23.23 cap detection)
+├── owners.txt                      (optional; improves owner block)
 └── Parcels/
     ├── Parcels.shp
     ├── Parcels.shx
@@ -496,6 +549,26 @@ touch without good reason:
   `tax_district` column — not the city's ZIP, not its school district,
   not the postal city string. **Do not use 061** — that's the City of
   Houston, ~580k parcels.
+- **JV filter fallback for HCAD data gaps.** `jur_value.txt` is
+  incomplete each year — 61 JV parcels had no row at all in 2026.
+  `load.py`'s `jv_accounts` UNIONs in `real_acct.site_addr_2='JERSEY
+  VILLAGE'` accounts *only when they're absent from jur_value
+  entirely*. Parcels that DO appear in jur_value with a different
+  tax_district are still treated as non-JV (authoritative signal).
+  Don't widen the fallback to all JV-addressed parcels — that'd sweep
+  in unincorporated Harris County parcels with a JV mailing address.
+- **§23.23 homestead = `exempt_cat='RES'`** in `jur_exempt.txt`. Other
+  exempt categories (TOT, OV65, VTX, etc.) don't trigger the 10% cap
+  on their own. If HCAD introduces a new homestead category code in a
+  future year, update `load.py`'s `homestead_accounts` CTE.
+- **Methods-differ is a directional flip only.** `findings.py`'s
+  `raw_color` applies the same bucket thresholds to `raw_over_pct`,
+  but `mapdata.py` and `reports_data.py` only set `dis=1` when the
+  per-sqft and raw colors straddle the file-vs-skip line (red/yellow
+  vs green/purple). Minor same-side flips (red↔yellow or green↔purple)
+  don't fire — they'd add noise without changing the homeowner's
+  decision. Don't loosen this to "any bucket difference" — 44% of the
+  map disagrees at that level.
 - **Axis-order trap in DuckDB spatial.** After `st_transform(..., 'EPSG:2278',
   'EPSG:4326')`, `st_x()` returns the latitude and `st_y()` returns the
   longitude (DuckDB honors EPSG:4326's published lat-first axis order).
