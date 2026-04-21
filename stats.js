@@ -160,23 +160,14 @@ function renderStats(parcels) {
   $("hero-total").textContent = fmtMillions(total);
   $("hero-count").textContent = fmtInt(parcels.length);
 
-  // Trio of secondary headline stats.
+  // Pair of secondary headline stats:
   //   #1 — combined over-assessment: sum of (v − fair) across red+yellow
-  //   #2 — average over-assessment for a red-bucket ("strong case") home
   //   #3 — median year-over-year appraisal change across all parcels
   const fileable = parcels.filter((p) =>
     (p.c === "red" || p.c === "yellow") && p.v != null && p.fair != null
   );
   const combinedGap = fileable.reduce((s, p) => s + (p.v - p.fair), 0);
   $("stat-combined").textContent = fmtMillions(combinedGap);
-
-  // Median, not mean — the red-home gap distribution is right-skewed
-  // by a handful of luxury-home outliers (one $1.3M parcel alone adds
-  // >$1k/parcel to the mean). Median gives "typical red home" what the
-  // caption actually promises.
-  const reds = parcels.filter((p) => p.c === "red" && p.v != null && p.fair != null);
-  const medianRedGap = median(reds.map((p) => p.v - p.fair));
-  $("stat-avg-red").textContent = fmtMoney(medianRedGap);
 
   const yoys = parcels.map((p) => p.yoy).filter((y) => y != null);
   $("stat-yoy").textContent = fmtPct(median(yoys), 1);

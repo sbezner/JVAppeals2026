@@ -814,12 +814,13 @@ body.stats-page {
 }
 .stats-hero-label b { color: var(--ink); font-weight: 600; }
 
-/* Sub-hero trio — three equal-weight stat cards sitting under the
-   hero number. Desktop: 3 columns. Mobile: stacked single column.
-   Each card is one big number + one muted caption. */
+/* Sub-hero row — secondary stat cards sitting under the hero number.
+   Desktop: equal columns (auto-fit lets the row flex if the card count
+   changes). Mobile: stacked single column. Each card is one big number
+   + one muted caption. */
 .stats-trio {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   margin: 0 0 28px;
 }
