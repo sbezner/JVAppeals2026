@@ -225,7 +225,8 @@ main { flex: 1; position: relative; }
 .locate-control.loading .locate-btn svg { animation: locate-pulse 1s ease-in-out infinite; }
 @keyframes locate-pulse { 50% { opacity: 0.35; } }
 
-.locate-toast {
+.locate-toast,
+.hcad-toast {
   position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%);
   z-index: 2000; max-width: calc(100vw - 32px);
   padding: 10px 14px;
@@ -515,6 +516,21 @@ body.report-page { background: var(--bg); }
   padding: 6px 10px; border-bottom: 1px solid var(--rule);
 }
 .report table.comps td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* HCAD account links in the comp table — clicking copies the account
+   number to the clipboard and opens HCAD's search page in a new tab.
+   Subtle blue treatment so the table doesn't look like a wall of
+   underlines. */
+.report .hcad-link {
+  color: #1b6fe6;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.report .hcad-link:hover { text-decoration: underline; }
+.report .hcad-arrow { color: var(--mute); font-size: 10px; }
+.report .subject-row .hcad-link { color: #1b6fe6; }
+
 .report table.comps .subject-row td {
   background: #FFF7E6; font-weight: 600;
 }
@@ -797,6 +813,11 @@ body.report-page { background: var(--bg); }
     background: #fff; border: 2px solid #000; border-left-width: 4px;
     color: #000;
   }
+  /* HCAD links: render as plain account numbers on paper — no color, no
+     arrow icon, no underline. The whole "open HCAD" interaction is
+     screen-only. */
+  .report .hcad-link { color: #000 !important; text-decoration: none !important; }
+  .report .hcad-arrow { display: none; }
   a { color: #000; text-decoration: none; }
   @page { margin: 0.75in; }
 }

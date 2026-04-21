@@ -126,13 +126,27 @@ function renderBottomLine(p) {
     capNote;
 }
 
+function hcadCell(account) {
+  // Click → copy account to clipboard + open HCAD search in new tab.
+  // Anchor's native href + target="_blank" handles opening; the click
+  // listener (wired in boot()) handles the clipboard copy + toast.
+  const acct = escape(account);
+  return (
+    `<a class="hcad-link" href="https://search.hcad.org/" ` +
+    `target="_blank" rel="noopener" data-account="${acct}" ` +
+    `title="Open HCAD search — your account number will be copied to the clipboard so you can paste it">` +
+      `${acct}<span class="hcad-arrow" aria-hidden="true">&nbsp;&#8599;</span>` +
+    `</a>`
+  );
+}
+
 function renderComps(p) {
   const body = $("comps-body");
   const foot = $("comps-foot");
   // Subject row.
   const subjectRow = `<tr class="subject-row">
     <td>Subject</td>
-    <td>${escape(p.a)}</td>
+    <td>${hcadCell(p.a)}</td>
     <td class="num">${fmtInt(p.sqft)}</td>
     <td class="num">${escape(p.year)}</td>
     <td>${escape(p.grade)}</td>
@@ -142,7 +156,7 @@ function renderComps(p) {
   // Comp rows.
   const compRows = p.comps.map((c, i) => `<tr>
     <td>${i + 1}</td>
-    <td>${escape(c.a)}</td>
+    <td>${hcadCell(c.a)}</td>
     <td class="num">${fmtInt(c.sqft)}</td>
     <td class="num">${escape(c.year)}</td>
     <td>${escape(c.grade)}</td>
@@ -454,7 +468,42 @@ function renderReport(p) {
   $("report").hidden = false;
 }
 
+// Click any HCAD account in the comp table → copy that account number to
+// the clipboard so the user can paste it into HCAD's search box. The
+// anchor's native href + target="_blank" still opens https://search.hcad.org/
+// in a new tab; we just ride along on the same click.
+function showHcadToast(msg) {
+  const existing = document.querySelector(".hcad-toast");
+  if (existing) existing.remove();
+  const t = document.createElement("div");
+  t.className = "hcad-toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function wireHcadLinks() {
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest(".hcad-link");
+    if (!link) return;
+    const acct = link.dataset.account;
+    if (!acct) return;
+    // Best-effort copy; if the API isn't available or the user denies
+    // permission, fall back to a toast that just shows the account so
+    // they can copy it manually.
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(acct).then(
+        () => showHcadToast(`Account ${acct} copied — paste it into HCAD's search box.`),
+        () => showHcadToast(`Account ${acct} — copy this and paste into HCAD's search box.`)
+      );
+    } else {
+      showHcadToast(`Account ${acct} — copy this and paste into HCAD's search box.`);
+    }
+  });
+}
+
 async function boot() {
+  wireHcadLinks();
   const params = new URLSearchParams(window.location.search);
   const acct = (params.get("a") || "").trim();
   if (!acct) {
