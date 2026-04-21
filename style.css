@@ -511,6 +511,45 @@ body.report-page { background: var(--bg); }
 .report table.facts .psf-inline {
   color: var(--mute); font-weight: 400; font-size: 12px;
 }
+/* Year-over-year row inside the facts table. Neutral styling — we
+   don't red/green it because "up" isn't always bad for the homeowner
+   (e.g., an under-assessed home moving toward fair). */
+.report table.facts .yoy-delta {
+  font-variant-numeric: tabular-nums;
+}
+.report table.facts .yoy-amounts {
+  color: var(--mute); font-weight: 400; font-size: 12px;
+  margin-left: 6px; font-variant-numeric: tabular-nums;
+}
+
+/* "What This Tool Doesn't Adjust For" — muted informational section
+   near the end of Page 1. Cool-gray left border to echo the other
+   secondary sections (info-relative, purple-warning, cap-caveat)
+   without shouting. */
+.report .limits-section {
+  margin-top: 24px;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border-left: 3px solid #c3cad2;
+  border-radius: 4px;
+}
+.report .limits-section h2 {
+  margin-top: 0;
+  font-size: 14px;
+}
+.report .limits-section p {
+  margin: 8px 0;
+  font-size: 13px; line-height: 1.55;
+}
+.report .limits-list {
+  padding-left: 22px;
+  margin: 10px 0;
+}
+.report .limits-list li {
+  margin: 6px 0;
+  font-size: 13px; line-height: 1.5;
+}
+.report .limits-list b { color: var(--ink); }
 .report table.comps tbody td,
 .report table.comps tfoot td {
   padding: 6px 10px; border-bottom: 1px solid var(--rule);
@@ -1054,6 +1093,10 @@ ul.stats-notable li:last-child { border-bottom: none; }
      screen-only. */
   .report .hcad-link { color: #000 !important; text-decoration: none !important; }
   .report .hcad-arrow { display: none; }
+  .report .limits-section {
+    background: #fff; border-left: 2px solid #000;
+    page-break-inside: avoid;
+  }
   /* Distribution chart in B&W — keep bars distinguishable as grays
      (darker = more extreme bucket). */
   .chart-bar-red    { fill: #333 !important; }

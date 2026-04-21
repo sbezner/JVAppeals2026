@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>2026 HCAD Appeal Report</title>
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body class="report-page">
 
@@ -110,6 +110,53 @@
         parcel's building permits and the HCAD improvement records on
         <a href="https://hcad.org" target="_blank" rel="noopener">hcad.org</a>
         before claiming the cap at the hearing.
+      </p>
+    </section>
+
+    <section class="limits-section">
+      <h2>What This Tool Doesn't Adjust For</h2>
+      <p>
+        The per-sqft median test above treats every comp as equivalent
+        to your home after matching on neighborhood code, HCAD grade,
+        living area (&plusmn;15%), and year built (&plusmn;10). It
+        does <b>not</b> adjust for the following, and any of them can
+        change whether your appraisal is really unequal:
+      </p>
+      <ul class="limits-list">
+        <li><b>Lot size.</b> HCAD values land separately from
+          improvements. An oversize lot adds appraised value that the
+          per-sqft comparison cannot normalize.</li>
+        <li><b>Pools, covered patios, detached garages, workshops.</b>
+          These appear in HCAD's total appraised value but live in
+          separate building records; the tool's $/sqft denominator
+          uses only your main dwelling.</li>
+        <li><b>Accessory dwellings</b> (garage apartments, mother-in-law
+          suites, casitas). Their value is included in your total
+          appraisal but their square footage is <em>not</em> in the
+          per-sqft denominator, so the ratio is inflated compared to
+          neighbors without one.</li>
+        <li><b>Condition and age-of-systems.</b> HCAD has a CDU rating
+          (condition / desirability / utility) but it isn't in the
+          public download. A home with a 25-year-old roof, failing
+          HVAC, or foundation issues is objectively worth less than
+          a comp in move-in condition &mdash; argue this at the
+          hearing with photos and estimates.</li>
+        <li><b>Recent renovations.</b> Fresh kitchens, additions, and
+          major remodels add value HCAD may not have captured yet; the
+          reverse is true too (deferred maintenance is invisible to
+          the district).</li>
+        <li><b>Flood history.</b> Post-Harvey and post-Imelda damage,
+          even when fully repaired, legitimately depresses market
+          value. Not in HCAD's data.</li>
+      </ul>
+      <p>
+        Before filing, open your 5 comps on
+        <a href="https://search.hcad.org/" target="_blank" rel="noopener">search.hcad.org</a>
+        (the account numbers above are click-to-copy) and compare
+        lot size, features, and condition against your own. If a comp
+        has significant extras yours doesn't, that's a legitimate
+        reason for HCAD's appraiser to defend the gap &mdash; know
+        it before walking into the hearing, not during.
       </p>
     </section>
   </section>
@@ -245,6 +292,6 @@
   <p><a href="index.html">&larr; Back to the map</a></p>
 </div>
 
-<script src="report.js?v=8"></script>
+<script src="report.js?v=9"></script>
 </body>
 </html>

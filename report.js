@@ -59,24 +59,42 @@ function showError(msg) {
 }
 
 function renderFacts(p) {
-  const addr = `${p.d || ""}${p.z ? `, Jersey Village, TX ${p.z}` : ", Jersey Village, TX"}`;
+  const addr = p.d
+    ? `${escape(p.d)}${p.z ? `, Jersey Village, TX ${escape(p.z)}` : ", Jersey Village, TX"}`
+    : "Jersey Village, TX";
   const appraisedCell = p.v != null && p.psf != null
     ? `${fmtMoney(p.v)} <span class="psf-inline">(${fmtPsf(p.psf)}/sqft)</span>`
     : fmtMoney(p.v);
+
+  // Each row is [label, already-HTML-safe content]. Caller is
+  // responsible for escape() when mixing user data in.
   const rows = [
-    ["HCAD Account", p.a],
+    ["HCAD Account", escape(p.a || "")],
     ["Site Address", addr],
     ["Living Area", p.sqft != null ? `${fmtInt(p.sqft)} sqft` : ""],
-    ["Year Built", p.year != null ? String(p.year) : ""],
-    ["Grade / Class", p.grade || ""],
-    ["Neighborhood Code", p.nbhd || ""],
+    ["Year Built", p.year != null ? escape(String(p.year)) : ""],
+    ["Grade / Class", escape(p.grade || "")],
+    ["Neighborhood Code", escape(p.nbhd || "")],
     ["2026 Appraised Value", appraisedCell],
   ];
+
+  // Year-over-year row. Present only when HCAD posted a prior-year
+  // value — skipped for new construction, mid-year splits, and data
+  // gaps. Muted styling; no red/green coloring because "up is bad"
+  // isn't always true (under-assessed homes moving toward fair is
+  // actually fine).
+  if (p.v != null && p.prior_v != null && p.prior_v > 0) {
+    const delta = ((p.v - p.prior_v) / p.prior_v) * 100;
+    const sign = delta >= 0 ? "+" : "";
+    rows.push([
+      "2025 &rarr; 2026 Change",
+      `<b class="yoy-delta">${sign}${delta.toFixed(1)}%</b>` +
+      `<span class="yoy-amounts">(${fmtMoney(p.prior_v)} &rarr; ${fmtMoney(p.v)})</span>`,
+    ]);
+  }
+
   $("facts-body").innerHTML = rows
-    .map(([k, v], i) =>
-      `<tr><th scope="row">${escape(k)}</th>` +
-      // Last row uses innerHTML for the inline psf span; others are text.
-      `<td>${i === rows.length - 1 ? v : escape(v)}</td></tr>`)
+    .map(([k, v]) => `<tr><th scope="row">${k}</th><td>${v}</td></tr>`)
     .join("");
 }
 

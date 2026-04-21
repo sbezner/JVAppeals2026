@@ -2,12 +2,49 @@
 
 Features under consideration for JVAppeals2026. Ranked by real impact on
 whether a Jersey Village homeowner wins their property tax appeal.
-Originally drafted 2026-04-20; last updated 2026-04-21 after the
-/stats.html launch (community-scale snapshot + distribution histogram).
+Originally drafted 2026-04-20; last updated 2026-04-21 after adding the
+"what this tool doesn't adjust for" caveat block + year-over-year row,
+and moving the tax-savings estimator to Out of Scope on liability grounds.
 
 ---
 
 ## ✅ Shipped
+
+### "What this tool doesn't adjust for" caveat block (2026-04-21)
+
+Dedicated section on Page 1 of every report, right after the
+comp table / methodology note / §23.23 cap ground. Lists the things
+the per-sqft test is blind to: lot size, pool, covered patios,
+detached garages/workshops, accessory dwellings (garage apartments /
+MILs), condition + age-of-systems, recent renovations, flood
+history. Each item has one sentence explaining *why* the tool can't
+see it. Ends with a call to open the comps on
+`search.hcad.org` and compare features before filing.
+
+Prompted by real user feedback — a neighbor wrote in asking whether
+the tool accounts for their oversize lot, two covered areas, and
+accessory apartment. The answer for all three was no; rather than
+reply one-off to every DM that raises this, the report now says it
+in writing. Matches the site's "here's what we can and can't see"
+ethos.
+
+Static HTML — no JS wiring, no data dependency, renders identically
+for every parcel.
+
+### Year-over-year trend row in the facts table (2026-04-21)
+
+New row at the bottom of the Page 1 facts table for any parcel with
+a 2025 appraisal on file: *"2025 → 2026 Change: +14.3% ($376,000 →
+$430,337)"*. Pulled from the `prior_v` field already loaded for the
+§23.23 cap detection — no pipeline change, no data re-emit.
+
+Neutral styling (no red/green tinting). Rationale: "appraisal went
+up" isn't always bad news (an under-assessed home moving toward fair
+is actually fine), and coloring the number editorializes something
+the facts table is supposed to just report.
+
+Omitted when HCAD has no prior-year value (new construction,
+mid-year splits, data gaps).
 
 ### Stats page — /stats.html (2026-04-21, commit af0f70e, iterated through 39b152b)
 
@@ -162,38 +199,6 @@ standing rule for future sessions. Currently at `v=10`.
 
 ## Tier 1 — High leverage (ship these first)
 
-### #2 Tax-savings estimator ⭐ next pick
-
-Turn *"+7% over"* into *"**~$840/year in tax savings if you win.**"*
-
-Jersey Village's combined effective tax rate is ~2.8% (city +
-Cy-Fair ISD + Harris County + HCFCD + HCCS). Multiply that by the gap
-dollar amount on the report.
-
-**Why:** This is the line homeowners print out and show their spouse
-to justify the 90 minutes they'll spend filing. Converts abstract
-percentage to concrete motivation.
-
-**Work:** One extra line in the bottom banner and Page 1 summary.
-Pure string formatting — no pipeline change. ~1 hour.
-
----
-
-### #3 Year-over-year appraisal trend
-
-`prior_tot_appr_val` is already loaded (we use it for the cap check).
-Show a line on the facts table: *"HCAD raised your appraisal 14.3%
-this year, from $376,000 to $430,337."*
-
-**Why:** Not itself a §41.43(b)(3) argument, but it's context ARB
-panelists notice. Combined with the homestead cap, it's actionable.
-
-**Work:** Add `prior_v` already in `reports.json`. Just add a row to
-the facts table in `report.js`; one sentence in the bottom line when
-delta > +10%. ~30 min.
-
----
-
 ### #4 Condition-adjustment worksheet
 
 The statute allows *"appropriately adjusted"* comps. A simple
@@ -347,12 +352,14 @@ discipline about snapshotting per year.
 - **Google Analytics.** Contradicts the neighbor-project spirit
   (aggressive tracking, cookies, ads). Cloudflare Web Analytics covers
   the legitimate use case.
-
----
-
-## Top pick
-
-**#2 — Tax-savings estimator.** Cheapest of the Tier 1 items, and the
-line that converts a casual "eh, 7% over median" into "this is worth
-90 minutes of my life to file." Strongest motivation-multiplier per
-hour of engineering work.
+- **Tax-savings estimator** (previously Tier 1 #2). Would multiply
+  the appraisal–median gap by Jersey Village's ~2.8% combined
+  effective tax rate to project "if you win, you save ~$X/year."
+  Killed on liability grounds: the site's whole positioning is
+  *"not legal advice, built by a neighbor, no guarantees."* A
+  projected dollar savings invites "your tool said I'd save $1,280
+  and I didn't — refund me" complaints from homeowners whose
+  protests don't win, which compromises the project's legal
+  posture. The comp-table's existing "Over-assessment $X (+Y%)"
+  row already anchors the magnitude without projecting a
+  homeowner-specific outcome.
