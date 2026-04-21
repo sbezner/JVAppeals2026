@@ -77,11 +77,16 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 .intro-nudge:hover { text-decoration: underline; }
 
 .info-popover {
-  position: fixed; top: 52px; right: 16px; z-index: 1002;
+  position: fixed; top: 52px; right: 16px; bottom: 16px; z-index: 1002;
   max-width: 420px; padding: 18px 20px;
   background: #fff; border: 1px solid var(--rule); border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.10);
   font-size: 13px; line-height: 1.55; color: var(--ink);
+  /* Cap to the viewport and let content scroll when it overflows. Without
+     this, long popovers get clipped on small screens with no way to reach
+     the bottom (mobile Safari, in particular). */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .info-popover section { margin-bottom: 14px; }
 .info-popover section + section { padding-top: 14px; border-top: 1px solid var(--rule); }
@@ -162,6 +167,7 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
   .info-popover {
     top: 92px;
     right: 8px; left: 8px;
+    bottom: 8px;
     max-width: none;
   }
 }
