@@ -814,6 +814,35 @@ body.stats-page {
 }
 .stats-hero-label b { color: var(--ink); font-weight: 600; }
 
+/* Sub-hero trio — three equal-weight stat cards sitting under the
+   hero number. Desktop: 3 columns. Mobile: stacked single column.
+   Each card is one big number + one muted caption. */
+.stats-trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0 0 28px;
+}
+.stats-trio .stat-card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 16px 14px;
+  text-align: center;
+}
+.stats-trio .stat-big {
+  font-size: 26px; font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+.stats-trio .stat-caption {
+  font-size: 12px; color: var(--mute);
+  line-height: 1.4;
+}
+
 .stats-container h2 {
   font-size: 15px; font-weight: 600;
   margin: 28px 0 10px;
@@ -895,6 +924,8 @@ ul.stats-notable li:last-child { border-bottom: none; }
   .stats-title { font-size: 17px; }
   .stats-hero { padding: 24px 16px; }
   .stats-hero-number { font-size: 34px; }
+  .stats-trio { grid-template-columns: 1fr; gap: 8px; }
+  .stats-trio .stat-big { font-size: 22px; }
   .stats-container { padding: 20px 14px 32px; }
   table.stats-buckets { font-size: 13px; }
 }
