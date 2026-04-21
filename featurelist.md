@@ -3,12 +3,43 @@
 Features under consideration for JVAppeals2026. Ranked by real impact on
 whether a Jersey Village homeowner wins their property tax appeal.
 Originally drafted 2026-04-20; last updated 2026-04-21 after the
-locate-me / per-sqft / purple-bucket / verdict-banner / legend-overlay /
-HCAD-links session.
+/stats.html launch (community-scale snapshot + distribution histogram).
 
 ---
 
 ## ✅ Shipped
+
+### Stats page — /stats.html (2026-04-21, commit af0f70e, iterated through 39b152b)
+
+A dedicated community-scale readout at `jvtaxappeal.com/stats.html`.
+Not a homeowner tool — a JV-wide snapshot for Nextdoor / Facebook
+browsers and for map users looking for context ("am I unusual?").
+Advocacy-light tone: neutral headline, data does the talking.
+
+Page structure:
+- Hero: $900M total HCAD 2026 appraised value across 2,172 parcels.
+- Secondary trio: combined red+yellow appraisal–median gap ($40M)
+  and city-wide median year-over-year appraisal change (+1.5%).
+- Distribution histogram: inline SVG, 2.5%-wide bins across the full
+  over-% range, bars tinted by bucket, dashed cutoff lines at
+  −5% / +2% / +7%, dotted median marker at −0.2%. Zero chart-library
+  dependencies; ~80 lines of vanilla JS emitting `<rect>`s + axis text.
+- Bucket ladder: 5 rows matching the map-overlay legend.
+- "Also on the map": 23 possible §23.23 cap claims (1% of homesteaded),
+  449 methods-differ flags (21% of parcels).
+- Methodology paragraph linking to CLAUDE.md + aggregate-figures-only
+  / not-legal-advice disclaimer.
+
+Implementation is client-side only. `stats.js` fetches
+`data/reports.json` (the lazy-loaded full dataset that feeds
+report.html — already browser-cached for returning visitors) and
+computes every number on load. No pipeline changes, no new data file;
+numbers auto-refresh whenever `reports.json` is regenerated.
+
+Linked from the footer of `index.html` and Page 2 of every
+`report.html` as "Jersey Village by the numbers". Print mode strips
+link styling so the phrase reads as plain text on paper — natural
+share attribution when a printed report makes its way around.
 
 ### HCAD account click-to-verify (2026-04-21, commit dbad1e0)
 
@@ -257,15 +288,6 @@ map".
 
 "Show only red" toggle on the map. A neighbor can text a block's-worth
 of red pins to each other.
-
-### #8 Stats page (`/stats.html`)
-
-Community-impact numbers: "Out of 2,172 JV parcels, 529 are
-over-assessed by more than 7%. Median over-assessment is X%. If every
-red homeowner filed and won, the total property-tax savings for JV
-would be $Y million/year." Plus cap-violation count, methods-differ
-count, etc. A Nextdoor-share and local-media hook, not a homeowner
-tool.
 
 ### #9 First-visit onboarding tour
 

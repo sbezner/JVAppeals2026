@@ -21,6 +21,12 @@ client-rendered §41.43(b)(3) HCAD appeal report behind every pin.
   the playbook (May 15 deadline, iFile steps, hearing script,
   rebuttals, §42.26 escalation, disclaimer). Fully printable; share by
   URL.
+- **Community snapshot** at
+  [`stats.html`](https://jvtaxappeal.com/stats.html) — JV-wide
+  aggregate numbers (total appraised value, combined over-assessment
+  gap, median year-over-year change, bucket distribution, cap-violation
+  count) plus an inline-SVG histogram of every parcel's over-%.
+  Client-side only; no pipeline changes required for updates.
 
 ## How it's built
 
@@ -77,6 +83,7 @@ git add data/ && git commit -m "Regenerate parcel data" && git push
 ```
 index.html, main.js, style.css    Leaflet map + search UI
 report.html, report.js            two-page appeal report template
+stats.html, stats.js              /stats.html community snapshot + histogram
 data/parcels.json                 map pins + flags
 data/reports.json                 per-parcel report data (lazy-loaded)
 pipeline/                         Python pipeline modules
@@ -85,6 +92,7 @@ pipeline/                         Python pipeline modules
   reports_data.py                   emits data/reports.json
   mapdata.py                        emits data/parcels.json
   download.py                       HCAD file check
+CNAME                             GitHub Pages custom-domain pointer (jvtaxappeal.com)
 featurelist.md                    backlog of features under consideration
 CLAUDE.md                         deeper design notes + runbook
 hcad_raw/                         (gitignored) your HCAD source files
