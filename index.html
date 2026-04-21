@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""/>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <header>
@@ -46,12 +46,33 @@
         neighbors are appraised low, your "fair" value will look low too.
       </p>
     </section>
+    <section id="info-badges">
+      <h3>What the badges mean</h3>
+      <ul>
+        <li>
+          <span class="dot ring-cap" aria-hidden="true"></span>
+          <strong>Orange ring</strong> around a pin — a homesteaded home
+          where HCAD's 2026 appraisal jumped more than 10% over 2025.
+          That triggers a possible
+          <a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.23.htm" target="_blank" rel="noopener">Tex. Tax Code §23.23</a>
+          homestead-cap claim, separate from the per-sqft test and often
+          worth thousands in taxable-value reduction. The report shows
+          both grounds when both apply.
+        </li>
+        <li>
+          <span class="badge-tag" aria-hidden="true">methods differ</span>
+          The per-sqft test and the raw-dollar test land in different
+          buckets (one says file, the other says skip). Read the report's
+          methodology note before deciding.
+        </li>
+      </ul>
+    </section>
     <section id="info-howto">
       <h3>How to use this site</h3>
       <ol>
         <li>Find your home — type the address or HCAD account in the search box above, or pan/zoom the map.</li>
         <li>Click (or hover, when zoomed in past block level) on any pin to see the over-assessment percentage and open the popup.</li>
-        <li>Click <b>View report</b> in the popup to open the full report. It has your parcel's facts, 5 comparable homes, the median, and the §41.43(b)(3) grounds paragraph — plus a Page 2 playbook with the May&nbsp;15 deadline, iFile steps, and a hearing script to read aloud. Print it from the browser to bring to the ARB.</li>
+        <li>Click <b>View report</b> in the popup. The report opens with a <b>FILE / DON'T FILE</b> verdict at the top, then your parcel's facts, 5 comparable homes (shown on both per-sqft <em>and</em> raw-dollar bases), and the §41.43(b)(3) grounds — plus a separate §23.23 homestead-cap claim if your appraisal jumped more than 10% over last year. Page 2 has the May&nbsp;15 deadline, iFile steps, and a hearing script you can print for the ARB.</li>
         <li>For <span class="dot gray"></span> pins (no comparable properties matched), the report still opens but with a "review manually" notice — you'll need to hand-pick comps on hcad.org before filing.</li>
       </ol>
     </section>
