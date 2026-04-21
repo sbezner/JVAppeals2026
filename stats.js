@@ -68,11 +68,13 @@ function renderStats(parcels) {
   const combinedGap = fileable.reduce((s, p) => s + (p.v - p.fair), 0);
   $("stat-combined").textContent = fmtMillions(combinedGap);
 
+  // Median, not mean — the red-home gap distribution is right-skewed
+  // by a handful of luxury-home outliers (one $1.3M parcel alone adds
+  // >$1k/parcel to the mean). Median gives "typical red home" what the
+  // caption actually promises.
   const reds = parcels.filter((p) => p.c === "red" && p.v != null && p.fair != null);
-  const avgRedGap = reds.length
-    ? reds.reduce((s, p) => s + (p.v - p.fair), 0) / reds.length
-    : null;
-  $("stat-avg-red").textContent = fmtMoney(avgRedGap);
+  const medianRedGap = median(reds.map((p) => p.v - p.fair));
+  $("stat-avg-red").textContent = fmtMoney(medianRedGap);
 
   const yoys = parcels.map((p) => p.yoy).filter((y) => y != null);
   $("stat-yoy").textContent = fmtPct(median(yoys), 1);
