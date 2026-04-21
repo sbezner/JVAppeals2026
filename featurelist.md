@@ -115,6 +115,32 @@ the comp table. ~half day.
 
 ## Tier 2 — Nice-to-haves (low effort, modest impact)
 
+### Social-media preview cards (Open Graph tags)
+
+When `jvtaxappeal.com` gets shared — on Facebook, iMessage, Slack, X,
+Nextdoor — the link currently unfurls as a naked URL with no preview.
+Posts with rich preview cards get roughly 2× the click-through of
+bare links.
+
+Four `<meta>` tags in `index.html` (duplicated in `report.html`) plus
+a 1200×630 PNG screenshot of the map committed to the repo root:
+
+- `og:title` — "Jersey Village 2026 HCAD Appeals"
+- `og:description` — one sentence: "Check your 2026 HCAD appraisal
+  and see if you have a §41.43(b)(3) case in one click."
+- `og:image` — a screenshot of the map with colored pins
+- `og:url` — canonical URL
+- `twitter:card` pair for X/Twitter previews
+
+**Why:** Time-sensitive for the neighborhood-FB launch. After the
+initial post, every re-share still benefits. Affects reach, not
+homeowner outcome — which is why it sits in Tier 2 rather than Tier 1.
+
+**Work:** ~30 minutes. Half of it is capturing and cropping a
+screenshot of the map to the 1200×630 spec.
+
+---
+
 ### #5 PWA / Add to Home Screen
 
 Make the site installable on phones (icon on home screen, splash
