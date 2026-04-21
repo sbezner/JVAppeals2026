@@ -2,12 +2,38 @@
 
 Features under consideration for JVAppeals2026. Ranked by real impact on
 whether a Jersey Village homeowner wins their property tax appeal.
-Originally drafted 2026-04-20; last updated 2026-04-20 after the
-homestead-cap / raw-dollar / methods-differ release.
+Originally drafted 2026-04-20; last updated 2026-04-21 after the
+locate-me / per-sqft / purple-bucket / verdict-banner / legend-overlay /
+HCAD-links session.
 
 ---
 
 ## ✅ Shipped
+
+### HCAD account click-to-verify (2026-04-21, commit dbad1e0)
+
+Every account number in the comp table (subject row + all 5 comps) is
+now a blue anchor with a ↗ icon. Click it and the account copies to
+the clipboard while `https://search.hcad.org/` opens in a new tab;
+the homeowner pastes and verifies the comp in two taps. Pre-empts the
+"are these really my comps?" pushback. HCAD's new search is
+session-URL-only (URL hash decodes to timestamp + token + offset, no
+account), so deep-linking to a parcel detail page isn't possible —
+copy-and-paste is the durable path. Print mode renders accounts as
+plain black text with no underline or arrow.
+
+### Info-popover badges + scrollable-on-mobile (2026-04-21, commits 99e7b8a, efadfec)
+
+The "?" popover now documents two signals the map had added without
+explanation: the orange ring around a pin (§23.23 homestead-cap claim
+available) and the "methods differ" tag (per-sqft and raw-dollar tests
+disagree). Each has a visual example matching the actual map pin and
+popup tag. Also rewrote step 3 of the how-to to describe the report
+as it actually is — FILE/DON'T FILE verdict banner, dual per-sqft +
+raw-dollar comp display, separate §23.23 ground when applicable.
+Separately, the popover got `max-height` + `overflow-y: auto` so
+mobile users can reach the bottom instead of having the new content
+clipped.
 
 ### §23.23 Homestead cap detection (2026-04-20, commit ac27938)
 
@@ -42,12 +68,64 @@ tax_district rows at all, silently dropping them from the map
 (including 15509 Jersey Dr). Fallback: postal `site_addr_2='JERSEY
 VILLAGE'` when no `jur_value` row exists. Net add: 59 parcels.
 
-### Site analytics
+### Verdict banner on the report (2026-04-19, commit 59d9ad1)
 
-Covered by Cloudflare Web Analytics (free, privacy-respecting, no
-beacon needed since the domain is already proxied). Page views,
-referrers, device mix, core web vitals — enough for this project's
-scale. Originally listed as Tier 3 #14; no code work required.
+Big FILE / Consider filing / Skip / DON'T FILE / Review manually
+banner on Page 1, right under the NOT-LEGAL-ADVICE notice. Tinted by
+bucket (red/yellow/green/purple/gray) with distinct copy per color.
+Homeowner gets the action decision above the fold before reading any
+numbers. Print mode flattens to B&W with a solid border so the
+banner still reads at the ARB hearing.
+
+### Map-overlay legend (2026-04-19, commits 5641b78, 68550d7)
+
+Bottom-left Leaflet control, always visible, with five color rows —
+File / Consider / Skip / Don't file / Review — that mirror the
+verdict banner's action verbs so the map and the report speak the
+same language. Plus a sixth row documenting the orange ring
+(homestead cap). Replaces the header-inline legend, which was 12px
+gray text and hidden entirely on mobile.
+
+### Purple under-assessed bucket + comp-spread CV badge (2026-04-19, commit 386b111)
+
+5th color for parcels more than 5% below their per-sqft median —
+explicit "do not file — the ARB can adjust values upward" warning
+with the dollar upside-risk quantified in the hearing script. Those
+583 parcels were previously in the green "skip — filing unlikely to
+change" bucket, which was silently misadvising the 246 most
+deeply-under-assessed homes. Comp-spread CV (`100 · stdev/mean of
+comp $/sqft`) surfaced as a "spread: tight / moderate / wide" pill
+next to the Median row so homeowners know how confident the median
+is (58% tight, 28% moderate, 10% wide, 4% very wide).
+
+### Per-sqft normalization (2026-04-19, commit f4c56f4)
+
+Comp comparison switched from raw appraised value to $/sqft
+(`median(comp_val / comp_living_area)`, implied fair value =
+`median_psf × subject_sqft`). Matches HCAD's own CAMA model and the
+Texas Comptroller's PVS uniformity audit, and removes the bias
+raw-dollar medians introduced when the subject sat at the edge of
+its sqft band. 2026 distribution shifted: red 581→529, yellow
+331→316, green 1165→1232. The new greens are parcels the raw-$
+method was wrongly flagging as over-assessed just because the
+subject was smaller than its comp basket average.
+
+### Locate-me map control (2026-04-19, commit 3230e50)
+
+Top-right Leaflet control button that uses `navigator.geolocation`
+to center the map on the user and drop a blue accuracy ring + dot.
+One tap and the surrounding parcels are right there — especially
+useful on mobile. Loading animation while geolocation resolves;
+error toast for permission-denied / timeout paths.
+
+### Cache-buster convention (2026-04-19, commit 32d7f19, plus every bump since)
+
+`index.html` and `report.html` reference local assets with a
+version query string — `style.css?v=N`, `main.js?v=N`,
+`report.js?v=N`. Whenever any of those three files changes, bump
+the integer so browsers fetch fresh on a normal refresh instead of
+serving a stale cached copy. Documented in CLAUDE.md §7 as a
+standing rule for future sessions. Currently at `v=10`.
 
 ---
 
@@ -141,6 +219,28 @@ screenshot of the map to the 1200×630 spec.
 
 ---
 
+### Site analytics
+
+Currently NOT collecting any data — the previous featurelist entry
+(now removed from Shipped) claimed Cloudflare Web Analytics was
+covered automatically. That only applies when the domain is
+orange-cloud-proxied through Cloudflare. `jvtaxappeal.com` is
+DNS-only (proxy off), which is required for GitHub Pages to
+provision its Let's Encrypt cert, so automatic mode doesn't apply.
+
+To enable: Cloudflare dashboard → Web Analytics → Add a site →
+`jvtaxappeal.com` → copy the `<script data-cf-beacon="...">` snippet
+Cloudflare generates → paste it just before `</body>` in
+`index.html` and `report.html` → bump cache-busters → commit.
+~10 minutes. Within ~30 min of enabling, the dashboard shows page
+views, referrers, device mix, country, and core-web-vitals.
+
+Alternatives if we ever want per-report-URL breakdowns: Plausible
+($9/mo, rich dashboard, privacy-respecting) or GoatCounter
+(free, open-source, lightweight).
+
+---
+
 ### #5 PWA / Add to Home Screen
 
 Make the site installable on phones (icon on home screen, splash
@@ -218,8 +318,8 @@ discipline about snapshotting per year.
   site doesn't do it either. The popup already reveals owner when you
   know the address; don't add the reverse lookup.
 - **AI-generated prose per parcel.** Shipped without it; the playbook
-  structure doesn't benefit from warmth. See
-  `memory/pipeline_three_phase_plan.md` for the full rationale.
+  structure doesn't benefit from warmth. See CLAUDE.md §7
+  ("Don't re-introduce AI prose generation") for the rationale.
 - **Per-parcel HTML or PDF files.** One template + one data file is
   the durable architecture. Don't undo that.
 - **Google Analytics.** Contradicts the neighbor-project spirit
