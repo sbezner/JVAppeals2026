@@ -567,6 +567,23 @@ body.report-page { background: var(--bg); }
 }
 .report .comps-map .comp-popup-addr:hover { text-decoration: underline; }
 
+/* Thin-basket caveat — appears above the comp table when fewer than
+   5 comps matched the §41.43(b)(3) filters. Info-blue left border
+   (informational, not a warning) to signal "honest limitation" rather
+   than "don't proceed." */
+.report .thin-basket-note {
+  margin: 10px 0 14px;
+  padding: 11px 15px;
+  background: #eff6ff;
+  border-left: 3px solid #1b6fe6;
+  border-radius: 4px;
+  font-size: 13px; line-height: 1.55;
+  color: var(--ink);
+}
+.report .thin-basket-note p { margin: 0; }
+.report .thin-basket-note b { color: var(--ink); }
+.report .thin-basket-note a { color: #1b6fe6; }
+
 /* "What This Tool Doesn't Adjust For" — muted informational section
    near the end of Page 1. Cool-gray left border to echo the other
    secondary sections (info-relative, purple-warning, cap-caveat)
@@ -1196,6 +1213,10 @@ ul.stats-notable li:last-child { border-bottom: none; }
   .report .hcad-link { color: #000 !important; text-decoration: none !important; }
   .report .hcad-arrow { display: none; }
   .report .limits-section {
+    background: #fff; border-left: 2px solid #000;
+    page-break-inside: avoid;
+  }
+  .report .thin-basket-note {
     background: #fff; border-left: 2px solid #000;
     page-break-inside: avoid;
   }

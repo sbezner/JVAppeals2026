@@ -218,6 +218,31 @@ function renderComps(p) {
     <tr class="summary ${gapClass}"><td colspan="6" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td></tr>
     ${altRows}
   `;
+
+  // Thin-basket caveat: 7% of JV parcels match fewer than 5 comps under
+  // the strict §41.43(b)(3) filter (same nbhd, same grade, ±15% sqft,
+  // ±10 yrs). The median is still valid on 1–4 data points but
+  // statistically noisier; flag it so the homeowner knows to hand-pick
+  // additional comparables before filing. Presentation-only — no
+  // verdict or number changes, safe under the May-15 freeze.
+  const thinNote = $("thin-basket-note");
+  if (thinNote) {
+    if (p.comps.length < 5) {
+      thinNote.innerHTML =
+        `<p><b>Only ${p.comps.length} of 5 standard comps matched</b> ` +
+        `this parcel's filters (same HCAD neighborhood, same grade, ` +
+        `&plusmn;15% living area, &plusmn;10 years of age). The per-sqft ` +
+        `median is still valid under &sect;41.43(b)(3), but with fewer ` +
+        `data points it is statistically less robust. Before filing, ` +
+        `open <a href="https://search.hcad.org/" target="_blank" rel="noopener">search.hcad.org</a> ` +
+        `and hand-pick 2&ndash;3 additional comparables that fit your ` +
+        `home to strengthen the basket.</p>`;
+      thinNote.hidden = false;
+    } else {
+      thinNote.hidden = true;
+      thinNote.innerHTML = "";
+    }
+  }
 }
 
 function capScriptHtml(p) {
