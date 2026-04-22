@@ -455,8 +455,16 @@ function renderCompsMap(p, parcelsByAccount) {
     iconSize: [24, 24],
     iconAnchor: [12, 12],
   });
+  // Match the comp-popup format so a viewer can compare apples-to-apples
+  // at the pin level: header row, sqft · $/sqft middle row, dollar value
+  // bottom row. The "(Your home)" label replaces the "Comp #N" tag.
+  const subjectPopup =
+    `<b>${escape(p.d || "Your home")}</b> <span class="map-popup-tag">(Your home)</span><br>` +
+    (p.sqft != null ? `${fmtInt(p.sqft)} sqft` : "") +
+    (p.psf != null ? ` &middot; ${fmtPsf(p.psf)}/sqft` : "") +
+    (p.v != null ? `<br>${fmtMoney(p.v)}` : "");
   L.marker(subject.ll, { icon: subjectIcon, zIndexOffset: 1000 })
-    .bindPopup(`<b>${escape(p.d || "Your home")}</b><br>Subject property`)
+    .bindPopup(subjectPopup)
     .addTo(map);
 
   // Numbered comp markers (1–5) matching the # column in the comp table.
