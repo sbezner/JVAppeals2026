@@ -212,6 +212,29 @@ methodology is frozen until after the May 15 filing deadline.*
 
 ## Tier 2 — Nice-to-haves (low effort, modest impact)
 
+### Sqft + $/sqft in the main-map popup
+
+Add a new row to the pin-popup (and the mobile bottom sheet) on the
+main map showing the parcel's living area and per-sqft appraisal,
+styled like the existing owner-name row. Makes the map directly
+useful for hand-picking comps on a gray parcel or sanity-checking
+the tool's automatic matches — a homeowner can scan neighboring
+pins and see which ones are in the right size/$/sqft ballpark
+without opening each report.
+
+**Data:** `parcels.json` currently carries `a, d, o, z, c, p, v, ll,
+cap, dis`; this feature needs `sqft` and `psf` added. One-line
+change to the SELECT in `pipeline/mapdata.py` (both fields are
+already in the findings table). Adds roughly 25KB to `parcels.json`
+(still under 60KB gzipped). Data emission only — no methodology
+change, no verdict change, safe under the May-15 freeze.
+
+**Work:** 15 min of code (mapdata.py + main.js popupHtml / sheetHtml
+string tweaks + graceful fallback when fields absent) + pipeline
+rerun on the Mac Mini + commit/push `data/parcels.json`. Deferred
+until next Mac session — no urgency and the feature is latent-safe
+if the code ships ahead of the data.
+
 ### Social-media preview cards (Open Graph tags)
 
 When `jvtaxappeal.com` gets shared — on Facebook, iMessage, Slack, X,
