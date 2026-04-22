@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>2026 HCAD Appeal Report</title>
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body class="report-page">
 
@@ -71,6 +74,15 @@
         <tbody id="comps-body"></tbody>
         <tfoot id="comps-foot"></tfoot>
       </table>
+    </section>
+
+    <section id="comps-map-section" class="comps-map-section" hidden>
+      <h2>Where the Comps Are</h2>
+      <p class="comps-map-intro">
+        Your home (highlighted) plus the 5 comparable homes, numbered
+        to match the table above. Click any pin for its address.
+      </p>
+      <div id="comps-map" class="comps-map"></div>
     </section>
 
     <section id="gray-notice" hidden>
@@ -292,6 +304,9 @@
   <p><a href="index.html">&larr; Back to the map</a></p>
 </div>
 
-<script src="report.js?v=9"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script src="report.js?v=10"></script>
 </body>
 </html>

@@ -522,6 +522,44 @@ body.report-page { background: var(--bg); }
   margin-left: 6px; font-variant-numeric: tabular-nums;
 }
 
+/* Mini-map of subject + 5 comps on Page 1. Visual-only; doesn't change
+   any number. Subject marker is gold-highlighted with a blue ring so
+   "your home" stands out; comp markers are small numbered circles that
+   cross-reference the # column in the comp table above. */
+.report .comps-map-section { margin-top: 24px; }
+.report .comps-map-section h2 { margin-bottom: 6px; }
+.report .comps-map-intro {
+  margin: 0 0 10px;
+  font-size: 13px; line-height: 1.5;
+  color: var(--mute);
+}
+.report .comps-map {
+  height: 260px;
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f4f6f8;
+}
+.report .comp-map-subject-marker { background: transparent; border: 0; }
+.report .comp-map-subject-marker .subject-dot {
+  display: block;
+  width: 22px; height: 22px;
+  background: #FFF7E6;
+  border: 3px solid #1b6fe6;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.report .comp-map-comp-marker { background: transparent; border: 0; }
+.report .comp-map-comp-marker .comp-num {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  background: #1b6fe6; color: #fff;
+  font-weight: 700; font-size: 12px;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30);
+}
+
 /* "What This Tool Doesn't Adjust For" — muted informational section
    near the end of Page 1. Cool-gray left border to echo the other
    secondary sections (info-relative, purple-warning, cap-caveat)
@@ -1096,6 +1134,14 @@ ul.stats-notable li:last-child { border-bottom: none; }
   .report .limits-section {
     background: #fff; border-left: 2px solid #000;
     page-break-inside: avoid;
+  }
+  /* Mini-map: hide the zoom control (useless on paper) but keep the
+     attribution as required by the tile provider's terms. The tiles
+     themselves rasterize fine on most browsers. */
+  .report .comps-map-section { page-break-inside: avoid; }
+  .report .comps-map .leaflet-control-zoom { display: none !important; }
+  .report .comps-map .leaflet-control-attribution {
+    font-size: 7pt; background: transparent; color: #666;
   }
   /* Distribution chart in B&W — keep bars distinguishable as grays
      (darker = more extreme bucket). */

@@ -420,7 +420,71 @@ function renderVerdictBanner(p) {
   banner.hidden = false;
 }
 
-function renderReport(p) {
+// Mini-map of the subject + 5 comps. Visual-only — doesn't change any
+// number on the report. Uses lat/lon from parcels.json (passed in as a
+// Map keyed by account) since reports.json doesn't carry coordinates.
+// Silently skipped when parcels.json is unavailable (graceful
+// degradation; the comp table is the authoritative record either way).
+function renderCompsMap(p, parcelsByAccount) {
+  if (!parcelsByAccount || !Array.isArray(p.comps) || p.comps.length === 0) return;
+  if (typeof L === "undefined") return; // Leaflet didn't load; skip.
+  const subject = parcelsByAccount.get(p.a);
+  if (!subject || !subject.ll) return;
+
+  const section = $("comps-map-section");
+  const container = $("comps-map");
+  if (!section || !container) return;
+  section.hidden = false;
+
+  const map = L.map(container, {
+    scrollWheelZoom: false,   // don't hijack page scroll on a long report
+    zoomControl: true,
+    attributionControl: true,
+  });
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 19,
+    subdomains: "abcd",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  }).addTo(map);
+
+  // Subject marker — gold-highlighted circle with a bold blue ring, so
+  // "your home" reads immediately against the numbered comps.
+  const subjectIcon = L.divIcon({
+    className: "comp-map-subject-marker",
+    html: '<span class="subject-dot"></span>',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+  L.marker(subject.ll, { icon: subjectIcon, zIndexOffset: 1000 })
+    .bindPopup(`<b>${escape(p.d || "Your home")}</b><br>Subject property`)
+    .addTo(map);
+
+  // Numbered comp markers (1–5) matching the # column in the comp table.
+  const points = [subject.ll];
+  p.comps.forEach((c, i) => {
+    const cp = parcelsByAccount.get(c.a);
+    if (!cp || !cp.ll) return;
+    const icon = L.divIcon({
+      className: "comp-map-comp-marker",
+      html: `<span class="comp-num">${i + 1}</span>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    });
+    const popup =
+      `<b>${escape(cp.d || c.a)}</b><br>` +
+      `Comp #${i + 1}${c.sqft ? ` &middot; ${fmtInt(c.sqft)} sqft` : ""}` +
+      (c.psf != null ? ` &middot; ${fmtPsf(c.psf)}/sqft` : "") +
+      (c.v != null ? `<br>${fmtMoney(c.v)}` : "");
+    L.marker(cp.ll, { icon }).bindPopup(popup).addTo(map);
+    points.push(cp.ll);
+  });
+
+  // Fit to all 6 points (or however many we could resolve) with padding
+  // so nothing sits on the edge.
+  map.fitBounds(L.latLngBounds(points), { padding: [24, 24], maxZoom: 17 });
+}
+
+function renderReport(p, parcelsByAccount) {
   const addrLine = p.d
     ? `${p.d}, Jersey Village, TX — HCAD ${p.a}`
     : `HCAD ${p.a}, Jersey Village, TX`;
@@ -437,6 +501,7 @@ function renderReport(p) {
   renderHearingScript(p);
   renderMethodsNote(p);
   renderCapSection(p);
+  renderCompsMap(p, parcelsByAccount);
 
   // Three paths, keyed off isEvaluable / hasCompsButNoValue / (neither).
   if (isEvaluable(p)) {
@@ -528,21 +593,41 @@ async function boot() {
     showError("No HCAD account specified. Go back to the map and click a parcel.");
     return;
   }
-  let reports;
-  try {
-    const resp = await fetch("data/reports.json", { cache: "default" });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    reports = await resp.json();
-  } catch (e) {
-    showError(`Could not load report data (${e.message}). Please try again.`);
+
+  // Fetch both data files in parallel. reports.json is mandatory —
+  // nothing renders without it. parcels.json is best-effort: we only
+  // use it for the mini-map of comps, and if it fails we just skip
+  // the map and render the rest of the report normally.
+  const [reportsResult, parcelsResult] = await Promise.allSettled([
+    fetch("data/reports.json", { cache: "default" }).then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }),
+    fetch("data/parcels.json", { cache: "default" }).then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }),
+  ]);
+
+  if (reportsResult.status === "rejected") {
+    showError(`Could not load report data (${reportsResult.reason.message}). Please try again.`);
     return;
   }
+  const reports = reportsResult.value;
   const p = reports[acct];
   if (!p) {
     showError(`HCAD account ${acct} was not found in this dataset.`);
     return;
   }
-  renderReport(p);
+
+  // Build an account-keyed lookup for the mini-map. Null if parcels.json
+  // failed — renderCompsMap handles null gracefully.
+  let parcelsByAccount = null;
+  if (parcelsResult.status === "fulfilled" && parcelsResult.value && Array.isArray(parcelsResult.value.parcels)) {
+    parcelsByAccount = new Map(parcelsResult.value.parcels.map((pp) => [pp.a, pp]));
+  }
+
+  renderReport(p, parcelsByAccount);
 }
 
 boot();
