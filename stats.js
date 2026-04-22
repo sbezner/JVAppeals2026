@@ -238,6 +238,35 @@ function renderNbhdBreakdown(parcels) {
       `<td class="num">${fmtMoneyCompact(r.gap)}</td>` +
     `</tr>`
   )).join("");
+
+  // Footer "Total" row. Computed from every parcel in every shown
+  // neighborhood (not from the per-row totals, which are each already
+  // rounded). This is what closes the gap between the per-row cells
+  // and the $40M hero stat — same dataset, same aggregation rule,
+  // no rounding drift.
+  const shownParcels = [];
+  for (const [nbhd, group] of groups) {
+    if (group.length >= MIN_N) shownParcels.push(...group);
+  }
+  const tFile = shownParcels.filter((p) => p.c === "red" || p.c === "yellow");
+  const tCaseRate = shownParcels.length ? 100 * tFile.length / shownParcels.length : 0;
+  const tMedOver = median(shownParcels.map((p) => p.p).filter((v) => v != null));
+  const tGap = tFile
+    .filter((p) => p.v != null && p.fair != null)
+    .reduce((s, p) => s + (p.v - p.fair), 0);
+
+  $("nbhd-foot").innerHTML = (
+    `<tr class="nbhd-total">` +
+      `<td class="nbhd-label">` +
+        `<b>Total</b>` +
+        `<span class="nbhd-code">all matched JV parcels</span>` +
+      `</td>` +
+      `<td class="num">${fmtInt(shownParcels.length)}</td>` +
+      `<td class="num">${Math.round(tCaseRate)}%</td>` +
+      `<td class="num">${fmtPct(tMedOver, 1)}</td>` +
+      `<td class="num">${fmtMoneyCompact(tGap)}</td>` +
+    `</tr>`
+  );
 }
 
 function renderStats(parcels) {
