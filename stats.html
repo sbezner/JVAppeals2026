@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jersey Village 2026 appraisals — by the numbers</title>
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="style.css?v=19">
 </head>
 <body class="stats-page">
 
@@ -58,6 +58,29 @@
     <tbody id="buckets-body"></tbody>
   </table>
 
+  <h2>By neighborhood</h2>
+  <p class="stats-nbhd-intro">
+    Where &sect;41.43(b)(3) cases cluster across Jersey Village. Each
+    row is a HCAD neighborhood code (used internally by HCAD's
+    mass-appraisal model to group similar homes); the label names the
+    most common street in that group. <b>Case rate</b> is the share of
+    homes in the red or yellow bucket (more than 2% over the per-sqft
+    median). Neighborhoods with fewer than 10 matched parcels are
+    omitted.
+  </p>
+  <table class="stats-nbhd-table">
+    <thead>
+      <tr>
+        <th class="col-nbhd">Neighborhood</th>
+        <th class="num">Homes</th>
+        <th class="num">Case rate</th>
+        <th class="num">Median over&#8209;%</th>
+        <th class="num">Gap</th>
+      </tr>
+    </thead>
+    <tbody id="nbhd-body"></tbody>
+  </table>
+
   <h2>Also on the map</h2>
   <ul class="stats-notable" id="notable"></ul>
 
@@ -94,6 +117,6 @@
   Built by a neighbor.
 </footer>
 
-<script src="stats.js?v=5"></script>
+<script src="stats.js?v=7"></script>
 </body>
 </html>

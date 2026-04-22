@@ -24,6 +24,18 @@ function fmtMillions(n) {
   return "$" + Math.round(n / 1_000_000).toLocaleString() + " million";
 }
 
+// Compact dollar format for table cells where the full "million" suffix
+// is too wordy. Handles small magnitudes honestly ($127K, $3.2M, $1.4B)
+// so a small-neighborhood gap doesn't read as "$0M" → "no gap."
+function fmtMoneyCompact(n) {
+  if (n == null || n <= 0) return "$0";
+  if (n >= 1_000_000_000) return "$" + (n / 1_000_000_000).toFixed(1) + "B";
+  if (n >= 10_000_000) return "$" + Math.round(n / 1_000_000) + "M";
+  if (n >= 999_500) return "$" + (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return "$" + Math.round(n / 1_000) + "K";
+  return "$" + Math.round(n);
+}
+
 function fmtPct(n, digits = 1) {
   if (n == null) return "—";
   const sign = n > 0 ? "+" : "";
@@ -154,6 +166,80 @@ const BUCKETS = [
   { key: "gray",   label: "No comparable homes matched", desc: "review manually" },
 ];
 
+// For a group of parcels, pick the most common street name to serve as
+// a human-readable label for the HCAD neighborhood code. Strips the
+// leading house number from each address and counts. If no address
+// resolves cleanly, falls back to "various streets."
+function nbhdLabel(parcelsInNbhd) {
+  const streets = new Map();
+  for (const p of parcelsInNbhd) {
+    const addr = (p.d || "").trim();
+    if (!addr) continue;
+    const m = addr.match(/^\d+\s+(.+?)$/);
+    if (!m) continue;
+    const street = m[1].toUpperCase();
+    streets.set(street, (streets.get(street) || 0) + 1);
+  }
+  let best = null, bestCount = 0;
+  for (const [street, count] of streets) {
+    if (count > bestCount) { best = street; bestCount = count; }
+  }
+  return best || "various streets";
+}
+
+// Group parcels by HCAD neighborhood code, compute per-group aggregates,
+// and render a table. Shows where §41.43(b)(3) cases cluster — useful
+// for local press, neighborhood advocacy, and context for homeowners
+// who want to know how their subdivision compares citywide.
+// Filters out nbhds with fewer than 10 parcels (sample too small to
+// generalize from).
+function renderNbhdBreakdown(parcels) {
+  const MIN_N = 10;
+  const groups = new Map();
+  for (const p of parcels) {
+    if (!p.nbhd || p.p == null) continue; // skip gray (no over-% computed)
+    if (!groups.has(p.nbhd)) groups.set(p.nbhd, []);
+    groups.get(p.nbhd).push(p);
+  }
+
+  const rows = [];
+  for (const [nbhd, group] of groups) {
+    if (group.length < MIN_N) continue;
+    const fileCount = group.filter((p) => p.c === "red" || p.c === "yellow").length;
+    const caseRate = 100 * fileCount / group.length;
+    const medOver = median(group.map((p) => p.p).filter((v) => v != null));
+    const gap = group
+      .filter((p) => (p.c === "red" || p.c === "yellow") && p.v != null && p.fair != null)
+      .reduce((s, p) => s + (p.v - p.fair), 0);
+    rows.push({
+      nbhd, label: nbhdLabel(group),
+      count: group.length, caseRate, medOver, gap,
+    });
+  }
+
+  if (!rows.length) {
+    $("nbhd-body").innerHTML = `<tr><td colspan="5" class="nbhd-empty">No neighborhoods with ≥${MIN_N} matched parcels.</td></tr>`;
+    return;
+  }
+
+  // Sort by case rate, descending — the most-over-assessed neighborhoods
+  // come first. Break ties with raw # of homes (larger first).
+  rows.sort((a, b) => (b.caseRate - a.caseRate) || (b.count - a.count));
+
+  $("nbhd-body").innerHTML = rows.map((r) => (
+    `<tr>` +
+      `<td class="nbhd-label">` +
+        `<b>${r.label}</b>` +
+        `<span class="nbhd-code">nbhd ${r.nbhd}</span>` +
+      `</td>` +
+      `<td class="num">${fmtInt(r.count)}</td>` +
+      `<td class="num">${Math.round(r.caseRate)}%</td>` +
+      `<td class="num">${fmtPct(r.medOver, 1)}</td>` +
+      `<td class="num">${fmtMoneyCompact(r.gap)}</td>` +
+    `</tr>`
+  )).join("");
+}
+
 function renderStats(parcels) {
   // Hero: total appraised value + parcel count.
   const total = parcels.reduce((sum, p) => sum + (p.v || 0), 0);
@@ -191,6 +277,8 @@ function renderStats(parcels) {
       `</tr>`
     );
   }).join("");
+
+  renderNbhdBreakdown(parcels);
 
   // "Also on the map" — secondary flags. The cap-violation line gets
   // the homestead-exposure % layered in so readers see what fraction

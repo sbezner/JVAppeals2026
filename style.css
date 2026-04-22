@@ -1023,6 +1023,53 @@ table.stats-buckets .bucket-label { color: var(--ink); line-height: 1.4; }
   font-family: inherit;
 }
 
+/* By-neighborhood breakdown — ranked table of HCAD nbhd codes with
+   case rate, median over-%, and combined gap. Mirrors .stats-buckets
+   styling but adds tabular-num right-aligned numeric columns. */
+.stats-nbhd-intro {
+  margin: 4px 0 10px;
+  font-size: 13px; color: var(--mute); line-height: 1.5;
+}
+table.stats-nbhd-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 14px;
+}
+table.stats-nbhd-table thead th {
+  text-align: right;
+  padding: 6px 6px;
+  font-weight: 600; font-size: 12px;
+  color: var(--mute);
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+table.stats-nbhd-table thead th.col-nbhd {
+  text-align: left;
+}
+table.stats-nbhd-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: baseline;
+}
+table.stats-nbhd-table tr:last-child td { border-bottom: none; }
+table.stats-nbhd-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+table.stats-nbhd-table .nbhd-label b {
+  color: var(--ink); font-weight: 600;
+}
+table.stats-nbhd-table .nbhd-code {
+  display: block;
+  color: var(--mute); font-size: 11px;
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+table.stats-nbhd-table .nbhd-empty {
+  color: var(--mute); text-align: center;
+  padding: 16px 6px;
+}
+
 ul.stats-notable {
   list-style: none; padding: 0; margin: 0;
   font-size: 14px; line-height: 1.5;
