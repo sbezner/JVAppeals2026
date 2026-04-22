@@ -2,9 +2,12 @@
 
 Features under consideration for JVAppeals2026. Ranked by real impact on
 whether a Jersey Village homeowner wins their property tax appeal.
-Originally drafted 2026-04-20; last updated 2026-04-21 after adding the
-"what this tool doesn't adjust for" caveat block + year-over-year row,
-and moving the tax-savings estimator to Out of Scope on liability grounds.
+Originally drafted 2026-04-20; last updated 2026-04-21. Methodology
+and recommendation logic are **frozen until after May 15, 2026** —
+all comp-filter, adjustment, and verdict-threshold changes have been
+moved to the new
+[Post-2026 season](#post-2026-season-locked-until-next-years-data)
+section so nothing accidentally ships mid-cycle.
 
 ---
 
@@ -199,31 +202,11 @@ standing rule for future sessions. Currently at `v=10`.
 
 ## Tier 1 — High leverage (ship these first)
 
-### #4 Condition-adjustment worksheet
-
-The statute allows *"appropriately adjusted"* comps. A simple
-checklist on the report page:
-
-- Roof > 20 years old
-- HVAC > 15 years old
-- Foundation issues / cracks
-- Kitchen pre-2000
-- Bathrooms pre-2000
-- No garage / carport only
-- Known flood history
-- Deferred maintenance / needs paint
-
-Each checkbox applies a standard downward adjustment to the fair-value
-median. Lets the homeowner argue their comps aren't truly equivalent
-to their (poorer-condition) home.
-
-**Why:** Distinguishes this site from every generic property-tax
-calculator. Real hearing tool — the appraiser will ask if there are
-condition issues and the homeowner should be ready with specifics.
-
-**Work:** Client-side only. State lives in `localStorage` per account.
-Adds a new section to Page 1 of the report between the facts table and
-the comp table. ~half day.
+*All Tier 1 items have either shipped or been deferred to the
+[Post-2026 season](#post-2026-season-locked-until-next-years-data)
+section below. Condition-adjustment worksheet (former #4) was moved
+there because it changes the verdict a homeowner sees, and the
+methodology is frozen until after the May 15 filing deadline.*
 
 ---
 
@@ -336,6 +319,110 @@ hearing with spotty WiFi. Depends on PWA (#5).
 Keep historical snapshots of `data/parcels.json` so next year's site
 can show "your appraisal has climbed 34% since 2022." Requires
 discipline about snapshotting per year.
+
+---
+
+## Post-2026 season (locked until next year's data)
+
+**Methodology and recommendation changes are frozen** until after the
+May 15, 2026 filing deadline. Changing comp filters, adjustment
+logic, or verdict thresholds mid-season means a homeowner who read
+their report in April and planned their filing could return in May
+to find their pin color or fair-value number shifted. That
+undermines the tool's reliability exactly when people are using it
+to make filing decisions.
+
+The items below are all deferred to the 2027 pipeline rebuild. Most
+are genuine upgrades that would strengthen the methodology — they
+just can't land mid-cycle.
+
+### Lot-size adjustment
+
+Load HCAD `land.txt`. Either tighten the comp filter to &plusmn;25%
+of the subject's lot size, or separate the land portion of the
+appraisal before the per-sqft compare. Directly fixes the
+"oversize lot" concern that the "What This Tool Doesn't Adjust For"
+caveat block currently equivocates on.
+
+*Pipeline change; ~2 hrs.*
+
+### Extra-features strip-out (pools, accessory dwellings, outbuildings)
+
+Load `fixtures.txt` and `extra_features.txt`. Subtract the HCAD-
+assessed value of pools, detached garages, accessory apartments,
+etc. from the total appraisal and compare just the main dwelling
+on a per-sqft basis. Makes the apartment-question DM go away for
+real instead of acknowledging it in the caveat.
+
+*Pipeline change; ~3 hrs.*
+
+### Bedroom / bathroom-count filter
+
+HCAD's residential table has both counts. Tighten comp matching
+so a 5BR/3BA subject isn't matched against 3BR/2BA comps in the
+same sqft band.
+
+*Pipeline change; ~1 hr.*
+
+### Effective-age instead of actual year-built
+
+HCAD stores both. A renovated 1960s home should match other
+renovated 1960s homes, not fresh-build 1960s homes.
+
+*Pipeline change; ~30 min.*
+
+### Condition-adjustment worksheet (former Tier 1 #4)
+
+Client-side checklist on the report — roof &gt; 20 yrs, HVAC &gt; 15
+yrs, foundation issues, kitchen pre-2000, no garage, deferred
+maintenance, flood history. Each checkbox applies a named downward
+adjustment to the fair-value median. Even though it's purely
+client-side, it changes the verdict a homeowner sees, so it falls
+under the mid-season methodology lock.
+
+*Client-side only; ~half-day.*
+
+### What-if "remove a comp" recompute
+
+Click an X on any comp row; the median, fair value, and over-%
+all recompute live. Lets a skeptical homeowner vet the basket and
+produce a tighter case. Numbers on the report change, so the same
+lock applies.
+
+*Client-side only; ~1.5 hrs.*
+
+### §23.01 sales-based market-value protest
+
+Load sale prices, compute per-nbhd median sale-$/sqft, flag parcels
+where HCAD's appraisal is materially above that. Would add a
+**second independent claim** (§23.01 market-value) alongside the
+existing §41.43(b)(3) unequal-appraisal ground. Blocked on data:
+Texas is a non-disclosure state, and HCAD's public download
+probably doesn't include arms-length sale prices. Needs MLS access
+or a paid data source (CoreLogic, DataTree, Realist). Verify
+HCAD's `pdata` page before committing to this.
+
+*Pipeline + report changes; half-day once a data source is
+confirmed.*
+
+### Multi-year §23.23 homestead-cap exposure
+
+Archive prior years' appraisals; detect homesteads that breached
+the 10% cap in **any** recent year, not just 2025&rarr;2026. Broader
+exposure than the current 23-parcel count.
+
+*Pipeline + data-archival change; ~half-day once prior snapshots
+exist.*
+
+### Multi-year trend chart per parcel
+
+Line graph of 2022&ndash;2026 appraisal history on the report's
+Page 1 facts table. Requires archiving HCAD data yearly (see
+Tier 3 #15 Multi-year tracking, which is the infrastructure
+prereq).
+
+*Pipeline + data-archival change; ~2 hrs once prior snapshots
+exist.*
 
 ---
 
