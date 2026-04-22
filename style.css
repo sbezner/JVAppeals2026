@@ -562,6 +562,10 @@ body.report-page { background: var(--bg); }
 .report .comps-map .map-popup-tag {
   color: var(--mute); font-weight: 400; font-size: 11px;
 }
+.report .comps-map .comp-popup-addr {
+  color: #1b6fe6; text-decoration: none;
+}
+.report .comps-map .comp-popup-addr:hover { text-decoration: underline; }
 
 /* "What This Tool Doesn't Adjust For" — muted informational section
    near the end of Page 1. Cool-gray left border to echo the other

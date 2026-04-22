@@ -478,8 +478,13 @@ function renderCompsMap(p, parcelsByAccount) {
       iconSize: [22, 22],
       iconAnchor: [11, 11],
     });
+    // The address is a same-tab link to this comp's full report, so
+    // a skeptical homeowner can drill into any single comp's own
+    // report, comps, and verdict. Same-tab keeps the browser history
+    // tidy; right-click / long-press still gives "open in new tab".
+    const addrHtml = `<a class="comp-popup-addr" href="report.html?a=${encodeURIComponent(c.a)}" title="Open this comp's report"><b>${escape(cp.d || c.a)}</b></a>`;
     const popup =
-      `<b>${escape(cp.d || c.a)}</b><br>` +
+      addrHtml + `<br>` +
       `Comp #${i + 1}${c.sqft ? ` &middot; ${fmtInt(c.sqft)} sqft` : ""}` +
       (c.psf != null ? ` &middot; ${fmtPsf(c.psf)}/sqft` : "") +
       (c.v != null ? `<br>${fmtMoney(c.v)}` : "");
