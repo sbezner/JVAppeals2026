@@ -518,8 +518,20 @@ function renderCompsMap(p, parcelsByAccount) {
   });
 
   // Fit to all 6 points (or however many we could resolve) with padding
-  // so nothing sits on the edge.
-  map.fitBounds(L.latLngBounds(points), { padding: [24, 24], maxZoom: 17 });
+  // so nothing sits on the edge. We defer this to the next animation
+  // frame because this function runs while #report is still hidden:
+  // Leaflet reads the container's computed size at init time, sees 0×0
+  // through the hidden parent, and caches that — so a synchronous
+  // fitBounds projects every lat/lon against a 0×0 viewport and lands
+  // every pin at pixel (0,0), i.e. the upper-left corner. rAF runs
+  // after the report is revealed and the browser has laid out the
+  // container with real dimensions, so invalidateSize() + fitBounds()
+  // then fit properly.
+  const bounds = L.latLngBounds(points);
+  requestAnimationFrame(() => {
+    map.invalidateSize();
+    map.fitBounds(bounds, { padding: [24, 24], maxZoom: 17 });
+  });
 }
 
 function renderReport(p, parcelsByAccount) {
