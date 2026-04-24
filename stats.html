@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jersey Village 2026 — by the numbers</title>
-<link rel="stylesheet" href="style.css?v=27">
+<link rel="stylesheet" href="style.css?v=28">
 </head>
 <body class="stats-page">
 
@@ -126,93 +126,86 @@
   <!-- ============ APPEALS & HISTORY TAB ============ -->
   <section id="view-appeals" role="tabpanel" hidden>
 
+    <p class="appeals-intro">
+      What happens when Jersey Village neighbors push back on HCAD?
+      Here's what the 2023&ndash;2025 ARB records show.
+    </p>
+
+    <!-- ACT 1 — What happens at a hearing -->
+    <h2>What happens at a hearing</h2>
+
     <div class="stats-hero stats-hero-appeals">
-      <div class="stats-hero-number" id="appeals-hero-winrate">&mdash;</div>
+      <div class="stats-hero-number stats-hero-win" id="appeals-hero-winrate">&mdash;</div>
       <div class="stats-hero-label">
-        of Jersey Village ARB hearings in 2025 ended with a lower
+        of 2025 Jersey Village ARB hearings ended with a lower
         appraised value.
       </div>
-    </div>
-
-    <div class="stats-trio">
-      <div class="stat-card">
-        <div class="stat-big" id="appeals-median-reduction">&mdash;</div>
-        <div class="stat-caption">
-          was the typical reduction when HCAD agreed to lower an
-          appraisal in 2025.
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-big" id="appeals-filed-pct">&mdash;</div>
-        <div class="stat-caption">
-          of Jersey Village homes (<b id="appeals-filed-n">&mdash;</b>
-          of <b id="appeals-filed-total">&mdash;</b>) has filed at least
-          one ARB protest since 2023.
-        </div>
+      <div class="stats-hero-sub">
+        Typical reduction: <b id="appeals-median-reduction">&mdash;</b>.
       </div>
     </div>
 
-    <section class="stats-filings-section">
-      <h2>Protests filed per year</h2>
-      <div class="stats-filings-chart" id="filings-chart"></div>
-      <p class="stats-filings-caption" id="filings-caption"></p>
-    </section>
+    <h3>What happened at 2025 hearings</h3>
+    <div class="stats-outcomes-bar stats-plain" id="outcomes-bar"></div>
+    <p class="stats-outcomes-caption" id="outcomes-caption"></p>
 
-    <section class="stats-outcomes-section">
-      <h2>What happened at 2025 hearings</h2>
-      <div class="stats-outcomes-bar" id="outcomes-bar"></div>
-      <p class="stats-outcomes-caption" id="outcomes-caption"></p>
-    </section>
+    <!-- ACT 2 — Who's filing -->
+    <h2>Who's filing</h2>
 
-    <section class="stats-filer-section">
-      <h2>Filing yourself vs. hiring an agent</h2>
-      <table class="stats-filer-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th class="num">Tax agent</th>
-            <th class="num">Homeowner</th>
-          </tr>
-        </thead>
-        <tbody id="filer-body"></tbody>
-      </table>
-      <p class="stats-filer-caption" id="filer-caption"></p>
-    </section>
+    <p class="appeals-paragraph">
+      Since 2023, <b id="appeals-filed-n">&mdash;</b> of
+      <b id="appeals-filed-total">&mdash;</b> Jersey Village homes
+      (<b id="appeals-filed-pct">&mdash;</b>) have filed at least
+      one ARB protest.
+    </p>
+
+    <h3>Protests filed per year</h3>
+    <div class="stats-filings-chart stats-plain" id="filings-chart"></div>
+    <p class="stats-filings-caption" id="filings-caption"></p>
+
+    <h3>Filing yourself vs. hiring an agent</h3>
+    <table class="stats-filer-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="num">Tax agent</th>
+          <th class="num">Homeowner</th>
+        </tr>
+      </thead>
+      <tbody id="filer-body"></tbody>
+    </table>
+    <p class="stats-filer-caption" id="filer-caption"></p>
+
+    <!-- ACT 3 — What's still possible -->
+    <h2>What's still possible in 2026</h2>
 
     <div class="stats-never-filed">
       <p>
         <b id="never-filed-count">&mdash;</b> Jersey Village homes
-        &mdash; including <b id="never-filed-red">&mdash;</b> in the
-        red bucket &mdash; have never filed an ARB protest in the last
-        4 years. The data says most of them would win if they did.
+        &mdash; including <b id="never-filed-red">&mdash;</b> currently
+        in the red bucket &mdash; have never filed an ARB protest in
+        the last 4 years. The data says most of them would win if
+        they did.
+      </p>
+      <p>
+        The 2026 filing window is open until <b>May 15</b>. As of
+        today, <b id="filed-2026">&mdash;</b> Jersey Village protests
+        have been filed; hearings run May&ndash;October and refresh
+        weekly.
+      </p>
+      <p class="stats-cta">
+        <a href="index.html">&rarr; Click your pin on the map</a>
+        to see if you're one of them.
       </p>
     </div>
 
-    <div class="stats-takeaway">
-      <b>The takeaway.</b>
-      Most neighbors who push back win, and wins are worth real money.
-      If your pin on the map is red or yellow, it's worth filing.
-    </div>
-
-    <p class="stats-appeals-footer">
-      <b>2026 is still active.</b>
-      <span id="filed-2026">&mdash;</span> Jersey Village protests filed
-      so far; hearings run May&ndash;October. Numbers refresh weekly as
-      HCAD updates its ARB records.
-    </p>
-
-    <p class="stats-method">
-      &ldquo;Reduction&rdquo; is the dollar amount by which HCAD lowered
-      the home's appraised value, not the homeowner's tax savings.
-      Actual tax impact depends on exemptions and the &sect;23.23
-      homestead cap.
-    </p>
-
     <p class="stats-disclaimer">
-      <b>Aggregate figures only.</b> Individual outcomes depend on the
-      facts of each hearing. This is not legal advice. Built by a
-      neighbor &mdash; not affiliated with HCAD or the City of Jersey
-      Village.
+      &ldquo;Reduction&rdquo; means HCAD lowered the home's appraised
+      value, not the homeowner's tax dollars; actual tax impact depends
+      on exemptions and the &sect;23.23 cap. Aggregate figures only;
+      individual outcomes depend on each hearing. Not legal advice.
+      Built by a neighbor &mdash; not affiliated with HCAD or the
+      City of Jersey Village.
     </p>
 
   </section>
@@ -231,6 +224,6 @@
   Built by a neighbor.
 </footer>
 
-<script src="stats.js?v=12"></script>
+<script src="stats.js?v=13"></script>
 </body>
 </html>

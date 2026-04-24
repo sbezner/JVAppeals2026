@@ -964,6 +964,79 @@ body.stats-page {
 }
 .stats-hero-label b { color: var(--ink); font-weight: 600; }
 
+/* Green hero variant — used on the Appeals tab to signal "win rate"
+   visually. Inherits size/weight from .stats-hero-number. */
+.stats-hero-number.stats-hero-win { color: var(--green); }
+
+/* Small supporting line under the hero label ("Typical reduction:
+   $19,484."). Inline continuation of the hero context, not a new
+   card. */
+.stats-hero-sub {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.4;
+}
+.stats-hero-sub b {
+  color: var(--ink); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Appeals-tab framing sentence + narrative paragraph. Quieter than
+   hero + cards; does the "article prose" work between sections. */
+.appeals-intro {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.55;
+}
+.appeals-paragraph {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.55;
+}
+.appeals-paragraph b {
+  color: var(--ink); font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sub-section h3 under the three act-level h2s. Muted uppercase
+   label style so it reads as "chart heading" rather than "new act." */
+.stats-container h3 {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 22px 0 10px;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* .stats-plain modifier — strips the white-card box styling from
+   .stats-filings-chart / .stats-outcomes-bar so the charts flow into
+   the surrounding prose instead of sitting in a dashboard tile. */
+.stats-filings-chart.stats-plain,
+.stats-outcomes-bar.stats-plain {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0;
+}
+
+/* "Click your pin on the map" CTA inside the closing callout. Simple
+   underlined link with a bit more weight than body text. */
+.stats-cta {
+  margin: 12px 0 0 !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+.stats-cta a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.stats-cta a:hover { color: #1b6fe6; }
+
 /* Filings-by-year horizontal bar chart on the Appeals tab.
    Each row: year | bar (proportional to count) | count. The
    current year carries a small "so far" tag + muted bar color
@@ -1111,23 +1184,28 @@ table.stats-filer-table td.num {
   font-size: 13px; color: var(--ink); line-height: 1.55;
 }
 
-/* 907-never-filed callout — frames the "opportunity gap" between
-   homes that should consider protesting and those that have actually
-   done so. Amber border distinguishes it from the blue takeaway
-   (action note) and yellow 2026-footer (freshness). */
+/* "What's still possible in 2026" closer — single callout that
+   absorbs three earlier callouts (never-filed opportunity, takeaway,
+   2026-active-footer). Amber left-border + yellow tint signals
+   "call to action + freshness" as one unified thought. */
 .stats-never-filed {
-  margin: 28px 0 12px;
-  padding: 14px 18px;
+  margin: 16px 0 24px;
+  padding: 16px 20px;
   background: #fff8e1;
   border-left: 3px solid #e6b422;
   border-radius: 4px;
   font-size: 14px; line-height: 1.55;
   color: var(--ink);
 }
-.stats-never-filed p { margin: 0; }
+.stats-never-filed p {
+  margin: 0 0 12px;
+}
+.stats-never-filed p:last-child {
+  margin-bottom: 0;
+}
 .stats-never-filed b {
   color: var(--ink);
-  font-size: 16px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
