@@ -86,10 +86,24 @@ function renderFacts(p) {
   if (p.v != null && p.prior_v != null && p.prior_v > 0) {
     const delta = ((p.v - p.prior_v) / p.prior_v) * 100;
     const sign = delta >= 0 ? "+" : "";
+    // New-construction caveat: a >100% YoY jump almost always means the
+    // prior-year value was land-only (pre-construction or major
+    // redevelopment). Flag it so the reader doesn't take the raw percent
+    // at face value or conclude that §41.43(b)(3) or §23.23 math applies
+    // unmodified.
+    const newConstructionCaveat = delta > 100
+      ? '<div class="yoy-caveat"><b>Note:</b> this jump is unusually ' +
+        'large; the prior value appears to be land-only ' +
+        '(pre-construction or major redevelopment). The percentage is not ' +
+        'directly comparable to a normal year-over-year change, and ' +
+        'under &sect;23.23(b) new-improvement value is excluded from the ' +
+        'homestead cap.</div>'
+      : "";
     rows.push([
       "2025 &rarr; 2026 Change",
       `<b class="yoy-delta">${sign}${delta.toFixed(1)}%</b>` +
-      `<span class="yoy-amounts">(${fmtMoney(p.prior_v)} &rarr; ${fmtMoney(p.v)})</span>`,
+      `<span class="yoy-amounts">(${fmtMoney(p.prior_v)} &rarr; ${fmtMoney(p.v)})</span>` +
+      newConstructionCaveat,
     ]);
   }
 
@@ -123,10 +137,11 @@ function renderBottomLine(p) {
   const capNote = capBottomNote(p);
   if (isEvaluable(p)) {
     const direction = p.p > 0 ? "above" : "below";
+    const n = p.comps.length;
     $("bottomline").innerHTML =
       `Your 2026 appraisal of <b>${fmtMoney(p.v)}</b> (<b>${fmtPsf(p.psf)}/sqft</b>) is ` +
-      `<b>${Math.abs(p.p).toFixed(1)}% ${direction}</b> the median of 5 ` +
-      `comparable homes (<b>${fmtPsf(p.med_psf)}/sqft</b>, implying a fair value of ` +
+      `<b>${Math.abs(p.p).toFixed(1)}% ${direction}</b> the median of ${n} ` +
+      `comparable home${n === 1 ? "" : "s"} (<b>${fmtPsf(p.med_psf)}/sqft</b>, implying a fair value of ` +
       `<b>${fmtMoney(p.fair)}</b> at your ${fmtInt(p.sqft)} sqft). ` +
       escape(verdict) + capNote;
     return;
@@ -195,6 +210,13 @@ function renderComps(p) {
     ? ` <span class="conf-badge conf-${conf.label}" title="Comp-basket coefficient of variation: ${p.cv}%. ${escape(conf.desc)}">spread: ${conf.label}</span>`
     : "";
 
+  // Actual comp count drives the summary-row labels. Hardcoded "5" is
+  // wrong for the 111 thin-basket parcels where the §41.43 filter
+  // returned only 1–4 matches; displaying "Median of 5 comps" when the
+  // table below shows 2 rows contradicts the thin-basket warning.
+  const nComps = p.comps.length;
+  const compLabel = `comp${nComps === 1 ? "" : "s"}`;
+
   // Alternate view: raw-dollar comp median with no size normalization.
   // This is what Chronicle shows and what most ARB panels compare against
   // at the hearing. Rendered as a muted appendix beneath the primary
@@ -206,13 +228,13 @@ function renderComps(p) {
     const rawGapClass = p.raw_p > 0 ? "over" : "under";
     altRows = `
       <tr class="alt-head"><td colspan="7" class="num">Alternate view: raw-dollar median (no size adjustment) &mdash; method most ARB panels default to</td></tr>
-      <tr class="alt-summary"><td colspan="6" class="num">Median of 5 comp appraisals</td><td class="num">${fmtMoney(p.med_val)}</td></tr>
+      <tr class="alt-summary"><td colspan="6" class="num">Median of ${nComps} ${compLabel === "comps" ? "comp appraisals" : "comp appraisal"}</td><td class="num">${fmtMoney(p.med_val)}</td></tr>
       <tr class="alt-summary ${rawGapClass}"><td colspan="6" class="num">${escape(rawGapLabel)} vs. raw median</td><td class="num">${fmtMoney(Math.abs(rawGap))} (${p.raw_p > 0 ? "+" : ""}${p.raw_p.toFixed(1)}%)</td></tr>
     `;
   }
 
   foot.innerHTML = `
-    <tr class="summary"><td colspan="5" class="num">Median $/sqft of 5 comps${confBadge}</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td></tr>
+    <tr class="summary"><td colspan="5" class="num">Median $/sqft of ${nComps} ${compLabel}${confBadge}</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td></tr>
     <tr class="summary"><td colspan="6" class="num">Fair value at median $/sqft (&times; ${fmtInt(p.sqft)} sqft)</td><td class="num">${fmtMoney(p.fair)}</td></tr>
     <tr class="summary"><td colspan="6" class="num">HCAD 2026 appraisal</td><td class="num">${fmtMoney(p.v)}</td></tr>
     <tr class="summary ${gapClass}"><td colspan="6" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td></tr>
@@ -309,7 +331,7 @@ function renderHearingScript(p) {
         <p><b>${p.cap ? "§41.43 context (do not raise at hearing)" : "Do not file this protest"}.</b>
         Your 2026 appraisal of <b>${fmtMoney(p.v)}</b>
         (${fmtPsf(p.psf)}/sqft) is already <b>${absPct}% below</b> the
-        per-square-foot median of 5 comparable homes
+        per-square-foot median of ${p.comps.length} comparable ${p.comps.length === 1 ? "home" : "homes"}
         (${fmtPsf(p.med_psf)}/sqft, implying a fair value of ${fmtMoney(p.fair)}
         at your ${fmtInt(p.sqft)} sqft).</p>
         <p>The Appraisal Review Board has the statutory authority to adjust
@@ -325,11 +347,14 @@ function renderHearingScript(p) {
   } else {
     const dir = p.p > 0 ? "below" : "above";
     const absPct = Math.abs(p.p).toFixed(1);
+    const n = p.comps.length;
+    const homeWord = n === 1 ? "home" : "homes";
+    const compWord = n === 1 ? "comp" : "comps";
     primaryHtml = `
       <p>${p.cap ? "<b>Secondary claim: §41.43 unequal appraisal.</b> " : ""}Keep this report as your personal script for the hearing. The core of your ${p.cap ? "§41.43 " : ""}claim is two points:</p>
       <ol class="script">
-        <li><b>"The median per-square-foot appraisal across 5 comparable homes in my neighborhood is ${fmtPsf(p.med_psf)}/sqft. Applied to my ${fmtInt(p.sqft)} sqft, that's a fair value of ${fmtMoney(p.fair)} &mdash; ${absPct}% ${dir} HCAD's appraisal of my home at ${fmtMoney(p.v)}."</b></li>
-        <li><b>"These 5 comps share my neighborhood code (${escape(p.nbhd)}), my HCAD grade (${escape(p.grade)}), fall within &plusmn;15% of my ${fmtInt(p.sqft)} sqft, and within 10 years of my ${escape(p.year)} build. Per-square-foot is the same yardstick HCAD's own mass-appraisal model uses, so the district has already endorsed this as the right comparison."</b></li>
+        <li><b>"The median per-square-foot appraisal across ${n} comparable ${homeWord} in my neighborhood is ${fmtPsf(p.med_psf)}/sqft. Applied to my ${fmtInt(p.sqft)} sqft, that's a fair value of ${fmtMoney(p.fair)} &mdash; ${absPct}% ${dir} HCAD's appraisal of my home at ${fmtMoney(p.v)}."</b></li>
+        <li><b>"${n === 1 ? "This" : "These"} ${n} ${compWord} ${n === 1 ? "shares" : "share"} my neighborhood code (${escape(p.nbhd)}), my HCAD grade (${escape(p.grade)}), ${n === 1 ? "falls" : "fall"} within &plusmn;15% of my ${fmtInt(p.sqft)} sqft, and ${n === 1 ? "is" : "are"} within 10 years of my ${escape(p.year)} build. Per-square-foot is the same yardstick HCAD's own mass-appraisal model uses, so the district has already endorsed this as the right comparison."</b></li>
       </ol>
       <p>Stay focused on the per-square-foot median gap. That is the only argument &sect;41.43(b)(3) lets you win on &mdash; don't wander into market value, tax rates, or condition.</p>`;
   }
@@ -558,6 +583,25 @@ function renderReport(p, parcelsByAccount) {
     renderComps(p);
     $("comps-section").hidden = false;
     $("gray-notice").hidden = true;
+    // Override the static "the five comps below" wording with a
+    // count-aware version. Matters for the 111 thin-basket parcels
+    // where only 1–4 comps matched the §41.43 filter; keeps the
+    // Legal Argument consistent with the thin-basket note + the
+    // actual row count in the comp table.
+    const n = p.comps.length;
+    const phrase = n === 1 ? "The one comp" : (n === 5 ? "The five comps" : `The ${n} comps`);
+    $("legal-argument").innerHTML =
+      'This protest is filed under <b>Texas Tax Code &sect;41.43(b)(3)</b>, ' +
+      'the unequal-appraisal ground. Under this section, the appraisal ' +
+      'district must prove that your appraised value is at or below the ' +
+      'median of a reasonable number of appropriately-adjusted comparable ' +
+      `properties. ${phrase} below share your HCAD neighborhood code ` +
+      'and grade, fall within &plusmn;15% of your living area, and within ' +
+      '10 years of your year built. Because comps vary in size, the ' +
+      'comparison is made on a <b>per-square-foot basis</b> &mdash; the ' +
+      'same normalization HCAD\'s own mass-appraisal (CAMA) model uses ' +
+      'internally, and the basis of the Texas Comptroller\'s uniformity ' +
+      'audit of every appraisal district.';
   } else {
     $("comps-section").hidden = true;
     $("gray-notice").hidden = false;

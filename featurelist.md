@@ -359,6 +359,49 @@ The items below are all deferred to the 2027 pipeline rebuild. Most
 are genuine upgrades that would strengthen the methodology — they
 just can't land mid-cycle.
 
+### Thin-basket re-bucketing (QA-surfaced, 2026-04-23)
+
+Today the bucket logic colors a parcel red/yellow/green/purple as long
+as `median(comp_psf)` is non-null — which is true for any basket with
+≥1 comp. That means 48 parcels with 1–4 comps are colored red or yellow
+and recommended to FILE, on statistically thin evidence that an ARB
+panel could reject as "not a reasonable number of appropriately-
+adjusted comparables" under §41.43(b)(3). The thin-basket note warns
+the homeowner, but the headline bucket still says FILE.
+
+**Post-freeze fix:** change `findings.py` so a parcel with
+`n_comps < 5` (or some threshold — 3 is defensible, 5 is conservative)
+gets `color='gray'` regardless of the computed over-%. Those parcels
+then render the existing "no comps" variant of the report (which
+already tells the homeowner to hand-pick on hcad.org), eliminating
+the false-confidence red/yellow verdicts.
+
+Worth A/B'ing the threshold. At `n_comps<3 ⇒ gray`, 57 parcels shift.
+At `n_comps<5 ⇒ gray`, 111 parcels shift. Conservative choice is 5 to
+match the statute's "reasonable number" language and the legal-argument
+paragraph's claim.
+
+*Pipeline + frontend change; ~1 hr.*
+
+### New-construction flag (QA-surfaced, 2026-04-23)
+
+HCAD's `real_acct.yr_impr` captures year-built, but nothing in the
+pipeline currently recognizes brand-new homes as a special case.
+`15418 Jersey Dr` (built 2025, +517% YoY, prior value was
+land-only, 1 comp from a 2016 build) is colored red — the tool
+tells the owner of a brand-new home to file an unequal-appraisal
+protest against a 9-year-old comp. An ARB panel would look at the
+building permit and reject it, or ask uncomfortable questions.
+
+**Post-freeze fix:** compute a `new_construction` boolean in
+`findings.py` (`year_built >= current_year - 1 OR yoy_pct > 100`)
+and set such parcels to `color='gray'` with a tailored
+"newly-built — ARB unlikely to accept comp-based claim on a brand-
+new home" variant. Would catch both the +517% case and the +339%
+case cleanly.
+
+*Pipeline + frontend change; ~1 hr.*
+
 ### Lot-size adjustment
 
 Load HCAD `land.txt`. Either tighten the comp filter to &plusmn;25%

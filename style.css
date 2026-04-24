@@ -521,6 +521,16 @@ body.report-page { background: var(--bg); }
   color: var(--mute); font-weight: 400; font-size: 12px;
   margin-left: 6px; font-variant-numeric: tabular-nums;
 }
+/* Caveat under the YoY row when the percentage is impossibly large
+   (>100%) — almost always means the prior-year appraisal was
+   land-only, so the percentage isn't a real year-over-year change. */
+.report table.facts .yoy-caveat {
+  margin-top: 4px; padding: 6px 8px;
+  background: #fff8e1; border-left: 3px solid var(--yellow);
+  font-size: 11px; line-height: 1.4; color: var(--ink);
+  border-radius: 3px;
+}
+.report table.facts .yoy-caveat b { color: #8a6500; }
 
 /* Mini-map of subject + 5 comps on Page 1. Visual-only; doesn't change
    any number. Subject marker is gold-highlighted with a blue ring so
