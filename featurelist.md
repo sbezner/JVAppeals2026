@@ -358,6 +358,38 @@ The items below are all deferred to the 2027 pipeline rebuild. Most
 are genuine upgrades that would strengthen the methodology — they
 just can't land mid-cycle.
 
+### Historical methodology validation (2026-04-23)
+
+The HCAD ARB hearings data now in `hcad_raw/Hearings/` 2023–2025 has
+the `Initial_Appraised_Value → Final_Appraised_Value` delta for every
+real-property hearing — the ground-truth measure of who won how much.
+To validate the tool's bucket assignments (*"do parcels we color red
+actually win reductions at a higher rate than green?"*) we'd need to
+re-run the pipeline against the 2025 HCAD appraisal-roll snapshot to
+generate 2025 bucket colors, then inner-join against
+`arb_hearings_real.txt` filtered to Tax_Year=2025.
+
+Not possible today — we only have 2026 raw data. Needs:
+- 2025 `real_acct.txt`, `building_res.txt`, `jur_value.txt`,
+  `jur_exempt.txt`, and `Parcels.shp` (HCAD's annual certified-roll
+  archive — may require emailing HCAD or paying for a historical
+  download).
+- A `hcad_raw_2025/` sibling folder + the pipeline invoked with
+  `DATA_DIR` set to 2025 paths, emitting separate `parcels_2025.json` /
+  `reports_2025.json`.
+- A validation script that joins the 2025 bucket colors against the
+  2025 hearing outcomes and reports a 5×2 table (red/yellow/green/
+  purple/gray × won-reduction/no-reduction) with counts and median-
+  reduction dollars per cell.
+
+If 2025 bucket reds win reductions meaningfully more than greens, the
+methodology is empirically validated and we can say so on `stats.html`.
+If the correlation is weak, we've learned something about per-sqft vs
+raw-dollar at real panels and can recalibrate for 2027.
+
+*Data acquisition + pipeline variant + analysis; ~half-day once 2025
+raw is in hand.*
+
 ### Thin-basket re-bucketing (QA-surfaced, 2026-04-23)
 
 Today the bucket logic colors a parcel red/yellow/green/purple as long

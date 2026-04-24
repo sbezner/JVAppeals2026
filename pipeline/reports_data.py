@@ -28,6 +28,9 @@ Per-parcel schema (short keys to keep the file small):
     cv       coefficient of variation of comp $/sqft (basket spread, %)
     c        color bucket: red / yellow / green / purple / gray
     comps    list of {a, sqft, year, grade, v, psf}
+    hist     (optional) per-year ARB protest/hearing history keyed by
+             tax year; each entry has pd/by/ad/rd/lt/ht/iv/fv/im/fm.
+             Only present on parcels with at least one 2023-2026 record.
 """
 from __future__ import annotations
 import duckdb
@@ -54,9 +57,38 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
         ORDER BY p.account
     """).fetchall()
 
+    # Pre-load per-parcel ARB history into a {account: {year_str: rec}}
+    # dict so we can attach without a per-row query. Gracefully no-ops if
+    # the hearings stage hasn't populated parcel_history.
+    hist_by_acct: dict[str, dict[str, dict]] = {}
+    has_history = bool(con.execute(
+        "SELECT 1 FROM information_schema.tables WHERE table_name='parcel_history'"
+    ).fetchone())
+    if has_history:
+        hist_rows = con.execute("""
+            SELECT account, year, pd, by_, ad, rd, lt, ht, iv, fv, im, fm
+            FROM parcel_history
+            ORDER BY account, year
+        """).fetchall()
+        for (h_acct, h_year, pd, by_, ad, rd, lt, ht, iv, fv, im, fm) in hist_rows:
+            rec = {}
+            if pd: rec["pd"] = pd
+            if by_: rec["by"] = by_
+            if ad: rec["ad"] = ad
+            if rd: rec["rd"] = rd
+            if lt: rec["lt"] = lt
+            if ht: rec["ht"] = ht
+            if iv is not None: rec["iv"] = iv
+            if fv is not None: rec["fv"] = fv
+            if im is not None: rec["im"] = im
+            if fm is not None: rec["fm"] = fm
+            if rec:
+                hist_by_acct.setdefault(h_acct, {})[str(h_year)] = rec
+
     reports: dict[str, dict] = {}
     n_with_comps = 0
     n_gray = 0
+    n_with_history = 0
     for row in subjects:
         (account, addr, zip_, owner, sqft, year, grade, nbhd,
          val, prior_val, homestead,
@@ -129,6 +161,13 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
             n_with_comps += 1
         else:
             n_gray += 1
+
+        # Attach ARB history if present. Keys are string years to match
+        # the JSON idiom (so report.js can just `for (const y in p.hist)`).
+        if account in hist_by_acct:
+            entry["hist"] = hist_by_acct[account]
+            n_with_history += 1
+
         reports[account] = entry
 
     con.close()
@@ -136,5 +175,6 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     out.write_text(json.dumps(reports, separators=(",", ":")))
     print(
         f"wrote {out} with {len(reports)} parcels "
-        f"({n_with_comps} with comps, {n_gray} gray)"
+        f"({n_with_comps} with comps, {n_gray} gray, "
+        f"{n_with_history} with ARB history)"
     )

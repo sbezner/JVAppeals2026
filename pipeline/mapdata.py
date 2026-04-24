@@ -7,10 +7,16 @@ Emit a compact JSON file for the Leaflet front-end:
             {"a": account, "d": address, "o": owner, "z": zip,
              "c": "red|yellow|green|gray",
              "sqft": living_area, "psf": $/sqft,
-             "p": over_pct, "v": appraised_val, "ll": [lat, lon]},
+             "p": over_pct, "v": appraised_val, "ll": [lat, lon],
+             "cap": 1?, "dis": 1?, "h": 1?},
             ...
         ]
     }
+
+    Sparse flags (only present when truthy; front-end treats missing as 0):
+        cap  — possible §23.23 homestead-cap claim
+        dis  — per-sqft and raw-dollar methods disagree on file/skip
+        h    — parcel has ARB protest or hearing history (2023+)
 
 Short keys to keep the file small — there are ~2,100 parcels and this file
 loads on every map visit. Gzipped by GitHub Pages automatically. The map
@@ -30,6 +36,21 @@ DATA_DIR = Path("data")
 def emit(db_path: str = "pipeline.duckdb") -> None:
     DATA_DIR.mkdir(exist_ok=True)
     con = duckdb.connect(db_path)
+
+    # Parcels with any ARB history (2023+ protests or hearings). Sparse
+    # `h:1` on the map pin signals "this parcel has protest history" so a
+    # future map feature can light it up without another data regen.
+    # Empty set if the hearings stage hasn't populated parcel_history.
+    has_hist_table = bool(con.execute(
+        "SELECT 1 FROM information_schema.tables WHERE table_name='parcel_history'"
+    ).fetchone())
+    if has_hist_table:
+        history_accts = {
+            r[0] for r in
+            con.execute("SELECT DISTINCT account FROM parcel_history").fetchall()
+        }
+    else:
+        history_accts = set()
 
     rows = con.execute("""
         SELECT
@@ -81,6 +102,8 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
             entry["cap"] = 1
         if disagree:
             entry["dis"] = 1
+        if account in history_accts:
+            entry["h"] = 1
         parcels.append(entry)
 
     out = DATA_DIR / "parcels.json"
