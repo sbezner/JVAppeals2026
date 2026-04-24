@@ -927,6 +927,26 @@ body.stats-page {
 }
 .stats-hero-label b { color: var(--ink); font-weight: 600; }
 
+/* Single-line factoid row under the hero — proves the weekly ARB
+   refresh is live without needing a dedicated card. Grows through
+   filing season (April–May 15) as more neighbors file. */
+.stat-factoid {
+  text-align: center;
+  margin: -14px 0 28px;
+  padding: 14px 18px;
+  background: #F4F7FB;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink);
+}
+.stat-factoid strong {
+  font-size: 22px; font-weight: 700;
+  color: #1b6fe6;
+  margin-right: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Sub-hero row — secondary stat cards sitting under the hero number.
    Desktop: equal columns (auto-fit lets the row flex if the card count
    changes). Mobile: stacked single column. Each card is one big number

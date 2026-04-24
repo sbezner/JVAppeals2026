@@ -275,6 +275,14 @@ function renderStats(parcels) {
   $("hero-total").textContent = fmtMillions(total);
   $("hero-count").textContent = fmtInt(parcels.length);
 
+  // Live count of 2026 protest filings among JV parcels. Grows each
+  // weekend as the hearings pipeline is refreshed. Reads the per-parcel
+  // hist.2026 entry emitted by pipeline/hearings.py → reports_data.py.
+  const filed2026 = parcels.filter(
+    (p) => p.hist && p.hist["2026"] && p.hist["2026"].pd
+  ).length;
+  $("filed-2026").textContent = fmtInt(filed2026);
+
   // Pair of secondary headline stats:
   //   #1 — combined over-assessment: sum of (v − fair) across red+yellow
   //   #3 — median year-over-year appraisal change across all parcels
