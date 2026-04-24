@@ -75,6 +75,7 @@ function renderFacts(p) {
     ["Year Built", p.year != null ? escape(String(p.year)) : ""],
     ["Grade / Class", escape(p.grade || "")],
     ["Neighborhood Code", escape(p.nbhd || "")],
+    ["Residence Homestead", p.hs ? "Yes" : "No"],
     ["2026 Appraised Value", appraisedCell],
   ];
 
