@@ -1023,10 +1023,10 @@ body.stats-page {
   padding: 4px 0;
 }
 
-/* "Click your pin on the map" CTA inside the closing callout. Simple
-   underlined link with a bit more weight than body text. */
+/* "Click your pin on the map" CTA — used inside the Appeals-tab
+   closing callout and as a standalone inline link between the
+   Appraisals tab's "Also worth knowing" section and its disclaimer. */
 .stats-cta {
-  margin: 12px 0 0 !important;
   font-size: 14px;
   font-weight: 600;
 }
@@ -1036,6 +1036,12 @@ body.stats-page {
   text-underline-offset: 3px;
 }
 .stats-cta a:hover { color: #1b6fe6; }
+/* Standalone variant (outside any callout) — needs its own vertical
+   rhythm. Inside .stats-never-filed, the callout's p:last-child rule
+   already zeroes the bottom margin. */
+.stats-cta-inline {
+  margin: 24px 0 28px;
+}
 
 /* Filings-by-year horizontal bar chart on the Appeals tab.
    Each row: year | bar (proportional to count) | count. The
