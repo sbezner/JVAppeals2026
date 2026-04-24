@@ -436,6 +436,49 @@ function renderAppeals(parcels) {
     ? `Based on ${fmtInt(total2025)} hearings in 2025 where both the initial and final appraised values were posted.`
     : "No 2025 outcome data available yet.";
 
+  // Agent vs owner — 2025 filer breakdown. The `by` field is "A" for
+  // agent-filed protests and "O" for owner-filed. Surprising and
+  // empowering finding worth surfacing: owners win slightly more often
+  // than agents and get slightly larger reductions. Keeps the
+  // "you can do this yourself" ethos honest.
+  const filerStats = { A: { filings: 0, reduced: 0, reductions: [] },
+                       O: { filings: 0, reduced: 0, reductions: [] } };
+  for (const p of parcels) {
+    const rec = p.hist && p.hist["2025"];
+    if (!rec) continue;
+    const by = rec.by;
+    if (by !== "A" && by !== "O") continue;
+    filerStats[by].filings++;
+    if (rec.iv != null && rec.fv != null && rec.fv < rec.iv) {
+      filerStats[by].reduced++;
+      filerStats[by].reductions.push(rec.iv - rec.fv);
+    }
+  }
+  const totalFilings = filerStats.A.filings + filerStats.O.filings;
+  const pctAgent = totalFilings ? Math.round(100 * filerStats.A.filings / totalFilings) : 0;
+  const pctOwner = totalFilings ? Math.round(100 * filerStats.O.filings / totalFilings) : 0;
+  const filerWinPct = (f) => f.filings ? Math.round(100 * f.reduced / f.filings) : 0;
+  const filerMedRed = (f) => f.reductions.length ? median(f.reductions) : null;
+  const filerRows = [
+    ["Filings in 2025",
+     `${fmtInt(filerStats.A.filings)} (${pctAgent}%)`,
+     `${fmtInt(filerStats.O.filings)} (${pctOwner}%)`],
+    ["Won a reduction",
+     `${filerWinPct(filerStats.A)}%`,
+     `${filerWinPct(filerStats.O)}%`],
+    ["Median reduction",
+     filerMedRed(filerStats.A) != null ? fmtMoney(filerMedRed(filerStats.A)) : "—",
+     filerMedRed(filerStats.O) != null ? fmtMoney(filerMedRed(filerStats.O)) : "—"],
+  ];
+  $("filer-body").innerHTML = filerRows.map(([label, a, o]) => (
+    `<tr><th scope="row">${label}</th><td class="num">${a}</td><td class="num">${o}</td></tr>`
+  )).join("");
+  $("filer-caption").textContent =
+    "Most Jersey Village filings are handled by a paid tax agent. " +
+    "But neighbors who file themselves win about as often and walk away " +
+    "with roughly the same — or slightly larger — reductions. You " +
+    "don't need to hire an agent to win.";
+
   // 2026-running-count in the Appeals-tab footer note.
   const filed2026 = parcels.filter(
     (p) => p.hist && p.hist["2026"] && p.hist["2026"].pd

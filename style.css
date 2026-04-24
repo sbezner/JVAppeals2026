@@ -1064,6 +1064,53 @@ body.stats-page {
   font-size: 12px; color: var(--mute); line-height: 1.5;
 }
 
+/* Agent-vs-owner comparison table. Two value columns, one label
+   column. Numeric values right-aligned, tabular-nums. */
+.stats-filer-section { margin-top: 28px; }
+.stats-filer-section h2 { margin-bottom: 10px; }
+table.stats-filer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+}
+table.stats-filer-table thead th {
+  background: #f4f7fb;
+  font-weight: 600; font-size: 12px;
+  color: var(--mute);
+  padding: 8px 14px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule);
+}
+table.stats-filer-table thead th:first-child { text-align: left; }
+table.stats-filer-table td,
+table.stats-filer-table th[scope="row"] {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: baseline;
+}
+table.stats-filer-table tr:last-child td,
+table.stats-filer-table tr:last-child th { border-bottom: none; }
+table.stats-filer-table th[scope="row"] {
+  font-weight: 400;
+  color: var(--ink);
+  text-align: left;
+}
+table.stats-filer-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.stats-filer-caption {
+  margin: 10px 0 0;
+  font-size: 13px; color: var(--ink); line-height: 1.55;
+}
+
 /* Takeaway callout + 2026-still-active footer note */
 .stats-takeaway {
   margin: 28px 0 12px;
