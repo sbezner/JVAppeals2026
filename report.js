@@ -58,10 +58,12 @@ function showError(msg) {
   $("report-error").hidden = false;
 }
 
-function renderFacts(p) {
-  const addr = p.d
+function renderFacts(p, parcelsByAccount) {
+  const addrText = p.d
     ? `${escape(p.d)}${p.z ? `, Jersey Village, TX ${escape(p.z)}` : ", Jersey Village, TX"}`
     : "Jersey Village, TX";
+  const sv = streetViewLink(p.a, parcelsByAccount, "Street View");
+  const addr = sv ? `${addrText} <span class="sv-sep">&middot;</span> ${sv}` : addrText;
   const appraisedCell = p.v != null && p.psf != null
     ? `${fmtMoney(p.v)} <span class="psf-inline">(${fmtPsf(p.psf)}/sqft)</span>`
     : fmtMoney(p.v);
@@ -174,7 +176,24 @@ function hcadCell(account) {
   );
 }
 
-function renderComps(p) {
+// Google Maps Street View link — free, no API key. Uses the parcel
+// centroid from parcels.json; Google snaps to the nearest road.
+function streetViewLink(account, parcelsByAccount, label) {
+  if (!parcelsByAccount) return "";
+  const pp = parcelsByAccount.get(account);
+  if (!pp || !Array.isArray(pp.ll)) return "";
+  const [lat, lon] = pp.ll;
+  const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+  return (
+    `<a class="sv-link" href="${url}" ` +
+    `target="_blank" rel="noopener" ` +
+    `title="Open Google Street View in a new tab">` +
+      `${label}<span class="sv-arrow" aria-hidden="true">&nbsp;&#8599;</span>` +
+    `</a>`
+  );
+}
+
+function renderComps(p, parcelsByAccount) {
   const body = $("comps-body");
   const foot = $("comps-foot");
   // Subject row.
@@ -186,6 +205,7 @@ function renderComps(p) {
     <td>${escape(p.grade)}</td>
     <td class="num">${fmtPsf(p.psf)}</td>
     <td class="num">${fmtMoney(p.v)}</td>
+    <td class="sv-cell">${streetViewLink(p.a, parcelsByAccount, "View")}</td>
   </tr>`;
   // Comp rows.
   const compRows = p.comps.map((c, i) => `<tr>
@@ -196,6 +216,7 @@ function renderComps(p) {
     <td>${escape(c.grade)}</td>
     <td class="num">${fmtPsf(c.psf)}</td>
     <td class="num">${fmtMoney(c.v)}</td>
+    <td class="sv-cell">${streetViewLink(c.a, parcelsByAccount, "View")}</td>
   </tr>`).join("");
   body.innerHTML = subjectRow + compRows;
 
@@ -228,17 +249,17 @@ function renderComps(p) {
     const rawGapLabel = p.raw_p > 0 ? "Over-assessment" : "Under-assessment";
     const rawGapClass = p.raw_p > 0 ? "over" : "under";
     altRows = `
-      <tr class="alt-head"><td colspan="7" class="num">Alternate view: raw-dollar median (no size adjustment) &mdash; method most ARB panels default to</td></tr>
-      <tr class="alt-summary"><td colspan="6" class="num">Median of ${nComps} ${compLabel === "comps" ? "comp appraisals" : "comp appraisal"}</td><td class="num">${fmtMoney(p.med_val)}</td></tr>
-      <tr class="alt-summary ${rawGapClass}"><td colspan="6" class="num">${escape(rawGapLabel)} vs. raw median</td><td class="num">${fmtMoney(Math.abs(rawGap))} (${p.raw_p > 0 ? "+" : ""}${p.raw_p.toFixed(1)}%)</td></tr>
+      <tr class="alt-head"><td colspan="7" class="num">Alternate view: raw-dollar median (no size adjustment) &mdash; method most ARB panels default to</td><td class="sv-cell"></td></tr>
+      <tr class="alt-summary"><td colspan="6" class="num">Median of ${nComps} ${compLabel === "comps" ? "comp appraisals" : "comp appraisal"}</td><td class="num">${fmtMoney(p.med_val)}</td><td class="sv-cell"></td></tr>
+      <tr class="alt-summary ${rawGapClass}"><td colspan="6" class="num">${escape(rawGapLabel)} vs. raw median</td><td class="num">${fmtMoney(Math.abs(rawGap))} (${p.raw_p > 0 ? "+" : ""}${p.raw_p.toFixed(1)}%)</td><td class="sv-cell"></td></tr>
     `;
   }
 
   foot.innerHTML = `
-    <tr class="summary"><td colspan="5" class="num">Median $/sqft of ${nComps} ${compLabel}${confBadge}</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td></tr>
-    <tr class="summary"><td colspan="6" class="num">Fair value at median $/sqft (&times; ${fmtInt(p.sqft)} sqft)</td><td class="num">${fmtMoney(p.fair)}</td></tr>
-    <tr class="summary"><td colspan="6" class="num">HCAD 2026 appraisal</td><td class="num">${fmtMoney(p.v)}</td></tr>
-    <tr class="summary ${gapClass}"><td colspan="6" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td></tr>
+    <tr class="summary"><td colspan="5" class="num">Median $/sqft of ${nComps} ${compLabel}${confBadge}</td><td class="num">${fmtPsf(p.med_psf)}</td><td></td><td class="sv-cell"></td></tr>
+    <tr class="summary"><td colspan="6" class="num">Fair value at median $/sqft (&times; ${fmtInt(p.sqft)} sqft)</td><td class="num">${fmtMoney(p.fair)}</td><td class="sv-cell"></td></tr>
+    <tr class="summary"><td colspan="6" class="num">HCAD 2026 appraisal</td><td class="num">${fmtMoney(p.v)}</td><td class="sv-cell"></td></tr>
+    <tr class="summary ${gapClass}"><td colspan="6" class="num">${escape(gapLabel)}</td><td class="num">${fmtMoney(Math.abs(gap))} (${p.p > 0 ? "+" : ""}${p.p.toFixed(1)}%)</td><td class="sv-cell"></td></tr>
     ${altRows}
   `;
 
@@ -572,7 +593,7 @@ function renderReport(p, parcelsByAccount) {
   document.body.classList.add(`bucket-${(COLOR_LABEL[p.c] || COLOR_LABEL.gray).css}`);
 
   renderVerdictBanner(p);
-  renderFacts(p);
+  renderFacts(p, parcelsByAccount);
   renderBottomLine(p);
   renderHearingScript(p);
   renderMethodsNote(p);
@@ -581,7 +602,7 @@ function renderReport(p, parcelsByAccount) {
 
   // Three paths, keyed off isEvaluable / hasCompsButNoValue / (neither).
   if (isEvaluable(p)) {
-    renderComps(p);
+    renderComps(p, parcelsByAccount);
     $("comps-section").hidden = false;
     $("gray-notice").hidden = true;
     // Override the static "the five comps below" wording with a

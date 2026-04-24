@@ -644,6 +644,18 @@ body.report-page { background: var(--bg); }
 .report .hcad-arrow { color: var(--mute); font-size: 10px; }
 .report .subject-row .hcad-link { color: #1b6fe6; }
 
+/* Google Street View links — same subtle blue as the HCAD links,
+   used in the facts-table address row and in the comp table's
+   Street View column. */
+.report .sv-link {
+  color: #1b6fe6;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.report .sv-link:hover { text-decoration: underline; }
+.report .sv-arrow { color: var(--mute); font-size: 10px; }
+.report .sv-sep { color: var(--mute); margin: 0 2px; }
+
 .report table.comps .subject-row td {
   background: #FFF7E6; font-weight: 600;
 }
@@ -1548,6 +1560,12 @@ ul.stats-notable li:last-child { border-bottom: none; }
      screen-only. */
   .report .hcad-link { color: #000 !important; text-decoration: none !important; }
   .report .hcad-arrow { display: none; }
+  /* Street View is screen-only — a link isn't useful on paper. Hide
+     the whole column in the comp table, and the inline link in the
+     facts-table address row. */
+  .report table.comps th.col-street,
+  .report table.comps .sv-cell { display: none; }
+  .report .sv-sep, .report .sv-link { display: none; }
   .report .limits-section {
     background: #fff; border-left: 2px solid #000;
     page-break-inside: avoid;
