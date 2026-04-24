@@ -13,6 +13,33 @@ section so nothing accidentally ships mid-cycle.
 
 ## ✅ Shipped
 
+### ARB protest + hearings pipeline + 2026 filings factoid (2026-04-23, commits eff8d43, 82907e5)
+
+New `hearings` pipeline stage loads HCAD's `arb_protest_real.txt` +
+`arb_hearings_real.txt` for tax years 2023–2026, filters to JV parcels,
+dedupes multi-hearings-per-year by `Release_Date DESC`, and emits a
+`parcel_history` DuckDB table keyed by (account, year). 1,265 of 2,172
+JV parcels (58%) have at least one record. `reports_data.py` attaches
+a per-parcel `hist` field (year → filing date, agent/owner, hearing
+outcome, initial/final appraised + market values); `mapdata.py` marks
+those parcels with sparse `h:1`. CLI accepts multi-stage invocations
+(`python -m pipeline hearings reports mapdata`) for the weekly refresh.
+
+First UI consumer: a single live-count factoid on `/stats.html`
+("**N** Jersey Village neighbors have already filed a 2026 protest")
+under the hero — verifies the data is wired through to the site
+without committing to a UI surface yet.
+
+Size impact: parcels.json 86.7 KB → 89.4 KB gzipped (+3.1%);
+reports.json 217.4 KB → 307.4 KB gzipped (+41.4%). reports.json is
+lazy-loaded by report.html and stats.html only, so the delta never
+hits map-load time. Cache-bust to stats.js v=9, style.css v=24.
+
+The pipeline foundation is in place for the next round of UI features
+(per-parcel protest-history row, owner-vs-agent win-rate stats,
+year-over-year trend on parcel reports) without further pipeline
+changes. Sub-features will be split out individually as they ship.
+
 ### Sqft + $/sqft in the main-map popup (2026-04-23)
 
 New row on the pin popup and mobile bottom sheet shows the parcel's

@@ -104,22 +104,25 @@ JVAppeals2026/
 ├── style.css               styles for map, popup, sheet, report, @media print
 ├── report.html             one template, rendered by JS from ?a=<account>
 ├── report.js               fetches data/reports.json, populates the template
+├── stats.html, stats.js    JV-wide by-the-numbers page + histogram
 │
 ├── data/
-│   ├── parcels.json        ~300KB; consumed by main.js on map load
-│   └── reports.json        ~1MB / ~140KB gzipped; lazy-loaded by report.js
+│   ├── parcels.json        ~370KB / ~89KB gzipped; consumed by main.js on map load
+│   └── reports.json        ~2MB / ~307KB gzipped; lazy-loaded by report.js + stats.js
 │
 ├── pipeline/
 │   ├── __init__.py
-│   ├── __main__.py         CLI: python -m pipeline {load|findings|reports|mapdata|all}
+│   ├── __main__.py         CLI: python -m pipeline {load|findings|hearings|reports|mapdata|all}
 │   ├── download.py         manual-download instructions + existence check
 │   ├── load.py             DuckDB ingest, schema-adaptive column resolution
 │   ├── findings.py         5-comp selection, median, over-assessment %, color
-│   ├── reports_data.py     emits data/reports.json (subject + comps per parcel)
-│   └── mapdata.py          emits data/parcels.json
+│   ├── hearings.py         ARB protest + hearings loader (2023-2026) → parcel_history
+│   ├── reports_data.py     emits data/reports.json (subject + comps + hist per parcel)
+│   └── mapdata.py          emits data/parcels.json (+ sparse cap/dis/h flags)
 │
 ├── hcad_download/          (gitignored) local staging for HCAD download zips
 └── hcad_raw/               (gitignored) extracted HCAD source files
+    └── Hearings/{year}/      (optional) arb_protest_real + arb_hearings_real
 ```
 
 ---
@@ -329,6 +332,51 @@ JVAppeals2026/
   in the repo. Do not add Google Analytics or any other cookie-based
   tracker — see `featurelist.md`'s out-of-scope section.
 
+### ✅ Shipped 2026-04-23 — ARB protest + hearings pipeline (commit eff8d43)
+
+- **New `hearings` stage** loads `hcad_raw/Hearings/{year}/arb_hearings_real.txt`
+  and `arb_protest_real.txt` across 2023–2026, filters to JV parcels via the
+  `parcels` table, and builds a `parcel_history` DuckDB table keyed by
+  (account, year). Dedupes via `row_number() ... ORDER BY Release_Date DESC`
+  when the same parcel has multiple hearings in a single tax year (picks the
+  latest release as the authoritative outcome).
+- **Reads optionally** — `pipeline/hearings.py` silently no-ops if
+  `hcad_raw/Hearings/` is missing, so a fresh clone without hearings data
+  still runs the full pipeline end-to-end. Creates an empty
+  `parcel_history` stub so downstream emitters can LEFT JOIN without
+  conditional logic.
+- **`reports_data.py` attaches a per-parcel `hist` field** keyed by tax year.
+  Schema:
+    pd  protest filing date (MM/DD/YYYY)
+    by  filer: 'A'=Agent, 'O'=Owner
+    ad  actual hearing date (ISO)
+    rd  release date (ISO)
+    lt  letter type (TC / FC / IC / EH / NN / FN / EC / WD / …)
+    ht  hearing type ('F'=Formal, 'I'=Informal)
+    iv/fv   initial/final *appraised* value
+    im/fm   initial/final *market* value
+  Null fields are omitted per year to keep the payload compact.
+- **`mapdata.py` emits sparse `h:1`** on every parcel with any history
+  (1,265 of 2,172 in 2026-04-23 data; 58%). Lets a future map feature light
+  those pins without re-running the pipeline.
+- **CLI accepts multi-stage invocations** (`python -m pipeline hearings
+  reports mapdata`) running in fixed dependency order regardless of argv
+  order — cheap weekend refresh pattern.
+- **stats.html 2026 filings factoid** is the first UI consumer of the hist
+  data: a live count of JV parcels with a 2026 protest filed (`p.hist["2026"].pd`
+  non-null). Grows weekly through the filing deadline.
+- **Size impact** (measured, per-commit):
+    parcels.json:  86.7 KB → 89.4 KB gzipped  (+3.1%)
+    reports.json: 217.4 KB → 307.4 KB gzipped (+41.4%)
+  reports.json is lazy-loaded on report.html / stats.html only, so the
+  delta never hits map-load time.
+- **Future UI features that can consume this data without pipeline changes**:
+  per-parcel protest-history row on report.html, per-neighborhood protest
+  aggregate table on stats.html, owner-vs-agent win-rate comparison,
+  year-over-year trend on parcel reports, post-May-15 methodology
+  validation (the featurelist item needs 2025 appraisal-roll data we don't
+  yet have, but the hearing outcomes half is now ready).
+
 ### ❌ Explicitly out of scope (not built)
 
 - Auto-downloading HCAD source files (blocked by HCAD; manual step).
@@ -370,15 +418,25 @@ hcad_raw/
 ├── jur_value.txt                   (was `jurisdiction_value.txt` before 2026)
 ├── jur_exempt.txt                  (optional; required for §23.23 cap detection)
 ├── owners.txt                      (optional; improves owner block)
-└── Parcels/
-    ├── Parcels.shp
-    ├── Parcels.shx
-    ├── Parcels.dbf
-    └── Parcels.prj
+├── Parcels/
+│   ├── Parcels.shp
+│   ├── Parcels.shx
+│   ├── Parcels.dbf
+│   └── Parcels.prj
+└── Hearings/                        (optional; required for ARB history)
+    ├── 2023/Hearing_files.zip       HCAD publishes one zip per closed cycle
+    ├── 2024/Hearing_files.zip
+    ├── 2025/Hearing_files.zip
+    └── 2026/Hearing_files.zip       in-progress; refresh weekly during cycle
 ```
 
 Filenames may vary year to year — `pipeline/download.py → REQUIRED`
 accepts common aliases; add more there if yours differ.
+
+The `Hearings/` tree is optional — if absent, the pipeline still runs
+end-to-end; the `hist` field in reports.json is simply never populated.
+Unzip each year's `Hearing_files.zip` in-place (the loader reads
+`arb_hearings_real.txt` and `arb_protest_real.txt` via glob).
 
 ### 5.3 Smoke-test on ONE parcel first
 
@@ -447,7 +505,6 @@ GitHub Pages re-publishes within ~1 minute. Visit:
 
 ### 5.6 Common re-run scenarios
 
-Tweaked the PDF template in `pipeline/render.py`, want to re-render
 **Tweaked the report template** (`report.html`, `report.js`, or
 `style.css`) — no pipeline run needed. The static template is the
 template; just commit and push:
@@ -462,12 +519,33 @@ git push
 `findings.py`, for example) — re-emit the JSONs and commit:
 
 ```bash
-uv run python -m pipeline reports
-uv run python -m pipeline mapdata
+uv run python -m pipeline reports mapdata
 git add data/
 git commit -m "Refresh 2026 parcel data"
 git push
 ```
+
+**Weekly ARB hearings refresh** (April–October during the 2026 cycle).
+HCAD's hearing files grow week-over-week as new filings + outcomes
+land. Only the 2026 zip changes — 2023–2025 are frozen:
+
+```bash
+# 1. Manually download fresh 2026 Hearing_files.zip from HCAD
+#    (HCAD blocks automation; use a browser, drop the file into
+#    hcad_raw/Hearings/2026/ overwriting the old zip)
+
+unzip -o hcad_raw/Hearings/2026/Hearing_files.zip \
+        -d hcad_raw/Hearings/2026/
+uv run python -m pipeline hearings reports mapdata
+git commit -am "Refresh 2026 hearings through $(date +%Y-%m-%d)"
+git push
+```
+
+~2 minutes end-to-end. No `load` or `findings` re-run (those depend on
+the 2026 certified appraisal roll, which doesn't change during the ARB
+cycle). The 2026 filings-count factoid on stats.html ticks up each
+time. Deeper UI features built on `hist` data pick up fresh numbers
+automatically.
 
 **After HCAD posts 2027 data** — download into `hcad_raw/` per §5.2,
 then:
@@ -579,6 +657,39 @@ touch without good reason:
   shapefile's `HCAD_NUM` is unpadded. `load.py` uses `TRIM()` on every
   account cast so the joins work — keep that in any new query that
   joins across the text and shapefile tables.
+- **Hearings dedupe is by `Release_Date DESC`, not Actual_Hearing_Date.**
+  A parcel can have an informal hearing rolled into a formal hearing
+  in the same tax year; HCAD lists both rows in `arb_hearings_real.txt`.
+  `pipeline/hearings.py` partitions by (account, year) and keeps
+  `row_number()=1` ordered by `CAST(Release_Date AS DATE) DESC NULLS
+  LAST` — release date is the authoritative final-outcome stamp.
+  Don't switch to filing date or hearing date without retesting
+  parcels with multi-stage hearings; you'd surface the informal's
+  initial reduction and miss the formal's final number.
+- **Hearings year filter is `>= 2023`.** Both the protest CTE and the
+  hearings CTE drop pre-2023 rows. HCAD occasionally leaks a stray
+  prior-year record into a current-year file (one 2022 protest snuck
+  through 2023's data); the filter keeps the `hist` keys clean.
+  Bump to `>= 2024` if you ever drop 2023 from the site, but don't
+  silently widen it.
+- **`hist` field is omitted entirely when empty**, and within each
+  year, null sub-fields are stripped. Don't assume `parcels.json`'s
+  `h:1` always corresponds to a usable `hist` block in `reports.json`
+  — a parcel with only a 2023 protest filing (no hearing yet) gets
+  `h:1` and `hist={"2023":{"pd":...}}` with no outcome fields. UI
+  consumers must handle missing `iv`/`fv`/`ad`/`rd` gracefully.
+- **`Letter_Type` codes in hearings data** are HCAD-internal and not
+  fully documented publicly. Observed values include TC (tax-code
+  hearing), FC (formal corrected), IC (informal corrected), EH (early
+  hearing), NN (no-notice), FN (final notice), EC, WD (withdrawn).
+  Treat as opaque labels for display; don't gate logic on specific
+  codes without verifying meaning against a known parcel's outcome.
+- **`hcad_raw/Hearings/` is optional.** A fresh clone without the
+  hearings download still runs `python -m pipeline all` end-to-end —
+  `hearings.py` creates an empty `parcel_history` stub, and downstream
+  emitters LEFT JOIN, so the only effect is that `hist` and `h:1` are
+  never populated. Don't add a hard dependency on the hearings table
+  in `findings.py` or `mapdata.py`.
 - The pipeline is **idempotent and fast** (~1 minute end-to-end).
   Re-run freely; every stage is `CREATE OR REPLACE` under the hood
   and the JSON emitters are write-in-place.

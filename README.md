@@ -25,8 +25,18 @@ client-rendered §41.43(b)(3) HCAD appeal report behind every pin.
   [`stats.html`](https://jvtaxappeal.com/stats.html) — JV-wide
   aggregate numbers (total appraised value, combined over-assessment
   gap, median year-over-year change, bucket distribution, cap-violation
-  count) plus an inline-SVG histogram of every parcel's over-%.
-  Client-side only; no pipeline changes required for updates.
+  count), an inline-SVG histogram of every parcel's over-%, a
+  per-neighborhood case-rate table, and a live count of how many
+  neighbors have already filed a 2026 protest (refreshed weekly from
+  HCAD's ARB data).
+- **ARB protest + hearings history** for 2023–2026 is loaded into
+  `data/reports.json` per parcel (1,265 of 2,172 JV parcels have at
+  least one record, 58%). Stored as a year-keyed `hist` object with
+  filing date, agent/owner, hearing outcome, and initial/final
+  appraised + market values. Not yet surfaced in the UI; the pipeline
+  is in place so future features (per-parcel protest-history row,
+  win-rate stats, year-over-year agent vs owner breakdown) can be
+  added without another pipeline change.
 
 ## How it's built
 
@@ -47,14 +57,31 @@ Offline pipeline (runs in ~1 minute):
    comps and computes per-sqft median, raw-dollar median, fair value,
    comp-basket coefficient of variation, homestead-cap excess, and
    bucket color.
-4. `python -m pipeline reports` — emits `data/reports.json`
-   (~1MB / ~140KB gzipped), keyed by HCAD account, with subject facts
-   + 5 comp details for every parcel.
-5. `python -m pipeline mapdata` — emits `data/parcels.json`
-   (~300KB / ~60KB gzipped), the compact payload the map loads on
-   boot.
+4. `python -m pipeline hearings` — loads HCAD ARB protest + hearings
+   files from `hcad_raw/Hearings/{year}/` (optional input; feature
+   silently no-ops if absent). Builds a `parcel_history` DuckDB table
+   of JV-filtered protest + hearing records keyed by (account, year),
+   2023–2026.
+5. `python -m pipeline reports` — emits `data/reports.json`
+   (~2MB / ~307KB gzipped), keyed by HCAD account, with subject facts,
+   5 comp details, and per-year ARB `hist` entries.
+6. `python -m pipeline mapdata` — emits `data/parcels.json`
+   (~367KB / ~89KB gzipped), the compact payload the map loads on
+   boot. Includes sparse `cap:1` / `dis:1` / `h:1` flags on parcels
+   that have a homestead-cap claim / methods-differ verdict / ARB
+   history.
 
 Or the shortcut: `python -m pipeline all`.
+
+Stages accept multi-invocation for weekly ARB refreshes (they run in
+fixed dependency order regardless of argv order):
+
+```bash
+# Weekly ARB refresh — only the 2026 hearings file changes during cycle
+unzip -o hcad_raw/Hearings/2026/Hearing_files.zip -d hcad_raw/Hearings/2026/
+uv run python -m pipeline hearings reports mapdata
+git commit -am "Refresh 2026 hearings" && git push
+```
 
 `report.html` and `report.js` then render the report client-side from
 `reports.json` when a visitor hits `report.html?a=<account>`.
@@ -89,13 +116,15 @@ data/reports.json                 per-parcel report data (lazy-loaded)
 pipeline/                         Python pipeline modules
   load.py                           DuckDB ingest + JV filter
   findings.py                       5-comp selection, medians, buckets
-  reports_data.py                   emits data/reports.json
+  hearings.py                       ARB protest + hearings loader (2023-2026)
+  reports_data.py                   emits data/reports.json (incl. hist)
   mapdata.py                        emits data/parcels.json
   download.py                       HCAD file check
 CNAME                             GitHub Pages custom-domain pointer (jvtaxappeal.com)
 featurelist.md                    backlog of features under consideration
 CLAUDE.md                         deeper design notes + runbook
 hcad_raw/                         (gitignored) your HCAD source files
+  Hearings/{year}/                  ARB protest + hearings downloads
 hcad_download/                    (gitignored) original HCAD zips
 ```
 
