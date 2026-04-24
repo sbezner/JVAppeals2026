@@ -6,6 +6,7 @@ Emit a compact JSON file for the Leaflet front-end:
         "parcels": [
             {"a": account, "d": address, "o": owner, "z": zip,
              "c": "red|yellow|green|gray",
+             "sqft": living_area, "psf": $/sqft,
              "p": over_pct, "v": appraised_val, "ll": [lat, lon]},
             ...
         ]
@@ -33,7 +34,7 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     rows = con.execute("""
         SELECT
             p.account, p.site_addr, p.site_zip, p.owner_name,
-            p.lat, p.lon,
+            p.living_area, p.lat, p.lon,
             p.appraised_val,
             f.over_pct, f.color, f.cap_violation,
             -- "Directional" disagreement: the two methods straddle the
@@ -56,13 +57,20 @@ def emit(db_path: str = "pipeline.duckdb") -> None:
     con.close()
 
     parcels = []
-    for account, addr, zip_, owner, lat, lon, val, pct, color, cap, disagree in rows:
+    for account, addr, zip_, owner, sqft, lat, lon, val, pct, color, cap, disagree in rows:
+        # Subject $/sqft so the popup / bottom sheet can show the same
+        # unit a homeowner would compare neighbors on. Computed per row
+        # rather than carried on parcels so we don't depend on findings
+        # having run.
+        psf = (val / sqft) if val and sqft else None
         entry = {
             "a": account,
             "d": (addr or "").strip(),
             "z": (zip_ or "").strip(),
             "o": (owner or "").strip(),
             "c": color or "gray",
+            "sqft": int(sqft) if sqft is not None else None,
+            "psf": round(psf, 2) if psf is not None else None,
             "p": round(pct, 1) if pct is not None else None,
             "v": int(val) if val is not None else None,
             "ll": [round(lat, 6), round(lon, 6)],

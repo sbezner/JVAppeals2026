@@ -50,6 +50,16 @@ function popupHtml(p) {
   const val = p.v == null ? "" : `$${p.v.toLocaleString()}`;
   const cls = p.c || "gray";
   const owner = p.o ? `<div class="owner">${p.o}</div>` : "";
+  // Size + per-sqft line — lets the viewer scan neighboring pins for
+  // comp-like size/$/sqft without opening each report. Missing sqft
+  // or psf (rare, data-gap parcels) → line is suppressed entirely,
+  // not "null sqft · null/sqft".
+  const sqftPsfParts = [];
+  if (p.sqft != null) sqftPsfParts.push(`${p.sqft.toLocaleString()} sqft`);
+  if (p.psf != null) sqftPsfParts.push(`$${p.psf.toFixed(2)}/sqft`);
+  const sqftPsf = sqftPsfParts.length
+    ? `<div class="size">${sqftPsfParts.join(" · ")}</div>`
+    : "";
   const cap = p.cap ? `<div class="cap-flag">Possible §23.23 homestead cap claim</div>` : "";
   const disagree = p.dis ? `<div class="disagree-flag">Methods differ — see report</div>` : "";
   const action = `<a class="download" href="report.html?a=${encodeURIComponent(p.a)}">View report</a>`;
@@ -58,6 +68,7 @@ function popupHtml(p) {
       <div class="addr">${p.d || "(no address)"}</div>
       ${owner}
       <div>HCAD ${p.a}${val ? ` · ${val}` : ""}</div>
+      ${sqftPsf}
       <div class="pct ${cls}">${pct} vs. median of 5 comps</div>
       ${cap}
       ${disagree}
@@ -108,6 +119,12 @@ function sheetHtml(p) {
   const val = p.v == null ? "" : `$${p.v.toLocaleString()}`;
   const cls = p.c || "gray";
   const owner = p.o ? `<div class="sheet-owner">${p.o}</div>` : "";
+  const sqftPsfParts = [];
+  if (p.sqft != null) sqftPsfParts.push(`${p.sqft.toLocaleString()} sqft`);
+  if (p.psf != null) sqftPsfParts.push(`$${p.psf.toFixed(2)}/sqft`);
+  const sqftPsf = sqftPsfParts.length
+    ? `<div class="sheet-size">${sqftPsfParts.join(" · ")}</div>`
+    : "";
   const cap = p.cap ? `<div class="sheet-cap">Possible §23.23 homestead cap claim</div>` : "";
   const disagree = p.dis ? `<div class="sheet-disagree">Methods differ — see report</div>` : "";
   const action = `<a class="sheet-action download" href="report.html?a=${encodeURIComponent(p.a)}">View report</a>`;
@@ -116,6 +133,7 @@ function sheetHtml(p) {
     <div class="sheet-addr" id="sheet-addr">${p.d || "(no address)"}</div>
     ${owner}
     <div class="sheet-meta">HCAD ${p.a}${val ? ` · ${val}` : ""}</div>
+    ${sqftPsf}
     <div class="sheet-pct ${cls}">${pct} vs. median of 5 comps</div>
     ${cap}
     ${disagree}

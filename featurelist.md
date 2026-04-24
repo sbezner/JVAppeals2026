@@ -13,6 +13,28 @@ section so nothing accidentally ships mid-cycle.
 
 ## ✅ Shipped
 
+### Sqft + $/sqft in the main-map popup (2026-04-23)
+
+New row on the pin popup and mobile bottom sheet shows the parcel's
+living area and per-sqft appraisal in a muted line under the HCAD
+account row, e.g. *"2,686 sqft · $160.21/sqft"*. Makes the map
+directly useful for hand-picking comps on a gray parcel or
+sanity-checking the tool's automatic matches — a homeowner can scan
+neighboring pins and see which ones are in the right size/$/sqft
+ballpark without opening each report.
+
+Implementation: `pipeline/mapdata.py` adds `sqft` and `psf` to every
+entry in `data/parcels.json` (psf is computed per-row, so it doesn't
+depend on findings). 2,113 of 2,172 parcels have both (the other 59
+are the HCAD-no-value parcels where psf can't be computed — the
+line is gracefully suppressed on those pins). File size: 294KB →
+359KB raw / 88KB gzipped (actually dropped from 97KB gzipped —
+denser integer fields compress tighter than the cap/dis flag
+sprinkle). Cache-bust to main.js v=8, style.css v=23.
+
+Data emission only — no methodology, verdict, or comp-selection
+change. Safe under the May-15 freeze.
+
 ### "What this tool doesn't adjust for" caveat block (2026-04-21)
 
 Dedicated section on Page 1 of every report, right after the
@@ -211,29 +233,6 @@ methodology is frozen until after the May 15 filing deadline.*
 ---
 
 ## Tier 2 — Nice-to-haves (low effort, modest impact)
-
-### Sqft + $/sqft in the main-map popup
-
-Add a new row to the pin-popup (and the mobile bottom sheet) on the
-main map showing the parcel's living area and per-sqft appraisal,
-styled like the existing owner-name row. Makes the map directly
-useful for hand-picking comps on a gray parcel or sanity-checking
-the tool's automatic matches — a homeowner can scan neighboring
-pins and see which ones are in the right size/$/sqft ballpark
-without opening each report.
-
-**Data:** `parcels.json` currently carries `a, d, o, z, c, p, v, ll,
-cap, dis`; this feature needs `sqft` and `psf` added. One-line
-change to the SELECT in `pipeline/mapdata.py` (both fields are
-already in the findings table). Adds roughly 25KB to `parcels.json`
-(still under 60KB gzipped). Data emission only — no methodology
-change, no verdict change, safe under the May-15 freeze.
-
-**Work:** 15 min of code (mapdata.py + main.js popupHtml / sheetHtml
-string tweaks + graceful fallback when fields absent) + pipeline
-rerun on the Mac Mini + commit/push `data/parcels.json`. Deferred
-until next Mac session — no urgency and the feature is latent-safe
-if the code ships ahead of the data.
 
 ### Social-media preview cards (Open Graph tags)
 

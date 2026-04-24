@@ -244,6 +244,8 @@ footer {
 .parcel-popup { font-size: 13px; line-height: 1.45; }
 .parcel-popup .addr { font-weight: 600; margin-bottom: 2px; }
 .parcel-popup .owner { font-size: 12px; color: var(--mute); margin-bottom: 4px; }
+.parcel-popup .size { font-size: 12px; color: var(--mute); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+.parcel-sheet .sheet-size { font-size: 13px; color: var(--mute); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
 .parcel-popup .pct { font-weight: 600; }
 .parcel-popup .pct.red    { color: var(--red); }
 .parcel-popup .pct.yellow { color: #a57a00; }
