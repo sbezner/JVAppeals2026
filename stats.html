@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jersey Village 2026 appraisals — by the numbers</title>
-<link rel="stylesheet" href="style.css?v=24">
+<title>Jersey Village 2026 — by the numbers</title>
+<link rel="stylesheet" href="style.css?v=25">
 </head>
 <body class="stats-page">
 
@@ -13,102 +13,186 @@
 </div>
 
 <main class="stats-container" id="stats" hidden>
-  <h1 class="stats-title">Jersey Village 2026 appraisals — by the numbers.</h1>
+  <h1 class="stats-title">Jersey Village 2026 &mdash; by the numbers.</h1>
 
-  <div class="stats-hero">
-    <div class="stats-hero-number" id="hero-total"></div>
-    <div class="stats-hero-label">
-      Total HCAD 2026 appraised value across
-      <b id="hero-count"></b> single-family parcels.
-    </div>
-  </div>
+  <nav class="stats-tabs" role="tablist" aria-label="Statistics views">
+    <a href="?view=appraisals" class="stats-tab" role="tab" aria-selected="true"
+       aria-controls="view-appraisals" data-view="appraisals">
+      <span class="stats-tab-label">Appraisals</span>
+      <span class="stats-tab-sub">2026</span>
+    </a>
+    <a href="?view=appeals" class="stats-tab" role="tab" aria-selected="false"
+       aria-controls="view-appeals" data-view="appeals">
+      <span class="stats-tab-label">Appeals &amp; History</span>
+      <span class="stats-tab-sub">2023&ndash;2026</span>
+    </a>
+  </nav>
 
-  <p class="stat-factoid">
-    <strong id="filed-2026">—</strong>
-    Jersey Village neighbors have already filed a 2026 protest.
-  </p>
+  <!-- ============ APPRAISALS TAB ============ -->
+  <section id="view-appraisals" role="tabpanel">
 
-  <div class="stats-trio">
-    <div class="stat-card">
-      <div class="stat-big" id="stat-combined"></div>
-      <div class="stat-caption">
-        Combined gap between HCAD's appraisal and the per-sqft median
-        across all red- and yellow-bucket homes.
+    <div class="stats-hero">
+      <div class="stats-hero-number" id="hero-total"></div>
+      <div class="stats-hero-label">
+        Total HCAD 2026 appraised value across
+        <b id="hero-count"></b> single-family parcels.
       </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-big" id="stat-yoy"></div>
-      <div class="stat-caption">
-        Median year-over-year appraisal change across Jersey Village
-        homes (2025 &rarr; 2026).
+
+    <div class="stats-trio">
+      <div class="stat-card">
+        <div class="stat-big" id="stat-combined"></div>
+        <div class="stat-caption">
+          Combined gap between HCAD's appraisal and the per-sqft median
+          across all red- and yellow-bucket homes.
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-big" id="stat-yoy"></div>
+        <div class="stat-caption">
+          Median year-over-year appraisal change across Jersey Village
+          homes (2025 &rarr; 2026).
+        </div>
       </div>
     </div>
-  </div>
 
-  <section class="stats-chart-section">
-    <h2>How over-assessed is Jersey Village?</h2>
-    <p class="stats-chart-intro">
-      Every parcel with matched comps, binned by how its 2026 HCAD
-      appraisal compares to the per-sqft median of its 5 closest
-      neighbors. Bar colors match the map. Dashed vertical lines
-      mark the bucket cutoffs (&minus;5%, +2%, +7%); the blue
-      dotted line marks the city-wide median.
+    <section class="stats-chart-section">
+      <h2>How over-assessed is Jersey Village?</h2>
+      <p class="stats-chart-intro">
+        Every parcel with matched comps, binned by how its 2026 HCAD
+        appraisal compares to the per-sqft median of its 5 closest
+        neighbors. Bar colors match the map. Dashed vertical lines
+        mark the bucket cutoffs (&minus;5%, +2%, +7%); the blue
+        dotted line marks the city-wide median.
+      </p>
+      <div class="stats-chart" id="chart"></div>
+      <p class="stats-chart-caption" id="chart-caption"></p>
+    </section>
+
+    <h2>By the &sect;41.43(b)(3) per-sqft median test</h2>
+    <table class="stats-buckets">
+      <tbody id="buckets-body"></tbody>
+    </table>
+
+    <h2>By neighborhood</h2>
+    <p class="stats-nbhd-intro">
+      Where &sect;41.43(b)(3) cases cluster across Jersey Village. Each
+      row is a HCAD neighborhood code (used internally by HCAD's
+      mass-appraisal model to group similar homes); the label names the
+      most common street in that group. <b>Case rate</b> is the share of
+      homes in the red or yellow bucket (more than 2% over the per-sqft
+      median). Neighborhoods with fewer than 10 matched parcels are
+      omitted.
     </p>
-    <div class="stats-chart" id="chart"></div>
-    <p class="stats-chart-caption" id="chart-caption"></p>
+    <table class="stats-nbhd-table">
+      <thead>
+        <tr>
+          <th class="col-nbhd">Neighborhood</th>
+          <th class="num">Homes</th>
+          <th class="num">Case rate</th>
+          <th class="num">Median over&#8209;%</th>
+          <th class="num">Gap</th>
+        </tr>
+      </thead>
+      <tbody id="nbhd-body"></tbody>
+      <tfoot id="nbhd-foot"></tfoot>
+    </table>
+
+    <h2>Also on the map</h2>
+    <ul class="stats-notable" id="notable"></ul>
+
+    <h2>How this was computed</h2>
+    <p class="stats-method">
+      Every single-family parcel in Jersey Village (HCAD tax district 070)
+      is compared against the median $/sqft of its 5 closest comparable
+      neighbors &mdash; same HCAD neighborhood code, same grade, within
+      &plusmn;15% of its living area, and within &plusmn;10 years of its
+      build year. The resulting over-assessment percentage drives the
+      color bucket and every headline figure above. Full methodology
+      lives in
+      <a href="https://github.com/sbezner/JVAppeals2026/blob/main/CLAUDE.md" target="_blank" rel="noopener">CLAUDE.md</a>
+      alongside the source code.
+    </p>
+
+    <p class="stats-disclaimer">
+      <b>Aggregate figures only.</b> Individual outcomes depend on
+      hearings; not every protest wins. This is not legal advice.
+      Built by a neighbor &mdash; not affiliated with HCAD or the City
+      of Jersey Village.
+    </p>
+
   </section>
 
-  <h2>By the &sect;41.43(b)(3) per-sqft median test</h2>
-  <table class="stats-buckets">
-    <tbody id="buckets-body"></tbody>
-  </table>
+  <!-- ============ APPEALS & HISTORY TAB ============ -->
+  <section id="view-appeals" role="tabpanel" hidden>
 
-  <h2>By neighborhood</h2>
-  <p class="stats-nbhd-intro">
-    Where &sect;41.43(b)(3) cases cluster across Jersey Village. Each
-    row is a HCAD neighborhood code (used internally by HCAD's
-    mass-appraisal model to group similar homes); the label names the
-    most common street in that group. <b>Case rate</b> is the share of
-    homes in the red or yellow bucket (more than 2% over the per-sqft
-    median). Neighborhoods with fewer than 10 matched parcels are
-    omitted.
-  </p>
-  <table class="stats-nbhd-table">
-    <thead>
-      <tr>
-        <th class="col-nbhd">Neighborhood</th>
-        <th class="num">Homes</th>
-        <th class="num">Case rate</th>
-        <th class="num">Median over&#8209;%</th>
-        <th class="num">Gap</th>
-      </tr>
-    </thead>
-    <tbody id="nbhd-body"></tbody>
-    <tfoot id="nbhd-foot"></tfoot>
-  </table>
+    <div class="stats-hero stats-hero-appeals">
+      <div class="stats-hero-number" id="appeals-hero-pct">&mdash;</div>
+      <div class="stats-hero-label">
+        of Jersey Village (<b id="appeals-hero-n">&mdash;</b> of
+        <b id="appeals-hero-total">&mdash;</b> homes) has filed at least
+        one ARB protest since 2023.
+      </div>
+    </div>
 
-  <h2>Also on the map</h2>
-  <ul class="stats-notable" id="notable"></ul>
+    <section class="stats-filings-section">
+      <h2>Protests filed per year</h2>
+      <div class="stats-filings-chart" id="filings-chart"></div>
+      <p class="stats-filings-caption" id="filings-caption"></p>
+    </section>
 
-  <h2>How this was computed</h2>
-  <p class="stats-method">
-    Every single-family parcel in Jersey Village (HCAD tax district 070)
-    is compared against the median $/sqft of its 5 closest comparable
-    neighbors &mdash; same HCAD neighborhood code, same grade, within
-    &plusmn;15% of its living area, and within &plusmn;10 years of its
-    build year. The resulting over-assessment percentage drives the
-    color bucket and every headline figure above. Full methodology
-    lives in
-    <a href="https://github.com/sbezner/JVAppeals2026/blob/main/CLAUDE.md" target="_blank" rel="noopener">CLAUDE.md</a>
-    alongside the source code.
-  </p>
+    <div class="stats-trio">
+      <div class="stat-card">
+        <div class="stat-big" id="appeals-winrate">&mdash;</div>
+        <div class="stat-caption">
+          of 2025 Jersey Village hearings ended with a lower appraised
+          value.
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-big" id="appeals-median-reduction">&mdash;</div>
+        <div class="stat-caption">
+          was the typical reduction when HCAD agreed to lower an
+          appraisal in 2025.
+        </div>
+      </div>
+    </div>
 
-  <p class="stats-disclaimer">
-    <b>Aggregate figures only.</b> Individual outcomes depend on
-    hearings; not every protest wins. This is not legal advice.
-    Built by a neighbor &mdash; not affiliated with HCAD or the City
-    of Jersey Village.
-  </p>
+    <section class="stats-outcomes-section">
+      <h2>What happened at 2025 hearings</h2>
+      <div class="stats-outcomes-bar" id="outcomes-bar"></div>
+      <p class="stats-outcomes-caption" id="outcomes-caption"></p>
+    </section>
+
+    <div class="stats-takeaway">
+      <b>The takeaway.</b>
+      Most neighbors who push back win, and wins are worth real money.
+      If your pin on the map is red or yellow, it's worth filing.
+    </div>
+
+    <p class="stats-appeals-footer">
+      <b>2026 is still active.</b>
+      <span id="filed-2026">&mdash;</span> Jersey Village protests filed
+      so far; hearings run May&ndash;October. Numbers refresh weekly as
+      HCAD updates its ARB records.
+    </p>
+
+    <p class="stats-method">
+      &ldquo;Reduction&rdquo; is the dollar amount by which HCAD lowered
+      the home's appraised value, not the homeowner's tax savings.
+      Actual tax impact depends on exemptions and the &sect;23.23
+      homestead cap.
+    </p>
+
+    <p class="stats-disclaimer">
+      <b>Aggregate figures only.</b> Individual outcomes depend on the
+      facts of each hearing. This is not legal advice. Built by a
+      neighbor &mdash; not affiliated with HCAD or the City of Jersey
+      Village.
+    </p>
+
+  </section>
+
 </main>
 
 <div id="stats-error" class="stats-error" hidden>
@@ -123,6 +207,6 @@
   Built by a neighbor.
 </footer>
 
-<script src="stats.js?v=9"></script>
+<script src="stats.js?v=10"></script>
 </body>
 </html>

@@ -900,10 +900,47 @@ body.stats-page {
 
 .stats-title {
   font-size: 20px; font-weight: 600;
-  margin: 0 0 22px;
+  margin: 0 0 14px;
   color: var(--ink);
   letter-spacing: -0.01em;
 }
+
+/* Segmented-control tabs at the top of the stats page. Two tabs:
+   Appraisals (default) and Appeals & History. URL-param backed in
+   stats.js; aria-selected on the active one. */
+.stats-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 24px;
+  padding: 4px;
+  background: #eef2f7;
+  border-radius: 10px;
+}
+.stats-tab {
+  flex: 1 1 0;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: transparent;
+  border: none; border-radius: 7px;
+  text-decoration: none;
+  color: var(--mute);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.stats-tab:hover { background: rgba(255, 255, 255, 0.55); color: var(--ink); }
+.stats-tab[aria-selected="true"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.stats-tab-label {
+  font-size: 14px; font-weight: 600;
+}
+.stats-tab-sub {
+  font-size: 11px; color: var(--mute); font-weight: 400;
+}
+.stats-tab[aria-selected="true"] .stats-tab-sub { color: var(--mute); }
 
 .stats-hero {
   text-align: center;
@@ -927,23 +964,129 @@ body.stats-page {
 }
 .stats-hero-label b { color: var(--ink); font-weight: 600; }
 
-/* Single-line factoid row under the hero — proves the weekly ARB
-   refresh is live without needing a dedicated card. Grows through
-   filing season (April–May 15) as more neighbors file. */
-.stat-factoid {
-  text-align: center;
-  margin: -14px 0 28px;
-  padding: 14px 18px;
-  background: #F4F7FB;
+/* Filings-by-year horizontal bar chart on the Appeals tab.
+   Each row: year | bar (proportional to count) | count. The
+   current year carries a small "so far" tag + muted bar color
+   so readers don't treat a partial-year count as final. */
+.stats-filings-section { margin-top: 28px; }
+.stats-filings-section h2 { margin-bottom: 10px; }
+.stats-filings-chart {
+  background: #fff;
   border: 1px solid var(--rule);
-  border-radius: 8px;
-  font-size: 15px; line-height: 1.5;
+  border-radius: 10px;
+  padding: 12px 18px;
+}
+.filings-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 120px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+}
+.filings-year {
+  font-weight: 600; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.filings-bar-wrap {
+  background: #eef2f7;
+  border-radius: 4px;
+  height: 20px;
+  overflow: hidden;
+}
+.filings-bar {
+  height: 100%;
+  background: #1b6fe6;
+  border-radius: 4px;
+}
+.filings-partial .filings-bar { background: #9ca3af; }
+.filings-count {
+  font-weight: 600; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.filings-partial-tag {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 5px;
+  background: #fff8e1;
+  border: 1px solid #e6b422;
+  border-radius: 3px;
+  font-size: 10px; font-weight: 600; color: #8a6500;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+.stats-filings-caption {
+  margin: 10px 0 0;
+  font-size: 12px; color: var(--mute); line-height: 1.5;
+}
+
+/* 2025 outcomes horizontal bar rows — three colored bars for
+   reduced / unchanged / raised, with percent on the right. */
+.stats-outcomes-section { margin-top: 28px; }
+.stats-outcomes-section h2 { margin-bottom: 10px; }
+.stats-outcomes-bar {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 12px 18px;
+}
+.outcomes-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+}
+.outcomes-label { color: var(--ink); }
+.outcomes-bar-wrap {
+  background: #eef2f7;
+  border-radius: 4px;
+  height: 20px;
+  overflow: hidden;
+}
+.outcomes-bar {
+  height: 100%;
+  border-radius: 4px;
+}
+.outcomes-bar.outcomes-win  { background: var(--green); }
+.outcomes-bar.outcomes-tie  { background: #9ca3af; }
+.outcomes-bar.outcomes-lose { background: var(--red); }
+.outcomes-pct {
+  font-weight: 600; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.stats-outcomes-caption {
+  margin: 10px 0 0;
+  font-size: 12px; color: var(--mute); line-height: 1.5;
+}
+
+/* Takeaway callout + 2026-still-active footer note */
+.stats-takeaway {
+  margin: 28px 0 12px;
+  padding: 16px 20px;
+  background: #eff6ff;
+  border-left: 3px solid #1b6fe6;
+  border-radius: 4px;
+  font-size: 14px; line-height: 1.55;
   color: var(--ink);
 }
-.stat-factoid strong {
-  font-size: 22px; font-weight: 700;
-  color: #1b6fe6;
-  margin-right: 6px;
+.stats-takeaway b { color: var(--ink); }
+.stats-appeals-footer {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: #fff8e1;
+  border-left: 3px solid #e6b422;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.stats-appeals-footer b { color: var(--ink); }
+.stats-appeals-footer #filed-2026 {
+  font-weight: 700; color: #1b6fe6;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1173,12 +1316,22 @@ ul.stats-notable li:last-child { border-bottom: none; }
 
 @media (max-width: 560px) {
   .stats-title { font-size: 17px; }
+  .stats-tabs { margin-bottom: 18px; }
+  .stats-tab { padding: 8px 8px; }
+  .stats-tab-label { font-size: 13px; }
+  .stats-tab-sub { font-size: 10px; }
   .stats-hero { padding: 24px 16px; }
   .stats-hero-number { font-size: 34px; }
   .stats-trio { grid-template-columns: 1fr; gap: 8px; }
   .stats-trio .stat-big { font-size: 22px; }
   .stats-container { padding: 20px 14px 32px; }
   table.stats-buckets { font-size: 13px; }
+  /* Tighten the filings/outcomes grid columns on narrow screens so
+     the bars still get usable width. */
+  .filings-row { grid-template-columns: 44px 1fr 90px; gap: 8px; font-size: 13px; }
+  .outcomes-row { grid-template-columns: 140px 1fr 48px; gap: 8px; font-size: 13px; }
+  .stats-filings-chart,
+  .stats-outcomes-bar { padding: 10px 14px; }
 }
 
 

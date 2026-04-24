@@ -275,14 +275,6 @@ function renderStats(parcels) {
   $("hero-total").textContent = fmtMillions(total);
   $("hero-count").textContent = fmtInt(parcels.length);
 
-  // Live count of 2026 protest filings among JV parcels. Grows each
-  // weekend as the hearings pipeline is refreshed. Reads the per-parcel
-  // hist.2026 entry emitted by pipeline/hearings.py → reports_data.py.
-  const filed2026 = parcels.filter(
-    (p) => p.hist && p.hist["2026"] && p.hist["2026"].pd
-  ).length;
-  $("filed-2026").textContent = fmtInt(filed2026);
-
   // Pair of secondary headline stats:
   //   #1 — combined over-assessment: sum of (v − fair) across red+yellow
   //   #3 — median year-over-year appraisal change across all parcels
@@ -351,6 +343,146 @@ function showError(msg) {
   $("stats-error").hidden = false;
 }
 
+// ============================================================================
+// APPEALS & HISTORY TAB
+// Renders the second tab's content: filings-by-year, 2025 win rate, 2025
+// median reduction, 2025 outcomes breakdown, and the running 2026 filing
+// count in the footer note.
+// ============================================================================
+function renderAppeals(parcels) {
+  // Hero: share of JV parcels that have filed at least one protest in any
+  // of the years loaded by pipeline/hearings.py (2023–2026).
+  const everFiled = parcels.filter(
+    (p) => p.hist && Object.keys(p.hist).length > 0
+  ).length;
+  const everFiledPct = parcels.length
+    ? Math.round(100 * everFiled / parcels.length)
+    : 0;
+  $("appeals-hero-pct").textContent = everFiledPct + "%";
+  $("appeals-hero-n").textContent = fmtInt(everFiled);
+  $("appeals-hero-total").textContent = fmtInt(parcels.length);
+
+  // Filings-by-year: count parcels with a 2023/2024/2025/2026 hist entry.
+  const filingsByYear = {};
+  for (const p of parcels) {
+    if (!p.hist) continue;
+    for (const year of Object.keys(p.hist)) {
+      filingsByYear[year] = (filingsByYear[year] || 0) + 1;
+    }
+  }
+  const years = Object.keys(filingsByYear).sort();
+  const currentYear = String(new Date().getFullYear());
+  const maxFilings = Math.max(1, ...Object.values(filingsByYear));
+  $("filings-chart").innerHTML = years.map((y) => {
+    const count = filingsByYear[y];
+    const width = (100 * count / maxFilings).toFixed(1);
+    const isPartial = y === currentYear;
+    const partialBadge = isPartial ? ` <span class="filings-partial-tag">so far</span>` : "";
+    return (
+      `<div class="filings-row${isPartial ? " filings-partial" : ""}">` +
+        `<span class="filings-year">${y}</span>` +
+        `<div class="filings-bar-wrap">` +
+          `<div class="filings-bar" style="width: ${width}%"></div>` +
+        `</div>` +
+        `<span class="filings-count">${fmtInt(count)}${partialBadge}</span>` +
+      `</div>`
+    );
+  }).join("");
+  $("filings-caption").textContent =
+    "Each bar is the count of Jersey Village parcels with an ARB filing " +
+    "recorded for that year. 2026 is partial; numbers grow through the " +
+    "May 15 deadline and during the hearing season.";
+
+  // 2025 hearing outcomes: pull parcels with a 2025 hist entry that has
+  // both iv (initial appraised value) and fv (final appraised value).
+  let reduced = 0, unchanged = 0, increased = 0;
+  const reductions = [];
+  for (const p of parcels) {
+    const rec = p.hist && p.hist["2025"];
+    if (!rec || rec.iv == null || rec.fv == null) continue;
+    if (rec.fv < rec.iv) { reduced++; reductions.push(rec.iv - rec.fv); }
+    else if (rec.fv > rec.iv) { increased++; }
+    else { unchanged++; }
+  }
+  const total2025 = reduced + unchanged + increased;
+  const winRate = total2025 ? Math.round(100 * reduced / total2025) : 0;
+  $("appeals-winrate").textContent = winRate + "%";
+  const medReduction = reductions.length ? median(reductions) : null;
+  $("appeals-median-reduction").textContent =
+    medReduction != null ? fmtMoney(medReduction) : "—";
+
+  // 2025 outcomes bar: three horizontal rows sized proportionally.
+  const outcomeRows = [
+    { label: "Appraisal lowered",              count: reduced,   cls: "win" },
+    { label: "Appraisal unchanged",            count: unchanged, cls: "tie" },
+    { label: "Appraisal raised (extremely rare)", count: increased, cls: "lose" },
+  ];
+  const maxOutcome = Math.max(1, ...outcomeRows.map((r) => r.count));
+  $("outcomes-bar").innerHTML = outcomeRows.map((r) => {
+    const pct = total2025 ? (100 * r.count / total2025) : 0;
+    const pctStr = pct === 0 ? "0%" : (pct < 1 ? "<1%" : Math.round(pct) + "%");
+    const width = (100 * r.count / maxOutcome).toFixed(1);
+    return (
+      `<div class="outcomes-row">` +
+        `<span class="outcomes-label">${r.label}</span>` +
+        `<div class="outcomes-bar-wrap">` +
+          `<div class="outcomes-bar outcomes-${r.cls}" style="width: ${width}%"></div>` +
+        `</div>` +
+        `<span class="outcomes-pct">${pctStr}</span>` +
+      `</div>`
+    );
+  }).join("");
+  $("outcomes-caption").textContent = total2025
+    ? `Based on ${fmtInt(total2025)} hearings in 2025 where both the initial and final appraised values were posted.`
+    : "No 2025 outcome data available yet.";
+
+  // 2026-running-count in the Appeals-tab footer note.
+  const filed2026 = parcels.filter(
+    (p) => p.hist && p.hist["2026"] && p.hist["2026"].pd
+  ).length;
+  $("filed-2026").textContent = fmtInt(filed2026);
+}
+
+// ============================================================================
+// TAB SWITCHING
+// URL-param backed. ?view=appeals deep-links the second tab; no param (or
+// ?view=appraisals) shows the default. Clicking a tab toggles visibility and
+// updates the URL via history.replaceState (no back-button churn).
+// ============================================================================
+function getActiveView() {
+  const params = new URLSearchParams(window.location.search);
+  const v = (params.get("view") || "").toLowerCase();
+  return v === "appeals" ? "appeals" : "appraisals";
+}
+
+function setActiveView(view, updateHistory) {
+  $("view-appraisals").hidden = view !== "appraisals";
+  $("view-appeals").hidden = view !== "appeals";
+  for (const tab of document.querySelectorAll(".stats-tab")) {
+    const match = tab.dataset.view === view;
+    tab.setAttribute("aria-selected", match ? "true" : "false");
+  }
+  if (updateHistory) {
+    // Clean URL: appraisals drops the param entirely (default state),
+    // appeals carries ?view=appeals so the URL is link-copyable.
+    const url = view === "appraisals"
+      ? window.location.pathname
+      : window.location.pathname + "?view=appeals";
+    history.replaceState(null, "", url);
+    // Reset scroll so the user lands at the top of the new tab.
+    window.scrollTo(0, 0);
+  }
+}
+
+function wireTabs() {
+  document.querySelectorAll(".stats-tab").forEach((tab) => {
+    tab.addEventListener("click", (e) => {
+      e.preventDefault();
+      setActiveView(tab.dataset.view, true);
+    });
+  });
+}
+
 async function boot() {
   try {
     // reports.json carries everything the stats page needs — the per-
@@ -362,6 +494,9 @@ async function boot() {
     const parcels = Object.values(reports || {});
     if (!parcels.length) throw new Error("reports.json is empty");
     renderStats(parcels);
+    renderAppeals(parcels);
+    wireTabs();
+    setActiveView(getActiveView(), false);
   } catch (e) {
     showError(`Could not load parcel data (${e.message}). Please try again.`);
   }
