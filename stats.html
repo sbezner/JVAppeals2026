@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jersey Village 2026 — by the numbers</title>
-<link rel="stylesheet" href="style.css?v=26">
+<link rel="stylesheet" href="style.css?v=27">
 </head>
 <body class="stats-page">
 
@@ -127,11 +127,28 @@
   <section id="view-appeals" role="tabpanel" hidden>
 
     <div class="stats-hero stats-hero-appeals">
-      <div class="stats-hero-number" id="appeals-hero-pct">&mdash;</div>
+      <div class="stats-hero-number" id="appeals-hero-winrate">&mdash;</div>
       <div class="stats-hero-label">
-        of Jersey Village (<b id="appeals-hero-n">&mdash;</b> of
-        <b id="appeals-hero-total">&mdash;</b> homes) has filed at least
-        one ARB protest since 2023.
+        of Jersey Village ARB hearings in 2025 ended with a lower
+        appraised value.
+      </div>
+    </div>
+
+    <div class="stats-trio">
+      <div class="stat-card">
+        <div class="stat-big" id="appeals-median-reduction">&mdash;</div>
+        <div class="stat-caption">
+          was the typical reduction when HCAD agreed to lower an
+          appraisal in 2025.
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-big" id="appeals-filed-pct">&mdash;</div>
+        <div class="stat-caption">
+          of Jersey Village homes (<b id="appeals-filed-n">&mdash;</b>
+          of <b id="appeals-filed-total">&mdash;</b>) has filed at least
+          one ARB protest since 2023.
+        </div>
       </div>
     </div>
 
@@ -140,23 +157,6 @@
       <div class="stats-filings-chart" id="filings-chart"></div>
       <p class="stats-filings-caption" id="filings-caption"></p>
     </section>
-
-    <div class="stats-trio">
-      <div class="stat-card">
-        <div class="stat-big" id="appeals-winrate">&mdash;</div>
-        <div class="stat-caption">
-          of 2025 Jersey Village hearings ended with a lower appraised
-          value.
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-big" id="appeals-median-reduction">&mdash;</div>
-        <div class="stat-caption">
-          was the typical reduction when HCAD agreed to lower an
-          appraisal in 2025.
-        </div>
-      </div>
-    </div>
 
     <section class="stats-outcomes-section">
       <h2>What happened at 2025 hearings</h2>
@@ -178,6 +178,15 @@
       </table>
       <p class="stats-filer-caption" id="filer-caption"></p>
     </section>
+
+    <div class="stats-never-filed">
+      <p>
+        <b id="never-filed-count">&mdash;</b> Jersey Village homes
+        &mdash; including <b id="never-filed-red">&mdash;</b> in the
+        red bucket &mdash; have never filed an ARB protest in the last
+        4 years. The data says most of them would win if they did.
+      </p>
+    </div>
 
     <div class="stats-takeaway">
       <b>The takeaway.</b>
@@ -222,6 +231,6 @@
   Built by a neighbor.
 </footer>
 
-<script src="stats.js?v=11"></script>
+<script src="stats.js?v=12"></script>
 </body>
 </html>

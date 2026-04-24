@@ -1111,6 +1111,26 @@ table.stats-filer-table td.num {
   font-size: 13px; color: var(--ink); line-height: 1.55;
 }
 
+/* 907-never-filed callout — frames the "opportunity gap" between
+   homes that should consider protesting and those that have actually
+   done so. Amber border distinguishes it from the blue takeaway
+   (action note) and yellow 2026-footer (freshness). */
+.stats-never-filed {
+  margin: 28px 0 12px;
+  padding: 14px 18px;
+  background: #fff8e1;
+  border-left: 3px solid #e6b422;
+  border-radius: 4px;
+  font-size: 14px; line-height: 1.55;
+  color: var(--ink);
+}
+.stats-never-filed p { margin: 0; }
+.stats-never-filed b {
+  color: var(--ink);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Takeaway callout + 2026-still-active footer note */
 .stats-takeaway {
   margin: 28px 0 12px;

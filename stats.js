@@ -350,17 +350,31 @@ function showError(msg) {
 // count in the footer note.
 // ============================================================================
 function renderAppeals(parcels) {
-  // Hero: share of JV parcels that have filed at least one protest in any
-  // of the years loaded by pipeline/hearings.py (2023–2026).
+  // Share of JV parcels that have filed at least one protest in any of
+  // the years loaded by pipeline/hearings.py (2023–2026). Demoted from
+  // the old hero position to a supporting trio card — the hero is now
+  // the 64% win rate (motivational / "filing works"), set further down.
   const everFiled = parcels.filter(
     (p) => p.hist && Object.keys(p.hist).length > 0
   ).length;
   const everFiledPct = parcels.length
     ? Math.round(100 * everFiled / parcels.length)
     : 0;
-  $("appeals-hero-pct").textContent = everFiledPct + "%";
-  $("appeals-hero-n").textContent = fmtInt(everFiled);
-  $("appeals-hero-total").textContent = fmtInt(parcels.length);
+  $("appeals-filed-pct").textContent = everFiledPct + "%";
+  $("appeals-filed-n").textContent = fmtInt(everFiled);
+  $("appeals-filed-total").textContent = fmtInt(parcels.length);
+
+  // Never-filed callout: the complement to everFiled, plus a call-out
+  // for the red-bucket subset (parcels the tool flags as "file" but
+  // whose owners haven't pulled the trigger). Motivational — frames
+  // the inaction gap in concrete numbers.
+  const neverFiled = parcels.length - everFiled;
+  const redNeverFiled = parcels.filter(
+    (p) => p.c === "red" &&
+      (!p.hist || Object.keys(p.hist).length === 0)
+  ).length;
+  $("never-filed-count").textContent = fmtInt(neverFiled);
+  $("never-filed-red").textContent = fmtInt(redNeverFiled);
 
   // Filings-by-year: count parcels with a 2023/2024/2025/2026 hist entry.
   const filingsByYear = {};
@@ -406,7 +420,7 @@ function renderAppeals(parcels) {
   }
   const total2025 = reduced + unchanged + increased;
   const winRate = total2025 ? Math.round(100 * reduced / total2025) : 0;
-  $("appeals-winrate").textContent = winRate + "%";
+  $("appeals-hero-winrate").textContent = winRate + "%";
   const medReduction = reductions.length ? median(reductions) : null;
   $("appeals-median-reduction").textContent =
     medReduction != null ? fmtMoney(medReduction) : "—";
