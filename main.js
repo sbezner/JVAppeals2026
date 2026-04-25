@@ -551,7 +551,7 @@ function wireLayerControl() {
     const note = L.DomUtil.create("div", "layer-cap-note", overlaysList);
     note.innerHTML =
       '<span class="layer-bullet layer-bullet-ring" aria-hidden="true"></span>' +
-      "Orange ring = &sect;23.23 cap claim";
+      "Orange ring = up &gt;10% from last year";
   }
 }
 
