@@ -4,10 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>2026 HCAD Appeal Report</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Your 2026 HCAD Appeal Report">
+<meta property="og:description" content="Personalized appeal report with comparable properties, fair-value math, §23.23 cap math, and a hearing script — for any Jersey Village parcel.">
+<meta property="og:url" content="https://jvtaxappeal.com/report.html">
+<meta property="og:image" content="https://jvtaxappeal.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Your 2026 HCAD Appeal Report">
+<meta name="twitter:description" content="Personalized appeal report with comparable properties, fair-value math, §23.23 cap math, and a hearing script — for any Jersey Village parcel.">
+<meta name="twitter:image" content="https://jvtaxappeal.com/og-image.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""/>
-<link rel="stylesheet" href="style.css?v=30">
+<link rel="stylesheet" href="style.css?v=52">
 </head>
 <body class="report-page">
 
@@ -100,8 +112,9 @@
         You can still file an unequal-appraisal protest, but you'll
         need to hand-pick your own comparable properties on
         <a href="https://hcad.org" target="_blank" rel="noopener">hcad.org</a>
-        before the hearing. The Playbook on Page 2 still applies once
-        you have your comps in hand.
+        before the hearing. The
+        <a href="playbook.html#file">Playbook &rarr; How to file</a>
+        walks through the rest once you have your comps in hand.
       </p>
     </section>
 
@@ -175,114 +188,29 @@
     </section>
   </section>
 
-  <!-- ============ PAGE 2 — THE PLAYBOOK ============ -->
+  <!-- ============ PAGE 2 — YOUR HEARING SCRIPT ============ -->
   <section class="report-sheet page-2">
-    <h1 class="report-title">How to Use This Report</h1>
+    <h1 class="report-title">Your Hearing Script</h1>
     <p class="report-subtitle" id="subtitle-2"></p>
 
-    <p class="deadline-banner">
-      <b>File by May 15, 2026</b>, or within 30 days of your Notice of
-      Appraised Value &mdash; whichever is later. Missing this deadline
-      waives your right to appeal for the 2026 tax year.
+    <p class="playbook-ref">
+      <b>Before you file:</b> see the
+      <a href="playbook.html#file">Playbook &rarr; How to file an appeal</a>
+      for the filing deadline, the three filing channels, how to
+      build your evidence packet from hcad.org records, iSettle
+      decisions, rebuttals, and what NOT to argue. This page is what
+      you actually <em>say</em> at the ARB hearing &mdash; personalized
+      with your numbers.
+      <span class="playbook-url">jvtaxappeal.com/playbook.html</span>
     </p>
 
-    <h3>Step 1 &mdash; File the Protest</h3>
-    <p>
-      Log in to <b>owners.hcad.org</b> using your iFile number (it's on
-      the Notice of Appraised Value HCAD mailed you). When choosing
-      your grounds for protest, select
-      <b>&ldquo;Value is unequal compared with other properties.&rdquo;</b>
-      You can attach this report as supporting evidence, but don't
-      rely on HCAD reading it in detail &mdash; they won't.
-    </p>
-
-    <h3>Step 2 &mdash; Understand the iSettle Offer</h3>
-    <p>
-      After filing, HCAD will likely respond with an <b>iSettle
-      offer</b> &mdash; a small reduction, often in the $2,000&ndash;$10,000
-      range. This offer is <b>not a ceiling</b>. If the reduction is
-      smaller than the gap shown on Page 1, reject it and request a
-      formal <b>Appraisal Review Board (ARB) hearing</b>, where you'll
-      present this report in person (or by video). Most of the value
-      in filing comes at the ARB, not from the iSettle offer.
-    </p>
-
-    <h3>Step 3 &mdash; Your Hearing Script</h3>
     <div id="hearing-script"></div>
-
-    <h3>If the Appraiser Pushes Back</h3>
-    <p>
-      The district's appraiser may try one of these pushbacks. Have
-      the scripted response ready:
-    </p>
-    <table class="rebuttals">
-      <thead>
-        <tr><th>The appraiser may say&hellip;</th><th>Your response</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><em>&ldquo;Those comps aren't appropriate.&rdquo;</em></td>
-          <td>
-            They share my neighborhood code, grade, sqft band, and age
-            band &mdash; the same filters HCAD uses internally. They meet
-            the reasonable-number-of-appropriately-adjusted test.
-          </td>
-        </tr>
-        <tr>
-          <td><em>&ldquo;Your home has features those don't.&rdquo;</em></td>
-          <td>
-            &sect;41.43(b)(3) requires appropriately-adjusted comps,
-            not identical ones. HCAD's own appraisals of these homes
-            already reflect the adjustments the district made for
-            their features.
-          </td>
-        </tr>
-        <tr>
-          <td><em>&ldquo;Market value supports our number.&rdquo;</em></td>
-          <td>
-            &sect;41.43(b)(3) is an unequal-appraisal claim, not a
-            market-value claim. The median of comparable appraisals
-            is the standard this panel is asked to apply.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h3>What NOT to Argue</h3>
-    <ul class="not-to-argue">
-      <li><b>Market value or recent sale prices.</b> Different statute,
-        different argument. Save for &sect;42.26(a)(3) judicial review.</li>
-      <li><b>&ldquo;My taxes went up too much.&rdquo;</b> Irrelevant &mdash;
-        the ARB panel sets the appraised value, not the tax rate.</li>
-      <li><b>Repair costs or damage.</b> That is a condition argument
-        under &sect;41.44, not an unequal-appraisal argument under
-        &sect;41.43(b)(3).</li>
-      <li><b>What your neighbor paid when they bought.</b> Panels
-        distrust anecdotes; stick to the comp table.</li>
-    </ul>
-
-    <h3>If You Want to Escalate &mdash; &sect;42.26(a)(3)</h3>
-    <p>
-      If the ARB denies your protest, you have 60 days to file for
-      judicial review in district court under <b>Texas Tax Code
-      &sect;42.26(a)(3)</b>. That statute prohibits the district from
-      presenting &mdash; and the court from considering &mdash;
-      market-value evidence as a response to your median-of-comps
-      showing. It is a stronger procedural posture than the ARB, but
-      requires a lawyer and filing fee. Mention it at the ARB hearing
-      to signal that you understand the full legal ladder.
-    </p>
 
     <h3>Disclaimer &amp; Terms of Use</h3>
     <ul class="disclaimer-list">
       <li><b>Not an Agent.</b> The author of this report is not your
         authorized representative and is not filing this protest on
         your behalf. You are responsible for all filings.</li>
-      <li><b>No Guarantee.</b> This data is provided as-is based on
-        public records. The author makes no claim as to the absolute
-        accuracy of this information or the outcome of any appeal.</li>
-      <li><b>Deadlines.</b> You are solely responsible for meeting the
-        HCAD filing deadline (typically May 15, 2026).</li>
       <li><b>Risk of Increase.</b> The Appraisal Review Board (ARB)
         has the authority to adjust property values upward, downward,
         or keep them unchanged.</li>
@@ -290,9 +218,20 @@
         charge as a community resource and may not be sold or used
         for commercial purposes.</li>
     </ul>
+    <p class="disclaimer-pointer">
+      Full Disclaimer &amp; Terms of Use &mdash; including
+      data-accuracy, no-guarantee, deadline, and acceptance terms &mdash;
+      at <a href="about.html#disclaimer">jvtaxappeal.com/about.html#disclaimer</a>.
+    </p>
 
     <p class="report-footer">
-      <a href="stats.html">Jersey Village by the numbers</a>
+      <a href="appraisals.html">Jersey Village by the numbers</a>
+      &nbsp;&middot;&nbsp;
+      <a href="playbook.html">Homeowner Playbook</a>
+      &nbsp;&middot;&nbsp;
+      <a href="about.html#contact">Contact</a>
+      &nbsp;&middot;&nbsp;
+      <a href="about.html#disclaimer">Disclaimer</a>
       &nbsp;&middot;&nbsp;
       Built by a neighbor.
     </p>
@@ -309,6 +248,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
-<script src="report.js?v=17"></script>
+<script src="report.js?v=20"></script>
 </body>
 </html>

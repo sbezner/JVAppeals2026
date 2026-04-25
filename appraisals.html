@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Appraisals 2026 — Jersey Village HCAD Appeals</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Appraisals 2026 — Jersey Village by the Numbers">
+<meta property="og:description" content="Total appraised value, combined over-assessment gap, distribution, and per-neighborhood case rates across every JV parcel.">
+<meta property="og:url" content="https://jvtaxappeal.com/appraisals.html">
+<meta property="og:image" content="https://jvtaxappeal.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Appraisals 2026 — Jersey Village by the Numbers">
+<meta name="twitter:description" content="Total appraised value, combined over-assessment gap, distribution, and per-neighborhood case rates across every JV parcel.">
+<meta name="twitter:image" content="https://jvtaxappeal.com/og-image.png">
+<link rel="stylesheet" href="style.css?v=52">
+</head>
+<body class="stats-page doc-page">
+
+<nav class="site-nav" aria-label="Primary">
+  <a href="index.html" class="site-nav-link">Map</a>
+  <a href="playbook.html" class="site-nav-link">Playbook</a>
+  <a href="appraisals.html" class="site-nav-link" aria-current="page">Appraisals</a>
+  <a href="appeals.html" class="site-nav-link">Appeals &amp; History</a>
+  <a href="about.html" class="site-nav-link">About</a>
+</nav>
+
+<main class="stats-container" id="stats" hidden>
+  <h1 class="stats-title">Appraisals 2026.</h1>
+
+  <section id="view-appraisals" role="tabpanel">
+
+    <p class="appeals-intro">
+      How does Jersey Village compare to itself? Here's what HCAD's
+      2026 appraisals look like against the &sect;41.43(b)(3)
+      per-square-foot median test.
+    </p>
+
+    <nav class="doc-toc" aria-label="On this page">
+      <b class="doc-toc-label">On this page</b>
+      <a href="#gap">1. How big is the gap?</a>
+      <a href="#cluster">2. Where do cases cluster?</a>
+      <a href="#notable-section">3. Also worth knowing</a>
+    </nav>
+
+    <!-- ACT 1 — How big is the gap? -->
+    <h2 id="gap">How big is the gap?</h2>
+
+    <div class="stats-hero stats-hero-appraisals">
+      <div class="stats-hero-number" id="stat-combined"></div>
+      <div class="stats-hero-label">
+        Combined gap between HCAD's 2026 appraisals and the
+        per-sqft fair value across all <b>red&ndash; and
+        yellow&ndash;bucket</b> homes &mdash; parcels appraised
+        more than 2% over their comp median.
+      </div>
+
+      <div class="stats-hero-secondary">
+        <div class="stats-hero-number-sm" id="hero-total"></div>
+        <div class="stats-hero-label-sm">
+          Total HCAD 2026 appraised value across
+          <b id="hero-count"></b> single-family parcels in Jersey
+          Village. Median year-over-year change:
+          <b id="stat-yoy"></b>.
+        </div>
+      </div>
+    </div>
+
+    <h3>How over-assessed is Jersey Village?</h3>
+    <p class="stats-chart-intro">
+      Every parcel with matched comps, binned by how its 2026 HCAD
+      appraisal compares to the per-sqft median of its 5 closest
+      neighbors. Bar colors match the map. Dashed vertical lines
+      mark the bucket cutoffs (&minus;5%, +2%, +7%); the blue
+      dotted line marks the city-wide median.
+    </p>
+    <div class="stats-chart stats-plain" id="chart"></div>
+    <p class="stats-chart-caption" id="chart-caption"></p>
+
+    <!-- ACT 2 — Where do cases cluster? -->
+    <h2 id="cluster">Where do cases cluster?</h2>
+
+    <p class="appeals-paragraph">
+      The per-sqft test sorts every Jersey Village home into one of
+      five buckets. Most cluster near the median; roughly 1 in 4
+      sits more than 7% above it.
+    </p>
+
+    <h3>By the &sect;41.43(b)(3) per-sqft median test</h3>
+    <table class="stats-buckets">
+      <tbody id="buckets-body"></tbody>
+    </table>
+
+    <h3>By neighborhood</h3>
+    <p class="stats-nbhd-intro">
+      Each row is a HCAD neighborhood code (HCAD's internal grouping
+      of similar homes); the label names the most common street in
+      that group. <b>Case rate</b> is the share of homes in the red
+      or yellow bucket (more than 2% over the per-sqft median).
+      Neighborhoods with fewer than 10 matched parcels are omitted.
+    </p>
+    <table class="stats-nbhd-table">
+      <thead>
+        <tr>
+          <th class="col-nbhd">Neighborhood</th>
+          <th class="num">Homes</th>
+          <th class="num">Case rate</th>
+          <th class="num">Median over&#8209;%</th>
+          <th class="num">Gap</th>
+        </tr>
+      </thead>
+      <tbody id="nbhd-body"></tbody>
+      <tfoot id="nbhd-foot"></tfoot>
+    </table>
+
+    <!-- ACT 3 — Also worth knowing -->
+    <h2 id="notable-section">Also worth knowing</h2>
+
+    <ul class="stats-notable" id="notable"></ul>
+
+    <p class="stats-cta stats-cta-inline">
+      <a href="appeals.html">See what happened when neighbors pushed
+      back &rarr;</a>
+    </p>
+
+  </section>
+
+</main>
+
+<div id="stats-error" class="stats-error" hidden>
+  <h1>Could not load data</h1>
+  <p id="stats-error-msg"></p>
+  <p><a href="index.html">&larr; Back to the map</a></p>
+</div>
+
+<footer class="site-footer">
+  <a href="index.html">&larr; Jersey Village 2026</a>
+  &nbsp;&middot;&nbsp;
+  Built by a neighbor.
+  &nbsp;&middot;&nbsp;
+  <a href="about.html#contact">Contact</a>
+  &nbsp;&middot;&nbsp;
+  <a href="about.html#disclaimer">Disclaimer</a>
+</footer>
+
+<script src="stats.js?v=16"></script>
+<script src="nav.js?v=1"></script>
+</body>
+</html>

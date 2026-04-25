@@ -342,15 +342,9 @@ function wireLegendInfo() {
     try { localStorage.setItem(INTRO_SEEN_KEY, "1"); } catch (e) {}
     if (nudge) nudge.hidden = true;
   }
-  function open(scrollToHowto) {
+  function open() {
     pop.hidden = false;
     btn.setAttribute("aria-expanded", "true");
-    if (scrollToHowto) {
-      requestAnimationFrame(() => {
-        const sec = document.getElementById("info-howto");
-        if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
   }
   function shut() {
     pop.hidden = true;
@@ -359,12 +353,12 @@ function wireLegendInfo() {
 
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
-    if (pop.hidden) { open(false); markIntroSeen(); } else { shut(); }
+    if (pop.hidden) { open(); markIntroSeen(); } else { shut(); }
   });
   if (nudge) {
     nudge.addEventListener("click", (e) => {
       e.stopPropagation();
-      open(true);
+      open();
       markIntroSeen();
     });
   }

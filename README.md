@@ -16,19 +16,39 @@ client-rendered §41.43(b)(3) HCAD appeal report behind every pin.
 - **Orange ring** on a pin = possible §23.23 homestead cap claim
   (homesteaded home with >10% year-over-year appraisal increase).
 - **Click a pin** → opens a two-page report at
-  `report.html?a=<account>`. Page 1 is the evidence (facts table,
-  comps, median with fair-value math, raw-dollar alt view); Page 2 is
-  the playbook (May 15 deadline, iFile steps, hearing script,
-  rebuttals, §42.26 escalation, disclaimer). Fully printable; share by
-  URL.
-- **Community snapshot** at
-  [`stats.html`](https://jvtaxappeal.com/stats.html) — JV-wide
-  aggregate numbers (total appraised value, combined over-assessment
-  gap, median year-over-year change, bucket distribution, cap-violation
-  count), an inline-SVG histogram of every parcel's over-%, a
-  per-neighborhood case-rate table, and a live count of how many
-  neighbors have already filed a 2026 protest (refreshed weekly from
-  HCAD's ARB data).
+  `report.html?a=<account>`. Page 1 is the case (facts table, comps,
+  median with fair-value math, raw-dollar alt view); Page 2 is the
+  filing guide (May 15 deadline, iFile steps, hearing script,
+  rebuttals, §42.26 escalation, disclaimer). The report is a
+  preparation worksheet — not evidence; homeowners build their
+  actual evidence packet from hcad.org records (see the Playbook
+  for the workflow). Fully printable; share by URL.
+- **Five-tab top nav** (sticky, mobile-scrollable) across every page:
+  - **Map** (`/`) — the primary surface, described above.
+  - **Playbook** ([`playbook.html`](https://jvtaxappeal.com/playbook.html)) —
+    the homeowner's three-act guide: how to use the site, how to file
+    an appeal (deadline, iFile / mail / in-person, what to upload,
+    iSettle vs ARB, hearing script, what NOT to argue, §23.23 cap),
+    and how to track the protest through HCAD's system to an outcome.
+    Plus a glossary and an 8-question FAQ. Prints cleanly — nav,
+    footer, and TOC are hidden; every `<details>` opens automatically.
+  - **Appraisals** ([`appraisals.html`](https://jvtaxappeal.com/appraisals.html)) —
+    total HCAD 2026 appraised value, combined over-assessment gap,
+    median year-over-year change, inline-SVG histogram of every
+    parcel's over-%, bucket table, and per-neighborhood case-rate
+    breakdown.
+  - **Appeals & History** ([`appeals.html`](https://jvtaxappeal.com/appeals.html)) —
+    2025 ARB win rate, typical reduction, agent-vs-owner comparison,
+    filings per year, "907 never filed" callout, and a live count of
+    how many neighbors have already filed a 2026 protest (refreshed
+    weekly from HCAD's ARB data).
+  - **About** ([`about.html`](https://jvtaxappeal.com/about.html)) —
+    what this is / isn't, data sources (with a client-computed
+    last-refresh date pulled from `data/parcels.json`'s
+    `Last-Modified` header), methodology link, privacy note, open-source
+    link, and contact (`hello@jvtaxappeal.com`).
+- `stats.html` is a backward-compatible redirect preserving the old
+  `?view=appeals` param for anyone who shared the legacy URL.
 - **ARB protest + hearings history** for 2023–2026 is loaded into
   `data/reports.json` per parcel (1,265 of 2,172 JV parcels have at
   least one record, 58%). Stored as a year-keyed `hist` object with
@@ -108,9 +128,16 @@ git add data/ && git commit -m "Regenerate parcel data" && git push
 ## Layout
 
 ```
-index.html, main.js, style.css    Leaflet map + search UI
-report.html, report.js            two-page appeal report template
-stats.html, stats.js              /stats.html community snapshot + histogram
+index.html, main.js, style.css    Leaflet map + search UI (the "/" landing)
+nav.js                              shared: scroll active top-nav tab into view on mobile
+report.html, report.js            two-page appeal report (Page 1 case + Page 2 hearing script)
+playbook.html                     three-act homeowner guide (TOC + glossary + FAQ)
+appraisals.html, stats.js         2026-appraisal snapshot (two-tier red hero + histogram + tables)
+appeals.html                      ARB outcomes + filings (two-tier green hero + agent vs owner + never-filed)
+about.html                        TOC + 8 sections (data sources, methodology, privacy, contact, disclaimer + acceptance clause)
+stats.html                        redirect stub — preserves ?view=appeals for old share URLs
+favicon.svg                       JV monogram on red circle (matches the strongest map-pin signal)
+og-image.png, og-image.svg        1200×630 Open Graph card for Facebook / iMessage / X / Slack previews
 data/parcels.json                 map pins + flags
 data/reports.json                 per-parcel report data (lazy-loaded)
 pipeline/                         Python pipeline modules

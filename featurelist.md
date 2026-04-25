@@ -2,7 +2,7 @@
 
 Features under consideration for JVAppeals2026. Ranked by real impact on
 whether a Jersey Village homeowner wins their property tax appeal.
-Originally drafted 2026-04-20; last updated 2026-04-21. Methodology
+Originally drafted 2026-04-20; last updated 2026-04-24. Methodology
 and recommendation logic are **frozen until after May 15, 2026** —
 all comp-filter, adjustment, and verdict-threshold changes have been
 moved to the new
@@ -12,6 +12,130 @@ section so nothing accidentally ships mid-cycle.
 ---
 
 ## ✅ Shipped
+
+### Content + UX refinement pass after the restructure (2026-04-24)
+
+A second pass focused on factual accuracy and density. Fact-checked
+copy against the live HCAD iFile portal (with the user logged in)
+and the Texas Comptroller's protest pages, then trimmed redundant
+content across pages.
+
+Substantive corrections shipped:
+- **iSettle is opt-in**, chosen during the iFile wizard's "Additional
+  Options" screen with a required Opinion of Market Value when Yes —
+  not something HCAD does automatically after filing. Playbook
+  rewritten to match.
+- **HCAD = Harris *Central* Appraisal District** (their footer name).
+- **2026 deadline is May 18** for most JV homeowners (May 15 is the
+  statute baseline; §41.44(a) extends 30 days from notice mailing,
+  §1.06 bumps Sunday → Monday). Playbook deadline banner shows the
+  full math; durable "May filing deadline" copy elsewhere.
+- **iFile login is `owners.hcad.org`**, not generic `hcad.org`.
+
+Content surfaces that changed:
+- Report Page 2 collapsed to hearing script + Disclaimer; the deadline
+  banner / iFile steps / iSettle / rebuttals / what-NOT-to-argue /
+  §42.26 escalation moved to the Playbook (no more duplication).
+  A blue callout at the top of Page 2 points to `playbook.html#file`
+  and prints the URL `jvtaxappeal.com/playbook.html` for paper readers.
+- Playbook Act 2 rewritten high-level: "follow HCAD's protest
+  wizard… self-explanatory once you're logged in" rather than
+  walking through screens. Evidence-packet section collapsed from
+  4 numbered steps to 3 items. Printable checklist removed.
+- Two-tier hero on both Appraisals (red gap → red total value) and
+  Appeals (green win-rate → green median reduction).
+- Map popover trimmed to colors + badges; "How comps are chosen"
+  indented under the gray No-comps bullet, methods-differ indented
+  under Orange Ring (visual parity). Relative-not-absolute caveat
+  moved to About → Methodology.
+- About page TOC + 8 anchored sections with proper sticky-nav offset.
+- Footer everywhere: `← Jersey Village 2026 · Built by a neighbor ·
+  Contact · Disclaimer` (Disclaimer link added).
+- "Use of this site constitutes acceptance" clause added to the
+  About → Disclaimer block.
+- Owner names + report-as-evidence framing tightened: the report is
+  a *preparation tool*, never described as the homeowner's
+  evidence; uploads are HCAD comp printouts + their own statement.
+
+Bug fix: anchor offsets stacked (`scroll-padding-top` + per-section
+`scroll-margin-top` both at 80px = 200px overshoot). Now using
+`scroll-padding-top: 60px` on `html` only — single source of truth.
+
+### Social-media preview cards / Open Graph (2026-04-24)
+
+When a JV neighbor shares `jvtaxappeal.com` on Facebook / NextDoor /
+iMessage / Slack / X, the link now unfurls as a branded card with
+the bucket-color dots, "Jersey Village 2026 HCAD Appeals" title,
+"Find your home. See if you should file." tagline, and the JV badge.
+
+- `og-image.svg` is the source design (1200×630, vector).
+- `og-image.png` is the rendered artifact crawlers fetch (50KB).
+  Generated with headless Chrome:
+  `Google Chrome --headless=new --window-size=1200,630
+  --screenshot=og-image.png file://$(pwd)/og-image.svg`
+- Per-page `og:title` / `og:description` / `og:url` plus matching
+  Twitter Card meta tags on every page (Map, Playbook, Appraisals,
+  Appeals, About, Report). Image is shared across all pages.
+
+Also shipped same day: `favicon.svg` — JV monogram in white on a red
+circle, matches the bucket palette's "file your appeal" signal.
+Linked from every HTML page.
+
+### Five-tab site restructure — Map / Playbook / Appraisals / Appeals / About (2026-04-24)
+
+Site went from two pages (map + stats) to five, tied together by a
+sticky mobile-scrollable top nav. The map keeps its zero-click
+address-search funnel at `/`; the old two-tab `stats.html` split into
+`appraisals.html` and `appeals.html`, each its own top-level page with
+the same three-act structure from the earlier designer pass. A new
+`playbook.html` consolidates the homeowner's guide (how to use the
+site, how to file, how to track on HCAD) with a TOC, glossary,
+and an 8-question FAQ. `about.html` holds data
+sources, methodology, privacy, contact (`hello@jvtaxappeal.com` via
+Cloudflare email routing), and the full legal disclaimer.
+`stats.html` was reduced to a tiny redirect stub that forwards
+`?view=appeals` to `appeals.html` so legacy share URLs keep working.
+
+Map-page `?` popover trimmed to just colors + badges (the old
+"How to use this site" section lives in Playbook now). Footer
+across every non-report page simplified to "← Jersey Village 2026 ·
+Built by a neighbor · Contact", where Contact anchors to the About
+page's Contact section rather than launching a `mailto:` on mis-tap.
+
+Decisions baked in during the restructure:
+- **Owner names stay visible** on map popup + sheet + report — HCAD
+  itself publishes this data with zero barrier, so no takedown
+  mechanism or privacy policy was added.
+- **Playbook and report.html Page 2 stay distinct by purpose**:
+  Playbook is generic pre-filing education, Page 2 is parcel-
+  personalized hearing-day content. Don't duplicate.
+- **Appraisals hero** gets a red-leaning accent (`.stats-hero-appraisals`)
+  to pair with the "over-assessment" story; Appeals keeps its green
+  win-rate hero. Everything else uses shared site-blue for nav/links.
+- **Report page stays nav-less** — toolbar only, to preserve the
+  print-clean layout for hearing packets.
+
+QA-pass shipped in the same commit:
+- Duplicate `id="notable"` in `appraisals.html` renamed to
+  `#notable-section` (h2 anchor) vs `#notable` (ul that stats.js
+  populates).
+- `report.html` footer picked up a Contact link.
+- Print CSS added for doc/stats pages — hides nav/footer/TOC and
+  forces every FAQ `<details>` open so the printable Playbook is
+  complete on paper.
+- `:focus-visible` focus rings on every nav pill (was invisible
+  default before).
+- `nav.js` auto-scrolls the active pill into view on load so
+  narrow-mobile landings on "Appeals & History" or "About" don't
+  render the active tab offscreen.
+- Non-obvious layout fix: `html, body { height: 100dvh }` (needed
+  for Leaflet) was globally clamping body height on long-content
+  pages and breaking sticky nav. Now scoped — only the unclassed
+  `body` (map page) keeps the clamp; `body.doc-page` and
+  `body.stats-page` override to `min-height: 100dvh; height: auto`.
+
+Cache-bust: `style.css?v=34`, `main.js?v=9`, `stats.js?v=15`,
+`nav.js?v=1`.
 
 ### ARB protest + hearings pipeline + 2026 filings factoid (2026-04-23, commits eff8d43, 82907e5)
 
@@ -260,30 +384,6 @@ methodology is frozen until after the May 15 filing deadline.*
 ---
 
 ## Tier 2 — Nice-to-haves (low effort, modest impact)
-
-### Social-media preview cards (Open Graph tags)
-
-When `jvtaxappeal.com` gets shared — on Facebook, iMessage, Slack, X,
-Nextdoor — the link currently unfurls as a naked URL with no preview.
-Posts with rich preview cards get roughly 2× the click-through of
-bare links.
-
-Four `<meta>` tags in `index.html` (duplicated in `report.html`) plus
-a 1200×630 PNG screenshot of the map committed to the repo root:
-
-- `og:title` — "Jersey Village 2026 HCAD Appeals"
-- `og:description` — one sentence: "Check your 2026 HCAD appraisal
-  and see if you have a §41.43(b)(3) case in one click."
-- `og:image` — a screenshot of the map with colored pins
-- `og:url` — canonical URL
-- `twitter:card` pair for X/Twitter previews
-
-**Why:** Time-sensitive for the neighborhood-FB launch. After the
-initial post, every re-share still benefits. Affects reach, not
-homeowner outcome — which is why it sits in Tier 2 rather than Tier 1.
-
-**Work:** ~30 minutes. Half of it is capturing and cropping a
-screenshot of the map to the 1200×630 spec.
 
 ---
 

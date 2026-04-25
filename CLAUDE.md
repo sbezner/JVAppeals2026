@@ -101,10 +101,19 @@ JVAppeals2026/
 │
 ├── index.html              Leaflet map page (served at site root)
 ├── main.js                 map + autocomplete + pin-click navigation
-├── style.css               styles for map, popup, sheet, report, @media print
+├── nav.js                  shared; scrolls active top-nav tab into view on mobile
+├── style.css               styles for map, popup, sheet, report, doc pages, @media print
 ├── report.html             one template, rendered by JS from ?a=<account>
 ├── report.js               fetches data/reports.json, populates the template
-├── stats.html, stats.js    JV-wide by-the-numbers page + histogram
+├── playbook.html           three-act homeowner guide (TOC + glossary + FAQ)
+├── appraisals.html         2026 appraisal snapshot (stats.js renders into it)
+├── appeals.html            ARB outcomes + filings (stats.js renders into it)
+├── about.html              data sources, methodology, privacy, contact, disclaimer
+├── stats.js                client-side renderer shared by appraisals.html + appeals.html
+├── stats.html              redirect stub; preserves ?view=appeals for legacy share URLs
+├── favicon.svg             JV monogram on red circle, 32×32 SVG; one source of truth
+├── og-image.svg            source for the 1200×630 Open Graph card (edit, then re-render PNG)
+├── og-image.png            rendered PNG that social crawlers actually fetch (1200×630)
 │
 ├── data/
 │   ├── parcels.json        ~370KB / ~89KB gzipped; consumed by main.js on map load
@@ -331,6 +340,171 @@ JVAppeals2026/
   (privacy-respecting, zero-config on the proxied domain). No tracker
   in the repo. Do not add Google Analytics or any other cookie-based
   tracker — see `featurelist.md`'s out-of-scope section.
+
+### ✅ Shipped 2026-04-24 — content + UX refinement pass (after the five-tab restructure)
+
+A second pass on the restructured site, focused on factual accuracy
+and "informative-but-not-overwhelming" copy density. Fact-checked
+against the live HCAD iFile portal (with the user logged in) and the
+Texas Comptroller's protest pages.
+
+- **iSettle is opt-in, not automatic** (correction). HCAD's iFile
+  wizard's "Additional Options" screen has a Yes/No radio plus an
+  Opinion of Market Value field that's required when iSettle = Yes.
+  The Playbook's iSettle section is rewritten to reflect this; the
+  prior "After you file, HCAD usually makes an iSettle offer" framing
+  was wrong.
+- **HCAD rebrand**: it's now "Harris **Central** Appraisal District"
+  (per their own footer on owners.hcad.org). The About page's
+  disclaimer block matches.
+- **2026 deadline is May 18**, not May 15 (statute baseline). HCAD's
+  iFile dashboard shows "Final protest deadline 5/18/2026" because
+  Notices were mailed April 17 → 30-day extension under §41.44(a) →
+  May 17 (Sunday) → bumped to Monday May 18 under §1.06. The
+  Playbook deadline banner explains the math; durable copy
+  ("May filing deadline") replaces hard-coded "May 15" elsewhere.
+  The FAQ summary "I missed May 15…" stays colloquial since
+  homeowners search by that date.
+- **iFile login URL** is `owners.hcad.org` (specific), not the
+  generic `hcad.org`.
+- **Report Page 2 collapsed** to its only unique content: the
+  personalized hearing script + Disclaimer & Terms. The deadline
+  banner, iFile steps, iSettle paragraph, rebuttals table, what-NOT-
+  to-argue list, and §42.26 escalation all moved out — they're
+  generic content and now live solely in the Playbook. A blue
+  callout at the top of Page 2 points to `playbook.html#file` and
+  exposes the URL `jvtaxappeal.com/playbook.html` in print so paper
+  readers can find it.
+- **Playbook Act 2 trimmed.** iFile bullet now reads "follow HCAD's
+  protest wizard… self-explanatory once you're logged in" rather
+  than walking through screens. Building-the-evidence-packet
+  collapsed from 4 numbered steps to 3 items (HCAD comp records /
+  written statement / extras). Printable one-page checklist
+  removed entirely (it duplicated the prose). Glossary keeps an
+  iFile / iSettle entry; FAQ has 8 questions.
+- **Owner names stay; report is not evidence.** Multiple copy edits
+  removed any suggestion that homeowners should upload the report's
+  PDF as their evidence. The report is now framed as a *preparation
+  tool*; homeowners pull each comp's record from `hcad.org`'s
+  Property Search and write their own one-page statement.
+- **Two-tier hero** on Appraisals + Appeals. Appraisals leads with
+  the red over-assessment gap (e.g., $40M) followed by a hairline
+  divider and a smaller red number for the total appraised value
+  ($900M). Appeals mirrors the structure in green: 64% win rate
+  primary, $19K median reduction secondary.
+- **Map popover trimmed** to colors + badges only. The "How comps
+  are chosen" explainer now lives indented under the gray "No comps"
+  bullet (and as a `.bucket-explainer` div under Orange Ring's
+  methods-differ tag too, for visual consistency with the same
+  badge-tag styling). The relative-not-absolute methodology caveat
+  was moved to About → Methodology where deeper readers actually
+  find it.
+- **About page TOC + section IDs** for all 8 sections. Anchors land
+  the heading just below the sticky nav (no more landing 200px
+  below the heading) thanks to scroll-padding-top: 60px on html
+  and adequate padding-bottom on `.doc-container` so even the last
+  sections (Open source / Contact / Disclaimer) can scroll to top.
+- **Acceptance clause + footer Disclaimer link.** About → Disclaimer
+  now contains "By using this site, you acknowledge that you have
+  read and accept this Disclaimer & Terms of Use." Every page
+  footer reads `← Jersey Village 2026 · Built by a neighbor ·
+  Contact · Disclaimer`, with both Contact and Disclaimer linking
+  to the right anchor on About. Replaced "Press" in the Contact
+  paragraph with a tighter "Questions, corrections, or a comp that
+  doesn't look right…" since the user wasn't soliciting press.
+- **Trimmed bottom-of-page disclaimers**. Appraisals' generic
+  methodology+legal paragraph removed (covered by About).
+  Appeals' shrunk to just the substantive "Reduction means
+  appraised value, not tax dollars" caveat that the page's green
+  numbers actually need.
+- **Favicon.** New `favicon.svg` — JV monogram in white on a red
+  circle, matches the bucket palette's "file your appeal" signal.
+  Linked from every HTML page including the stats redirect.
+- **Open Graph cards.** New `og-image.svg` (source) +
+  `og-image.png` (1200×630, what crawlers fetch). PNG generated
+  by rendering the SVG via headless Chrome:
+  `Google Chrome --headless=new --window-size=1200,630
+  --screenshot=og-image.png file://$(pwd)/og-image.svg`. Each page
+  has its own `og:title` / `og:description` / `og:url` plus the
+  shared image and matching Twitter Card tags. When a JV neighbor
+  shares a link on Facebook / NextDoor / iMessage / Slack, it now
+  unfurls as a branded card.
+- **Cache-bust:** `style.css?v=51`, `main.js?v=9`, `stats.js?v=16`,
+  `report.js?v=19`, `nav.js?v=1`. (No `?v=` on the favicon /
+  og-image — they're stable assets; if you redesign either, bump
+  via filename rename or query string at that time.)
+
+### ✅ Shipped 2026-04-24 — five-tab site restructure (Map / Playbook / Appraisals / Appeals / About)
+
+- **Sticky top nav across all non-report pages.** Single `.site-nav`
+  component in `index.html`, `playbook.html`, `appraisals.html`,
+  `appeals.html`, `about.html`. Horizontally scrollable pills on narrow
+  mobile; `aria-current="page"` drives the highlighted-pill state;
+  `nav.js` (tiny, shared) scrolls the active pill into view on load so
+  it's never offscreen on phones. Report page intentionally stays
+  toolbar-only — the print layout needs the chrome-free header.
+- **Split `stats.html` into `appraisals.html` + `appeals.html`.** The
+  two in-page tabs from the earlier designer pass are now top-level
+  pages, each inheriting its original three-act structure. `stats.js`
+  is now defensive — each renderer early-returns if its root DOM node
+  is missing, so the same script powers both single-view pages.
+  Appraisals hero gained a red-leaning accent (`.stats-hero-appraisals`)
+  to pair with the "over-assessment" story; Appeals keeps the green
+  win-rate hero.
+- **New `playbook.html`** — the homeowner's three-act guide. Act 1:
+  how to use this site. Act 2: how to file an appeal (deadline, three
+  channels, evidence upload, iSettle vs ARB, hearing script, what NOT
+  to argue, §23.23 cap). Act 3: how to validate and track on HCAD
+  (hcad.org search, hearing schedule, release-letter outcome codes,
+  §42.26 judicial-review escalation). Plus a glossary and an
+  8-question FAQ drawn from known homeowner questions. In-page TOC at the top
+  (scrolls-away, not sticky — mobile-screen-real-estate tradeoff).
+  **Playbook and `report.html` Page 2 split responsibilities on
+  purpose**: Playbook is the generic pre-filing education; Page 2
+  stays parcel-personalized with the hearing-day script. Neither
+  duplicates the other — don't let them re-merge.
+- **New `about.html`** — what this is/isn't, data sources (with a
+  client-side last-refresh date fetched from `data/parcels.json`'s
+  `Last-Modified` header), methodology pointer to CLAUDE.md, privacy
+  note (no cookies, HCAD-public-record framing), open-source link,
+  contact alias `hello@jvtaxappeal.com`, full legal disclaimer.
+  **No takedown policy.** Project decision: the tool surfaces public
+  HCAD data that's already searchable at hcad.org; stating a removal
+  policy would invite requests that don't scale, and HCAD itself
+  offers none. If a removal request arrives to `hello@`, handle it
+  out-of-band — do not add policy copy to the About page.
+- **`stats.html` is now a silent forwarder.** Tiny HTML that reads
+  `?view=appeals` and redirects to `appeals.html`; otherwise to
+  `appraisals.html`. Facebook posts and neighbor-to-neighbor texts
+  that reference `stats.html` or `stats.html?view=appeals` keep
+  working.
+- **Map page `?` popover trimmed** to just the color + badge legend.
+  The old "How to use this site" section is gone — it now lives in
+  Playbook. `info-disclaimer` in the popover links to Playbook for
+  depth. `main.js`'s `scrollToHowto` branch (dead code after the
+  trim) was removed.
+- **Footer simplification** across every page (except `report.html`,
+  which has its own layout): `← Jersey Village 2026 · Built by a
+  neighbor · Contact`. **Contact** is an `about.html#contact` anchor
+  link — intentionally not a raw `mailto:` so it doesn't launch the
+  user's email client on a mis-tap.
+- **Print CSS** for doc/stats pages — hides `.site-nav`,
+  `.site-footer`, and in-page TOCs; forces every FAQ `<details>` open
+  so the printable Playbook is complete on paper.
+- **Accessibility** — `:focus-visible` focus rings on every nav
+  pill (keyboard users were getting no visible focus state before).
+- **Layout fix during restructure:** the global
+  `html, body { height: 100dvh }` clamp (originally for Leaflet's
+  map container) broke sticky-nav + overflow on the new long
+  pages. Now scoped: only `body` (no class) keeps the dvh clamp;
+  `body.doc-page` and `body.stats-page` override to
+  `height: auto; min-height: 100dvh` so the document flows
+  naturally and sticky works. Don't re-globalize the dvh rule —
+  it's map-page-only for a reason. Also added `width: 100%` to
+  `.stats-container` so `margin: 0 auto` stops shrinking-to-fit on
+  phones.
+- **Cache-bust:** `style.css?v=34`, `main.js?v=9`, `stats.js?v=15`,
+  `nav.js?v=1`.
 
 ### ✅ Shipped 2026-04-23 — ARB protest + hearings pipeline (commit eff8d43)
 
@@ -690,6 +864,54 @@ touch without good reason:
   emitters LEFT JOIN, so the only effect is that `hist` and `h:1` are
   never populated. Don't add a hard dependency on the hearings table
   in `findings.py` or `mapdata.py`.
+- **iSettle is opt-in, not automatic.** During HCAD's iFile wizard
+  the homeowner ticks Yes/No on iSettle Participation; if Yes, the
+  Opinion of Market Value field becomes required. Don't write copy
+  that implies HCAD "automatically makes an iSettle offer after
+  you file" — that was wrong and got corrected in the Playbook.
+  The wizard order (verified against the live portal): verify
+  account → exemption status → iSettle opt-in + Opinion of Market
+  Value → protest grounds → document upload.
+- **HCAD = Harris *Central* Appraisal District** (not "County" — they
+  rebranded; their own owners.hcad.org footer reads "Harris Central
+  Appraisal District"). Use "HCAD" or the full "Harris Central
+  Appraisal District" in copy. "Harris County" still applies for the
+  geographic county (district court, ARB hearings happen there).
+- **2026 protest deadline is May 18, not May 15** for most JV
+  homeowners. May 15 is the §41.44(a) baseline; the deadline
+  extends to 30 days after the Notice of Appraised Value mail
+  date (April 17 → May 17), and §1.06 bumps Sunday to Monday.
+  HCAD's iFile dashboard shows "Final protest deadline 5/18/2026"
+  for confirmation. Use durable language ("the May filing
+  deadline") in non-banner copy so the site doesn't re-rot every
+  cycle. The FAQ-summary heading "I missed May 15…" stays
+  colloquial because that's how homeowners search.
+- **The report is a preparation tool, not evidence.** Don't write
+  copy that suggests homeowners should upload the report's PDF as
+  their ARB submission. The actual evidence packet is each comp's
+  Property Search printout from `hcad.org` plus a one-page written
+  statement the homeowner signs. The Playbook's Act 2 builds this
+  packet; the report's Page 2 callout points readers there.
+- **Report Page 2 is hearing-script-only.** Generic filing content
+  (deadline, iFile steps, iSettle, rebuttals, what-NOT-to-argue,
+  §42.26 escalation) lives in the Playbook. The report's Page 2
+  is intentionally lean: personalized hearing script + Disclaimer
+  & Terms. If you find yourself adding generic filing copy back
+  to report.html, stop — that's undoing the deduplication.
+- **Favicon and OG image regen.** Both source files are SVG.
+  Favicon is used directly (`favicon.svg`). OG image needs a PNG
+  for max Facebook compatibility — render with headless Chrome:
+  `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  --headless=new --window-size=1200,630
+  --screenshot=og-image.png "file://$(pwd)/og-image.svg"` (~50KB
+  output). If you redesign either, both files need updating.
+- **Anchor offset for sticky nav** is set ONCE on `html` via
+  `scroll-padding-top: 60px`. Don't also add `scroll-margin-top`
+  on individual targets — they stack additively, and we previously
+  had a bug where TOC clicks landed 200px below the heading
+  because both were set to 80px. The fix is in §6 of the
+  refinement-pass shipped block; don't re-introduce per-target
+  scroll-margin-top.
 - The pipeline is **idempotent and fast** (~1 minute end-to-end).
   Re-run freely; every stage is `CREATE OR REPLACE` under the hood
   and the JSON emitters are write-in-place.

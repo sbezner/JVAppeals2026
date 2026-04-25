@@ -13,12 +13,109 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+/* Anchor-jump offset for the sticky top nav (44px tall on mobile, ~52px
+   on desktop). 60px gives a small breathing band above the heading and
+   no more — TOC clicks should land at the heading, not 200px below it.
+   This is the ONLY scroll-offset rule on the site; do not also add
+   scroll-margin-top on the targets, or the offsets stack. */
+html { scroll-padding-top: 60px; }
 /* Use dynamic viewport height on browsers that support it so iOS Safari's
    address-bar collapse/expand doesn't leave the map overflowing or gapping. */
 @supports (height: 100dvh) {
   html, body { height: 100dvh; }
 }
 body { display: flex; flex-direction: column; }
+
+/* Long-scrolling document pages need natural flow, not the map's fixed
+   100dvh clamp — otherwise the sticky top-nav can't find a scrolling
+   ancestor and content collides with it. Map (index.html) keeps the
+   clamp; every other page opts in via .doc-page / .stats-page. */
+body.doc-page,
+body.stats-page {
+  height: auto;
+  min-height: 100vh;
+}
+@supports (height: 100dvh) {
+  body.doc-page,
+  body.stats-page { min-height: 100dvh; }
+}
+
+/* ----- Top nav (shared across Map / Playbook / Appraisals / Appeals / About).
+   Sticky on scroll; horizontally scrollable pills on narrow viewports.
+   ----- */
+.site-nav {
+  position: sticky; top: 0; z-index: 1003;
+  display: flex; gap: 4px;
+  padding: 6px 12px;
+  background: #fff;
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.site-nav::-webkit-scrollbar { display: none; }
+.site-nav-link {
+  flex: 0 0 auto;
+  min-height: 32px;
+  display: inline-flex; align-items: center;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.site-nav-link:hover { background: #f2f6fb; }
+.site-nav-link:focus-visible {
+  outline: 2px solid #1b6fe6;
+  outline-offset: 2px;
+  background: #f2f6fb;
+}
+.site-nav-link[aria-current="page"] {
+  background: #1b6fe6;
+  color: #fff;
+}
+.site-nav-link[aria-current="page"]:hover { background: #1558c2; }
+.site-nav-link[aria-current="page"]:focus-visible {
+  outline: 2px solid #0a3a7f;
+  outline-offset: 2px;
+  background: #1558c2;
+}
+@media (max-width: 720px) {
+  .site-nav { padding: 6px 8px; }
+  .site-nav-link { font-size: 13px; padding: 8px 12px; min-height: 36px; }
+}
+
+/* ----- Stub pages (Playbook / Appraisals / Appeals / About while scaffolded).
+   Plain document layout while full content lands chunk-by-chunk. ----- */
+body.stub-page { background: var(--bg); }
+.stub-container {
+  flex: 1;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.stub-title { font-size: 28px; margin: 0 0 10px; font-weight: 700; letter-spacing: -0.01em; }
+.stub-lede  { font-size: 16px; color: var(--mute); margin: 0 0 20px; }
+.stub-note  { font-size: 14px; color: var(--mute); background: #fff;
+              border: 1px solid var(--rule); border-radius: 8px;
+              padding: 14px 16px; margin: 18px 0; }
+.stub-note a { color: #1b6fe6; }
+.stub-note code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                  font-size: 13px; padding: 1px 5px; background: #f2f6fb;
+                  border-radius: 4px; }
+.stub-outline { list-style: none; padding: 0; margin: 18px 0; font-size: 14px; }
+.stub-outline li { padding: 10px 14px; background: #fff;
+                   border: 1px solid var(--rule); border-radius: 8px;
+                   margin-bottom: 8px; }
+@media (max-width: 720px) {
+  .stub-container { padding: 22px 16px 40px; }
+  .stub-title { font-size: 22px; }
+  .stub-lede { font-size: 15px; }
+}
 
 header {
   display: flex; align-items: center; gap: 16px;
@@ -77,7 +174,7 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 .intro-nudge:hover { text-decoration: underline; }
 
 .info-popover {
-  position: fixed; top: 52px; right: 16px; bottom: 16px; z-index: 1002;
+  position: fixed; top: 96px; right: 16px; bottom: 16px; z-index: 1002;
   max-width: 420px; padding: 18px 20px;
   background: #fff; border: 1px solid var(--rule); border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.10);
@@ -165,7 +262,7 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
   .legend-item { display: none; }
   .intro-nudge { font-size: 11px; }
   .info-popover {
-    top: 92px;
+    top: 140px;
     right: 8px; left: 8px;
     bottom: 8px;
     max-width: none;
@@ -767,6 +864,17 @@ body.report-page { background: var(--bg); }
   content: "•"; position: absolute; left: 4px; color: var(--mute);
 }
 
+/* Pointer line below the report's slimmed disclaimer-list, sending
+   readers (or paper-only readers, who see the URL string) to About
+   for the canonical full Terms. */
+.report .disclaimer-pointer {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--mute);
+  line-height: 1.5;
+}
+.report .disclaimer-pointer a { color: #1b6fe6; }
+
 /* Hearing script ordered list */
 .report ol.script {
   padding: 0 0 0 24px; margin: 10px 0;
@@ -905,6 +1013,7 @@ body.stats-page {
 .stats-toolbar .toolbar-btn:hover { text-decoration: underline; }
 
 .stats-container {
+  width: 100%;
   max-width: 720px;
   margin: 0 auto;
   padding: 24px 20px 40px;
@@ -1287,6 +1396,24 @@ table.stats-filer-table td.num {
   font-size: 15px; font-weight: 600;
   margin: 28px 0 10px;
   color: var(--ink);
+  /* Offset anchor-jump scrolls so the sticky top nav doesn't cover the
+     heading the user just asked to see. */
+  scroll-margin-top: 80px;
+}
+/* Visual separator between acts on the Appraisals + Appeals pages. Each
+   act's <h2> is a sibling of the prior act's content; a hairline divider
+   + breathing room matches the doc-page visual rhythm. First <h2> in the
+   tabpanel is left alone (no separator above the first section). */
+.stats-container section[role="tabpanel"] > h2 + h2,
+.stats-container section[role="tabpanel"] > * + h2 {
+  border-top: 1px solid var(--rule);
+  padding-top: 32px;
+  margin-top: 40px;
+}
+.stats-container section[role="tabpanel"] > h2:first-of-type {
+  border-top: none;
+  padding-top: 12px;
+  margin-top: 28px;
 }
 
 table.stats-buckets {
@@ -1560,6 +1687,21 @@ ul.stats-notable li:last-child { border-bottom: none; }
      screen-only. */
   .report .hcad-link { color: #000 !important; text-decoration: none !important; }
   .report .hcad-arrow { display: none; }
+  /* Playbook callout: on paper, expose the URL string so a reader with
+     only the printout knows where to go. Hide the color / anchor chrome. */
+  .report .playbook-ref {
+    background: #fff; border: 1px solid #000; border-left-width: 3px;
+    padding: 10px 12px; font-size: 10pt; color: #000;
+    page-break-inside: avoid;
+  }
+  .report .playbook-ref a { color: #000 !important; text-decoration: none !important; font-weight: 700; }
+  .report .playbook-ref .playbook-url {
+    display: block;
+    margin-top: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 9pt;
+    color: #000;
+  }
   /* Street View is screen-only — a link isn't useful on paper. Hide
      the whole column in the comp table, and the inline link in the
      facts-table address row. */
@@ -1593,4 +1735,380 @@ ul.stats-notable li:last-child { border-bottom: none; }
   .chart-median-label { fill: #000 !important; }
   a { color: #000; text-decoration: none; }
   @page { margin: 0.75in; }
+}
+
+/* ============================================================================
+   Shared site footer (every page that isn't report.html / the old stats.html).
+   ============================================================================ */
+.site-footer {
+  padding: 16px; margin-top: 24px;
+  font-size: 12px; color: var(--mute);
+  border-top: 1px solid var(--rule);
+  background: #fff;
+  text-align: center;
+}
+.site-footer a { color: #1b6fe6; text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+
+/* ============================================================================
+   Document pages — Playbook, About, and (layered on top of .stats-page)
+   the Appraisals + Appeals split pages. Article-style layout with a capped
+   reading width, generous leading, and sectioned content blocks.
+   ============================================================================ */
+body.doc-page { background: var(--bg); }
+
+.doc-container {
+  flex: 1;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  /* Generous bottom padding so the last few sections have enough document
+     below them to scroll up to the top of the viewport when their TOC
+     anchor is clicked. Without this, near-bottom sections (Open source /
+     Contact / Disclaimer on About) can't physically reach viewport-top
+     because the document has no more content after them. */
+  padding: 28px 20px 50vh;
+  color: var(--ink);
+  line-height: 1.6;
+}
+.doc-title {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+.doc-lede {
+  font-size: 16px; color: var(--mute);
+  margin: 0 0 24px;
+}
+.doc-section {
+  margin: 36px 0;
+}
+.doc-section > h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+}
+/* Visual separator between consecutive sections on doc pages.
+   First section is un-prefixed; every subsequent one gets a hairline
+   divider + extra breathing room. The 32px margin-top sits OUTSIDE the
+   section (between previous and current), so the section's top edge —
+   which is what TOC anchors land on — still falls right where the
+   heading is. No internal padding-top, otherwise anchor scroll lands
+   below the heading. */
+.doc-section + .doc-section {
+  border-top: 1px solid var(--rule);
+  margin-top: 32px;
+  padding-top: 16px;
+}
+.doc-section > h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 24px 0 8px;
+}
+.doc-section p { margin: 10px 0; }
+.doc-section a { color: #1b6fe6; }
+.doc-section code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px; padding: 1px 5px; background: #f2f6fb;
+  border-radius: 4px;
+}
+.doc-act-lede {
+  font-size: 15px;
+  color: var(--mute);
+  font-style: italic;
+  margin: 6px 0 16px;
+}
+
+/* In-page TOC at the top of long pages. Not sticky — scrolls away with the
+   content. Pills wrap on narrow viewports. */
+.doc-toc {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  font-size: 13px;
+  margin: 18px 0 28px;
+}
+.doc-toc-label {
+  color: var(--mute);
+  font-weight: 600;
+  margin-right: 6px;
+}
+.doc-toc a {
+  color: #1b6fe6;
+  text-decoration: none;
+  padding: 4px 10px;
+  background: #f2f6fb;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.doc-toc a:hover { background: #e3ecf7; }
+
+/* Plain bulleted list with tight spacing — the default for in-prose callouts. */
+.doc-plain-list {
+  list-style: disc; padding-left: 22px; margin: 10px 0;
+}
+.doc-plain-list li { margin: 6px 0; }
+.doc-plain-list li b { color: var(--ink); font-weight: 600; }
+
+/* Numbered steps — used for the 3 filing channels, the hearing script, etc. */
+.doc-numbered-list {
+  list-style: decimal; padding-left: 22px; margin: 10px 0;
+}
+.doc-numbered-list li { margin: 10px 0; }
+.doc-numbered-list li b { color: var(--ink); font-weight: 600; }
+
+/* The 5-bucket color legend inside Playbook's "reading a pin" section —
+   compact, single-line rows with the color dot inline. */
+.doc-bucket-list {
+  list-style: none; padding: 0; margin: 12px 0;
+}
+.doc-bucket-list li {
+  padding: 6px 0;
+  font-size: 14px;
+}
+.doc-bucket-list li .dot {
+  width: 12px; height: 12px; margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Indented sub-explainer that lives under a bucket bullet (currently the
+   "No comps" row in both Playbook and the map's ?-popover). Reads as a
+   visually subordinate "by the way, here's how the matching works"
+   paragraph rather than competing with the bullet's own text. Plain
+   text — just an indent and a slight color/size mute. */
+.bucket-explainer {
+  margin: 6px 0 4px 22px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--mute);
+}
+.bucket-explainer b,
+.bucket-explainer strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+@media (max-width: 720px) {
+  .bucket-explainer {
+    margin-left: 18px;
+    font-size: 12px;
+  }
+}
+
+/* May-15 deadline callout — prominent, warning-adjacent. */
+.doc-deadline-banner {
+  margin: 14px 0;
+  padding: 14px 16px;
+  background: #fff8e1;
+  border-left: 4px solid var(--yellow);
+  border-radius: 6px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.doc-deadline-banner b { color: var(--ink); font-weight: 700; }
+
+/* Glossary — definition-list styling. dt bold inline, dd muted below. */
+.doc-glossary {
+  margin: 14px 0;
+  padding: 0;
+}
+.doc-glossary dt {
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 14px;
+  font-size: 14px;
+}
+.doc-glossary dt:first-child { margin-top: 0; }
+.doc-glossary dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.55;
+}
+.doc-glossary dd a { color: #1b6fe6; }
+
+/* FAQ — native <details>/<summary>. One question per row; the marker is a
+   rotating chevron driven by open state. */
+.doc-faq {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 8px;
+  padding: 0;
+}
+.doc-faq > summary {
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.doc-faq > summary::-webkit-details-marker { display: none; }
+.doc-faq > summary::before {
+  content: "›";
+  font-size: 18px;
+  color: var(--mute);
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+.doc-faq[open] > summary::before { transform: rotate(90deg); }
+.doc-faq > p {
+  padding: 0 16px 14px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.6;
+}
+.doc-faq > p a { color: #1b6fe6; }
+
+/* The final disclaimer section on About — quieter, tight paragraphs. */
+.doc-disclaimer p {
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.55;
+}
+.doc-disclaimer p b { color: var(--ink); }
+
+/* Appraisals hero accent — red-leaning to pair with the "over-assessment"
+   story. Appeals uses green (defined further up). */
+.stats-hero-appraisals { border-top: 3px solid var(--red); }
+.stats-hero-appraisals .stats-hero-number { color: var(--red); }
+.stats-hero-appraisals .stats-hero-number-sm { color: var(--red); }
+.stats-hero-appeals .stats-hero-number-sm { color: var(--green); }
+
+/* Secondary hero block on the Appraisals page: a smaller red number
+   ($900M total) with its own explainer, sitting under the primary
+   gap-number and separated by a hairline divider. Reads as a second
+   data point in the same hero card, not a footnote. */
+.stats-hero-secondary {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+.stats-hero-number-sm {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.stats-hero-label-sm {
+  font-size: 13px;
+  color: var(--mute);
+  line-height: 1.5;
+}
+.stats-hero-label-sm b {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 720px) {
+  .stats-hero-number-sm { font-size: 24px; }
+  .stats-hero-secondary { margin-top: 18px; padding-top: 18px; }
+}
+
+/* The Appraisals + Appeals pages share the site-nav chrome, but they
+   also carry .stats-page for the pre-existing stats-specific rules. Both
+   work together; the doc-page body class additionally provides the
+   background. */
+body.stats-page.doc-page .stats-container {
+  /* Reset any bottom margin so the footer sits cleanly below. */
+  padding-bottom: 24px;
+}
+
+/* Mobile tightening for all doc-page layouts. */
+@media (max-width: 720px) {
+  .doc-container { padding: 20px 16px 32px; }
+  .doc-title { font-size: 24px; }
+  .doc-lede { font-size: 15px; }
+  .doc-section > h2 { font-size: 19px; }
+  .doc-section > h3 { font-size: 15px; }
+  .doc-toc { padding: 10px 12px; font-size: 12px; gap: 6px; }
+  .doc-toc a { padding: 4px 8px; }
+  .doc-deadline-banner { padding: 12px 14px; font-size: 14px; }
+  .doc-faq > summary { padding: 10px 14px; font-size: 14px; }
+  .doc-faq > p { padding: 0 14px 12px; font-size: 13px; }
+}
+
+/* Callout at the top of the report's Page 2 pointing readers to the
+   Playbook for all the generic filing steps. Screen version is inline;
+   print version exposes the URL since a paper reader has no way to click. */
+.report .playbook-ref {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  background: #f2f6fb;
+  border-left: 3px solid #1b6fe6;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.report .playbook-ref a { color: #1b6fe6; font-weight: 600; }
+.report .playbook-ref .playbook-url {
+  display: none;
+}
+
+/* Print styling for the doc/stats pages. Hide navigation chrome and
+   on-page TOC — printed output is the article itself, not the site. Force
+   every FAQ <details> open so the printed Playbook includes all answers.
+   Paper margins match the report page's @page rule. */
+@media print {
+  body.doc-page .site-nav,
+  body.stats-page .site-nav,
+  body.doc-page .site-footer,
+  body.stats-page .site-footer,
+  body.doc-page .doc-toc,
+  body.stats-page .doc-toc {
+    display: none !important;
+  }
+  body.doc-page .doc-container,
+  body.stats-page .stats-container {
+    max-width: none;
+    margin: 0; padding: 0;
+    font-size: 11pt; line-height: 1.4;
+    color: #000;
+  }
+  body.doc-page a,
+  body.stats-page a {
+    color: #000; text-decoration: none;
+  }
+  body.doc-page .doc-faq {
+    border: 1px solid #999; page-break-inside: avoid;
+  }
+  body.doc-page .doc-faq[open] > summary,
+  body.doc-page .doc-faq > summary {
+    list-style: none; font-weight: 700;
+  }
+  body.doc-page .doc-faq > summary::before {
+    content: none;
+  }
+  /* Force all FAQ items open in print, regardless of user's onscreen state. */
+  body.doc-page .doc-faq > p {
+    display: block !important;
+  }
+  body.doc-page .doc-deadline-banner {
+    background: #fff; border: 1px solid #000;
+    page-break-inside: avoid;
+  }
+  body.doc-page .doc-section { page-break-inside: avoid; }
+  body.doc-page h1, body.doc-page h2, body.doc-page h3 { page-break-after: avoid; }
+  body.stats-page .stats-hero { background: #fff; border: 1px solid #000; }
+  body.stats-page .stats-hero-number { color: #000 !important; }
+  @page { margin: 0.75in; }
+}
+
+/* Force-open FAQ items when printing (details.open rule — browsers vary
+   on whether @media print triggers open=true). Belt and suspenders with
+   the display: block above. */
+@media print {
+  details.doc-faq { display: block; }
+  details.doc-faq > p { display: block !important; }
 }

@@ -270,6 +270,10 @@ function renderNbhdBreakdown(parcels) {
 }
 
 function renderStats(parcels) {
+  // When this page is the Appeals-only page, the Appraisals DOM nodes
+  // don't exist. Bail cleanly — the other renderer will take care of its
+  // own sections. Same applies in reverse for renderAppeals().
+  if (!$("hero-total")) return;
   // Hero: total appraised value + parcel count.
   const total = parcels.reduce((sum, p) => sum + (p.v || 0), 0);
   $("hero-total").textContent = fmtMillions(total);
@@ -334,8 +338,6 @@ function renderStats(parcels) {
       `side-by-side.</li>`
   );
   $("notable").innerHTML = notable.join("");
-
-  $("stats").hidden = false;
 }
 
 function showError(msg) {
@@ -350,6 +352,9 @@ function showError(msg) {
 // count in the footer note.
 // ============================================================================
 function renderAppeals(parcels) {
+  // When this page is the Appraisals-only page, the Appeals DOM nodes
+  // don't exist. Bail quietly.
+  if (!$("appeals-hero-winrate")) return;
   // Share of JV parcels that have filed at least one protest in any of
   // the years loaded by pipeline/hearings.py (2023–2026). Demoted from
   // the old hero position to a supporting trio card — the hero is now
@@ -405,7 +410,7 @@ function renderAppeals(parcels) {
   $("filings-caption").textContent =
     "Each bar is the count of Jersey Village parcels with an ARB filing " +
     "recorded for that year. 2026 is partial; numbers grow through the " +
-    "May 15 deadline and during the hearing season.";
+    "May filing deadline and during the hearing season.";
 
   // 2025 hearing outcomes: pull parcels with a 2025 hist entry that has
   // both iv (initial appraised value) and fv (final appraised value).
@@ -513,9 +518,20 @@ function getActiveView() {
 }
 
 function setActiveView(view, updateHistory) {
-  $("view-appraisals").hidden = view !== "appraisals";
-  $("view-appeals").hidden = view !== "appeals";
-  for (const tab of document.querySelectorAll(".stats-tab")) {
+  // On the single-view pages (appraisals.html / appeals.html) only one
+  // tabpanel exists; leave whatever is present visible and skip the
+  // URL-param dance entirely.
+  const appraisalsEl = $("view-appraisals");
+  const appealsEl = $("view-appeals");
+  const tabs = document.querySelectorAll(".stats-tab");
+  if (!tabs.length) {
+    if (appraisalsEl) appraisalsEl.hidden = false;
+    if (appealsEl) appealsEl.hidden = false;
+    return;
+  }
+  if (appraisalsEl) appraisalsEl.hidden = view !== "appraisals";
+  if (appealsEl)    appealsEl.hidden    = view !== "appeals";
+  for (const tab of tabs) {
     const match = tab.dataset.view === view;
     tab.setAttribute("aria-selected", match ? "true" : "false");
   }
@@ -554,6 +570,7 @@ async function boot() {
     renderAppeals(parcels);
     wireTabs();
     setActiveView(getActiveView(), false);
+    if ($("stats")) $("stats").hidden = false;
   } catch (e) {
     showError(`Could not load parcel data (${e.message}). Please try again.`);
   }

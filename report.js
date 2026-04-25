@@ -326,8 +326,9 @@ function renderHearingScript(p) {
       `<p>HCAD has not yet published a 2026 appraised value for this ` +
       `parcel, so the numbers for your §41.43 hearing script aren't ` +
       `available yet. Refresh this page after HCAD updates and the script ` +
-      `will populate automatically. In the meantime, the Playbook steps ` +
-      `below (deadline, iFile, iSettle, rebuttals) still apply.</p>`;
+      `will populate automatically. In the meantime, the ` +
+      `<a href="playbook.html#file">Playbook</a> (deadline, filing steps, ` +
+      `iSettle decisions, rebuttals) still applies.</p>`;
   } else if (!isEvaluable(p)) {
     // No comps path. If cap also applies, the cap script above IS the
     // primary claim and the §41.43 "hand-pick your own" path is optional.

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About — Jersey Village 2026 HCAD Appeals</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="About — Jersey Village 2026 HCAD Appeals">
+<meta property="og:description" content="What this is, who built it, data sources, methodology, and contact.">
+<meta property="og:url" content="https://jvtaxappeal.com/about.html">
+<meta property="og:image" content="https://jvtaxappeal.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="About — Jersey Village 2026 HCAD Appeals">
+<meta name="twitter:description" content="What this is, who built it, data sources, methodology, and contact.">
+<meta name="twitter:image" content="https://jvtaxappeal.com/og-image.png">
+<link rel="stylesheet" href="style.css?v=52">
+</head>
+<body class="doc-page">
+
+<nav class="site-nav" aria-label="Primary">
+  <a href="index.html" class="site-nav-link">Map</a>
+  <a href="playbook.html" class="site-nav-link">Playbook</a>
+  <a href="appraisals.html" class="site-nav-link">Appraisals</a>
+  <a href="appeals.html" class="site-nav-link">Appeals &amp; History</a>
+  <a href="about.html" class="site-nav-link" aria-current="page">About</a>
+</nav>
+
+<main class="doc-container">
+
+  <h1 class="doc-title">About</h1>
+  <p class="doc-lede">
+    A weekend project by a Jersey Village neighbor, built to
+    help the rest of us figure out whether our 2026 HCAD appraisal
+    is actually high &mdash; and what to do about it if it is.
+  </p>
+
+  <nav class="doc-toc" aria-label="On this page">
+    <b class="doc-toc-label">On this page</b>
+    <a href="#what-is">What this is</a>
+    <a href="#what-isnt">What this isn't</a>
+    <a href="#data-sources">Data sources</a>
+    <a href="#methodology">Methodology</a>
+    <a href="#privacy">Privacy</a>
+    <a href="#open-source">Open source</a>
+    <a href="#contact">Contact</a>
+    <a href="#disclaimer">Disclaimer</a>
+  </nav>
+
+  <section class="doc-section" id="what-is">
+    <h2>What this is</h2>
+    <p>
+      A static map of every single-family parcel in the
+      <b>City of Jersey Village</b> (HCAD tax district 070). Each
+      pin is colored by how the parcel's 2026 HCAD appraisal
+      compares, on a per-square-foot basis, to the median of its
+      5 closest comparable neighbors under
+      <a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.41.htm" target="_blank" rel="noopener">Tex. Tax Code &sect;41.43(b)(3)</a>.
+      Click any pin to open a personalized appeal report with
+      comps, fair-value math, a hearing script, and filing steps.
+    </p>
+    <p>
+      It's designed to answer <i>one</i> question fast: <b>is my
+      appraisal high enough to be worth protesting?</b> Everything
+      else &mdash; the stats page, the playbook, this About page &mdash;
+      is in service of that.
+    </p>
+  </section>
+
+  <section class="doc-section" id="what-isnt">
+    <h2>What this isn't</h2>
+    <ul class="doc-plain-list">
+      <li>It's <b>not legal advice.</b> If your situation is unusual, talk to a property tax lawyer or a CPA.</li>
+      <li>It's <b>not a guarantee.</b> The tool is an indicator; every ARB panel weighs comps slightly differently.</li>
+      <li>It's <b>not affiliated</b> with HCAD (the Harris Central Appraisal District), the City of Jersey Village, or any tax-protest firm.</li>
+      <li>It <b>doesn't file your protest</b> for you, and the report itself isn't evidence. You still log in to HCAD's iFile portal &mdash; this site helps you identify your comps and understand the math so you can build your own evidence packet from HCAD's records.</li>
+    </ul>
+  </section>
+
+  <section class="doc-section" id="data-sources">
+    <h2>Data sources</h2>
+    <ul class="doc-plain-list">
+      <li><b>HCAD 2026 property tables</b> &mdash; <code>real_acct.txt</code>, <code>building_res.txt</code>, <code>jur_value.txt</code>, <code>jur_exempt.txt</code> from <a href="https://hcad.org/pdata/pdata-property-downloads.html" target="_blank" rel="noopener">hcad.org/pdata</a>. These are the same source files HCAD uses internally; the tool reads them as-is.</li>
+      <li><b>HCAD 2026 parcel shapefile</b> &mdash; from <a href="https://hcad.org/pdata/pdata-gis-downloads.html" target="_blank" rel="noopener">hcad.org/pdata-gis-downloads</a>. Used to place each pin and compute distances between comp candidates.</li>
+      <li><b>HCAD ARB protest + hearings files</b> &mdash; 2023&ndash;2026 from HCAD's ARB data release. Powers the Appeals &amp; History page's win-rate and filer breakdown.</li>
+      <li><b>Base map tiles</b> &mdash; <a href="https://carto.com/help/building-maps/basemap-list/" target="_blank" rel="noopener">CartoDB Positron</a>, served via their free tier.</li>
+    </ul>
+    <p>
+      Parcel data refreshes when HCAD publishes a new certified roll
+      (typically April each year). Hearings data refreshes weekly
+      during the ARB cycle (roughly May through October).
+      <span id="last-refresh-wrap">Last refresh:
+      <b id="last-refresh">&mdash;</b>.</span>
+    </p>
+  </section>
+
+  <section class="doc-section" id="methodology">
+    <h2>Methodology</h2>
+    <p>
+      For each parcel, the tool picks 5 comparable homes from the
+      HCAD roll: <i>same neighborhood code</i>, <i>same grade</i>,
+      <i>within &plusmn;15% of square footage</i>, <i>within &plusmn;10
+      years of build year</i>, closest by geographic distance. It
+      computes the median $/sqft of those 5, multiplies by the
+      subject's square footage to get an implied fair value, and
+      colors the pin by how far the HCAD appraisal sits above or
+      below that fair value.
+    </p>
+    <p>
+      Per-sqft is how HCAD's own mass-appraisal model is built and
+      what the Texas Comptroller's Property Value Study audits for
+      uniformity, which is why it's the right yardstick for a
+      &sect;41.43(b)(3) claim. Full technical write-up, including
+      the bucket thresholds, spread-badge math, and
+      <a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.23.htm" target="_blank" rel="noopener">&sect;23.23</a>
+      homestead-cap detection, lives in
+      <a href="https://github.com/sbezner/JVAppeals2026/blob/main/CLAUDE.md" target="_blank" rel="noopener">CLAUDE.md</a>
+      alongside the source code.
+    </p>
+    <p>
+      Note that the comparison is <em>relative</em>: each parcel is
+      measured against the median of similar HCAD-appraised neighbors,
+      not absolute market value. That's the test the &sect;41.43(b)(3)
+      statute applies, but it means the tool cannot detect
+      district-wide over- or under-appraisal &mdash; if all your
+      neighbors are appraised low, your &ldquo;fair&rdquo; value will
+      look low too.
+    </p>
+  </section>
+
+  <section class="doc-section" id="privacy">
+    <h2>Privacy</h2>
+    <p>
+      The site collects <b>no cookies</b>, runs <b>no tracking scripts</b>,
+      and has <b>no user accounts</b>. Aggregate traffic counts come
+      from <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">Cloudflare Web Analytics</a>,
+      which is privacy-preserving and needs no browser-side JavaScript.
+    </p>
+    <p>
+      All parcel data displayed here &mdash; owner names, addresses,
+      appraised values, prior-year values, year built, square footage &mdash;
+      is <a href="https://hcad.org" target="_blank" rel="noopener">public record at hcad.org</a>,
+      searchable by address or owner name with no account needed.
+      This site presents the same data in map form.
+    </p>
+  </section>
+
+  <section class="doc-section" id="open-source">
+    <h2>Open source</h2>
+    <p>
+      Every line of code, every pipeline stage, and every data file
+      is on GitHub:
+      <a href="https://github.com/sbezner/JVAppeals2026" target="_blank" rel="noopener">github.com/sbezner/JVAppeals2026</a>.
+      Issues, pull requests, and methodology questions welcome.
+    </p>
+    <p>
+      Built with help from an AI coding assistant (Anthropic's
+      Claude); every claim was verified against HCAD's own systems
+      before publishing.
+    </p>
+  </section>
+
+  <section class="doc-section" id="contact">
+    <h2>Contact</h2>
+    <p>
+      Questions, corrections, or a comp that doesn't look
+      right &mdash; write to
+      <a href="mailto:hello@jvtaxappeal.com"><code>hello@jvtaxappeal.com</code></a>.
+      One person reads that inbox; don't expect instant replies, but
+      everything gets read.
+    </p>
+  </section>
+
+  <section class="doc-section doc-disclaimer" id="disclaimer">
+    <h2>Disclaimer &amp; terms of use</h2>
+    <p>
+      <b>Not legal advice.</b> This site is an educational indicator
+      based on public HCAD data. Nothing on it should be read as
+      legal counsel on your specific tax situation. Every ARB panel
+      weighs comps slightly differently, and ARB outcomes are never
+      guaranteed.
+    </p>
+    <p>
+      <b>Not an agent.</b> The author is not your authorized
+      representative and is not filing any protest on your behalf.
+      You are solely responsible for all filings, submissions, and
+      deadlines. If your situation is complex, consult a qualified
+      property tax attorney or CPA.
+    </p>
+    <p>
+      <b>No guarantee.</b> The site's data is provided as-is based
+      on public records. The author makes no claim as to the
+      absolute accuracy of this information or the outcome of any
+      appeal. Use of this site is at your own risk; the author
+      accepts no liability for filing decisions, hearing outcomes,
+      or tax consequences.
+    </p>
+    <p>
+      <b>Risk of increase.</b> The Appraisal Review Board (ARB)
+      has statutory authority to adjust property values upward,
+      downward, or leave them unchanged. Filing a protest carries
+      some risk of an upward adjustment, particularly when the
+      report colors a parcel purple (more than 5% under the
+      per-sqft median).
+    </p>
+    <p>
+      Under
+      <a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.41.htm" target="_blank" rel="noopener">Tex. Tax Code &sect;41.43(b)(3)</a>,
+      an ARB <i>is required</i> to lower an appraisal to the median
+      of a reasonable number of appropriately-adjusted comparables
+      if the protest establishes that median. But "reasonable" and
+      "appropriately adjusted" are judgment calls by the panel.
+      Review your comps before filing.
+    </p>
+    <p>
+      <b>Deadlines.</b> You are solely responsible for meeting the
+      HCAD filing deadline shown on your iFile dashboard. The 2026
+      deadline is Monday, May&nbsp;18 for most JV homeowners.
+      Missing it waives your right to appeal for that tax year.
+    </p>
+    <p>
+      <b>Non-commercial.</b> This site and its reports are provided
+      free of charge as a community resource. They may not be sold,
+      repackaged, or used for commercial purposes.
+    </p>
+    <p>
+      <b>By using this site, you acknowledge that you have read and
+      accept this Disclaimer &amp; Terms of Use.</b> If you do not
+      accept these terms, please do not use the site.
+    </p>
+    <p>
+      Built by a neighbor. Not affiliated with HCAD (the Harris
+      Central Appraisal District) or the City of Jersey Village.
+    </p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <a href="index.html">&larr; Jersey Village 2026</a>
+  &nbsp;&middot;&nbsp;
+  Built by a neighbor.
+  &nbsp;&middot;&nbsp;
+  <a href="about.html#contact">Contact</a>
+  &nbsp;&middot;&nbsp;
+  <a href="about.html#disclaimer">Disclaimer</a>
+</footer>
+
+<script>
+  // Last-refresh date, derived from the Last-Modified header on
+  // data/parcels.json. GitHub Pages sets this to the commit time
+  // that last touched the file, which matches the pipeline's
+  // actual regen cadence. Silent fallback if the header is missing.
+  (async () => {
+    try {
+      const r = await fetch("data/parcels.json", { method: "HEAD", cache: "no-cache" });
+      const lm = r.headers.get("Last-Modified");
+      if (!lm) return;
+      const d = new Date(lm);
+      document.getElementById("last-refresh").textContent =
+        d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    } catch (e) { /* leave the placeholder */ }
+  })();
+</script>
+<script src="nav.js?v=1"></script>
+</body>
+</html>
