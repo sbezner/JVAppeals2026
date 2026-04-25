@@ -211,6 +211,16 @@ function closeSheet() {
 }
 
 function drawParcels() {
+  // Add empty layerGroups to the map FIRST. Then in the loop below, each
+  // pin added to its bucket's group hits the canvas immediately in
+  // iteration order. state.parcels is in HCAD-account-number order, which
+  // is effectively random with respect to bucket — so at zoom-out where
+  // pins overlap, the visual field is a mixed-color mosaic instead of
+  // one color batch dominating. (The earlier post-loop addTo pattern
+  // batched all pins of a bucket together, making the last-added bucket
+  // visually dominant.)
+  for (const g of Object.values(bucketLayers)) g.addTo(map);
+
   for (const p of state.parcels) {
     const resting = restingStyle(p);
     const m = L.circleMarker(p.ll, {
@@ -246,16 +256,14 @@ function drawParcels() {
       });
     }
 
-    // Route pin into its bucket's layerGroup instead of the map directly.
-    // The layerGroups are added to the map after this loop, and the
-    // layer-control toggles their visibility.
+    // Route pin into its bucket's layerGroup. Because the group is
+    // already on the map, the marker is added to the canvas immediately
+    // — in the order we encounter parcels — producing a mixed-color
+    // mosaic at zoom-out instead of color-batched dominance.
     const group = bucketLayers[p.c] || bucketLayers.gray;
     m.addTo(group);
     state.markers.set(p.a, m);
   }
-  // All five bucket layers visible by default; the user toggles them via
-  // the layer-control in the top-right.
-  for (const g of Object.values(bucketLayers)) g.addTo(map);
 
   if (MOBILE) {
     // Tap anywhere on the map (not a pin) closes the sheet.
