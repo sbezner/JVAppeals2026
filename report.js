@@ -482,7 +482,7 @@ function renderVerdictBanner(p) {
       sub = `§41.43 over-assessment AND §23.23 cap claim (${excess} excess).`;
     } else {
       cls = "verdict-cap";
-      label = "FILE — §23.23 cap";
+      label = "FILE — homestead cap";
       sub = `Excess above the 10% homestead cap: ${excess}.`;
     }
   }

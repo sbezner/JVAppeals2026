@@ -327,9 +327,10 @@ function renderStats(parcels) {
   const notable = [];
   notable.push(
     `<li><b>${fmtInt(caps)} homes (${hsExposurePct}% of homesteaded homes)</b> ` +
-      `&mdash; Possible &sect;23.23 homestead-cap claim. A residence ` +
-      `homestead with a year-over-year appraisal jump greater than 10% ` +
-      `triggers a separate statutory ground on top of the per-sqft test.</li>`
+      `&mdash; Up &gt;10% from last year &mdash; possible homestead-cap ` +
+      `claim. A residence homestead with a year-over-year appraisal jump ` +
+      `greater than 10% triggers a separate statutory ground on top of ` +
+      `the per-sqft test.</li>`
   );
   notable.push(
     `<li><b>${fmtInt(diffs)} homes (${pctOfTotal(diffs, parcels.length)}%)</b> ` +

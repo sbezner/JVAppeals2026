@@ -93,7 +93,7 @@ function popupHtml(p) {
   const sqftPsf = sqftPsfParts.length
     ? `<div class="size">${sqftPsfParts.join(" · ")}</div>`
     : "";
-  const cap = p.cap ? `<div class="cap-flag">Possible §23.23 homestead cap claim</div>` : "";
+  const cap = p.cap ? `<div class="cap-flag">Up &gt;10% from last year — possible homestead cap claim</div>` : "";
   const disagree = p.dis ? `<div class="disagree-flag">Methods differ — see report</div>` : "";
   const action = `<a class="download" href="report.html?a=${encodeURIComponent(p.a)}">View report</a>`;
   return `
@@ -161,7 +161,7 @@ function sheetHtml(p) {
   const sqftPsf = sqftPsfParts.length
     ? `<div class="sheet-size">${sqftPsfParts.join(" · ")}</div>`
     : "";
-  const cap = p.cap ? `<div class="sheet-cap">Possible §23.23 homestead cap claim</div>` : "";
+  const cap = p.cap ? `<div class="sheet-cap">Up &gt;10% from last year — possible homestead cap claim</div>` : "";
   const disagree = p.dis ? `<div class="sheet-disagree">Methods differ — see report</div>` : "";
   const action = `<a class="sheet-action download" href="report.html?a=${encodeURIComponent(p.a)}">View report</a>`;
   return `
