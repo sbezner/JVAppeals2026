@@ -341,6 +341,48 @@ JVAppeals2026/
   in the repo. Do not add Google Analytics or any other cookie-based
   tracker — see `featurelist.md`'s out-of-scope section.
 
+### ✅ Shipped 2026-04-25 — map: layer-control + satellite + slim legend (commit 3e4f9f9)
+
+Map page picked up bucket filtering, a satellite basemap toggle, and
+crisper pin styling. The layer-control top-right doubles as the
+canonical Leaflet legend (per leafletjs.com/examples/layers-control);
+a slim always-visible color key sits bottom-right so a first-time
+visitor doesn't have to expand a control to read pin colors.
+
+- **`L.control.layers()` top-right** (collapsed): basemap radios
+  (Street / Satellite) + five bucket-overlay checkboxes with colored
+  bullets and action-verb labels (File / Consider / Skip / Don't file
+  / Review). A non-filterable footer row reads
+  *"Orange ring = §23.23 cap claim"* — explains the cap-ring marker
+  without making it a separate bucket.
+- **Slim static `LegendControl` bottom-right**: just colored dots +
+  verbs, no descriptions. Six rows, including a *hollow* orange-ring
+  row at 10×10 (same outer dimensions as the bucket dots) signaling
+  that the ring overlays a bucket color rather than being one.
+- **Two named basemaps**: `streetBasemap` (CartoDB Positron, default)
+  + `satelliteBasemap` (Esri World Imagery,
+  `server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/...`,
+  attribution "Tiles © Esri"). Wired through the layer-control.
+- **Five `L.layerGroup()` instances** — one per §41.43(b)(3) bucket.
+  Pins route into their bucket's group instead of `map.addTo`; the
+  layer-control's checkboxes toggle group visibility.
+- **Pin styling tightened**: default radius 6 (was 5) + white border
+  weight 1 (was 0.5 dark). Cap pins bump to radius 8 to keep the
+  size-difference signal at city-wide zoom. Reads cleaner on
+  satellite tiles when toggled on.
+- **Cache-bust audit**: caught five doc pages still on
+  `style.css?v=52` while index.html had moved to `v=56` after
+  map-only iterations. Synced everywhere to `v=56`. main.js?v=12.
+
+**Why two map controls (layer-control + static legend) instead of
+one?** Tested both — collapsed-by-default layer-control was a
+real discoverability regression for first-time visitors who'd see
+colored pins with no key. Adding back the slim static legend
+restores always-visible readability. The redundancy (cap-ring info
+in both controls + the ?-popover) is intentional for a high-stakes /
+low-frequency-visit site. Don't try to deduplicate — the audiences
+differ (first-time vs power-user).
+
 ### ✅ Shipped 2026-04-24 — content + UX refinement pass (after the five-tab restructure)
 
 A second pass on the restructured site, focused on factual accuracy

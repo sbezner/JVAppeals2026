@@ -13,6 +13,33 @@ section so nothing accidentally ships mid-cycle.
 
 ## ✅ Shipped
 
+### Map: layer-control + satellite + slim legend (2026-04-25, commit 3e4f9f9)
+
+Bucket filtering, a satellite basemap toggle, and tighter pin styling
+on the map. Two controls split by audience: the standard Leaflet
+`L.control.layers()` top-right (collapsed) for power use — basemap
+radios + bucket overlay checkboxes + a non-filterable cap-ring info
+footer. A slim always-visible color key bottom-right covers
+first-time-visitor readability so the legend isn't behind a click.
+
+- Two basemaps: CartoDB Positron (default) + Esri World Imagery.
+- Five `L.layerGroup()` instances, one per §41.43(b)(3) bucket;
+  toggled via the layer-control checkboxes.
+- Action-verb labels (File / Consider / Skip / Don't file / Review)
+  match the report's verdict banner so a homeowner reads the same
+  word in both places.
+- Cap-ring meaning visible in three places (popover, layer-control
+  footer, slim legend) — intentional redundancy for a high-stakes /
+  low-frequency-visit site, not a dedup target.
+- Pin tightening: radius 6 + white-border weight 1 (was 5 + 0.5
+  dark); cap pins bump to radius 8 to keep the size-difference
+  signal at city-wide zoom.
+- 5-bucket methodology and color palette unchanged — the user spec
+  proposed a 3-bucket / different-threshold variant but it would
+  have collided with the just-shipped Playbook / Appraisals /
+  Appeals / report.html copy and violated the May-15 methodology
+  freeze.
+
 ### Content + UX refinement pass after the restructure (2026-04-24)
 
 A second pass focused on factual accuracy and density. Fact-checked
