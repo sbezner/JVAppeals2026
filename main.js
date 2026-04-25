@@ -52,12 +52,20 @@ streetBasemap.addTo(map);
 // toggle visibility (e.g., hide green/purple to focus on red/yellow
 // "should-file" pins). Pin colors and bucket thresholds match the rest
 // of the site (5-bucket §41.43(b)(3) scheme — frozen until May 15).
+//
+// Declaration order = canvas draw order = z-order (later entries draw
+// on top of earlier ones). Putting "informational" buckets (gray,
+// purple) first and "actionable" buckets (red) last means that at
+// zoom-out where pins overlap, RED dominates the visual field — which
+// matches what homeowners are looking for when they open the map. The
+// layer-control's UI display order is independent (set by overlayRows
+// in wireLayerControl).
 const bucketLayers = {
-  red:    L.layerGroup(),
-  yellow: L.layerGroup(),
-  green:  L.layerGroup(),
-  purple: L.layerGroup(),
   gray:   L.layerGroup(),
+  purple: L.layerGroup(),
+  green:  L.layerGroup(),
+  yellow: L.layerGroup(),
+  red:    L.layerGroup(),
 };
 
 // Normalize a string for fuzzy-ish substring search.
