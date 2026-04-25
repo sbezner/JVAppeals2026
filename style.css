@@ -866,8 +866,12 @@ body.report-page { background: var(--bg); }
 .report table.comps tfoot tr.summary:first-child td {
   border-top: 1px solid #000;
 }
-.report table.comps tfoot tr.summary.over td:last-child { color: #C03030; }
-.report table.comps tfoot tr.summary.under td:last-child { color: var(--green); }
+/* Color the dollar-amount cell on the summary "Over-assessment" /
+   "Under-assessed" row. The amount is in the second-to-last TD (the
+   final TD is the empty Street View column added by commit af6b5b8),
+   so target nth-last-child(2). */
+.report table.comps tfoot tr.summary.over  td:nth-last-child(2) { color: #C03030; }
+.report table.comps tfoot tr.summary.under td:nth-last-child(2) { color: var(--green); }
 
 /* Alternate-view rows: raw-dollar comp median, shown below the primary
    per-sqft summary. Muted and smaller so readers see this as a
@@ -888,8 +892,8 @@ body.report-page { background: var(--bg); }
   color: var(--mute);
   padding-top: 3px; padding-bottom: 3px;
 }
-.report table.comps tfoot tr.alt-summary.over td:last-child { color: #c04040; }
-.report table.comps tfoot tr.alt-summary.under td:last-child { color: #3a7a3a; }
+.report table.comps tfoot tr.alt-summary.over  td:nth-last-child(2) { color: #c04040; }
+.report table.comps tfoot tr.alt-summary.under td:nth-last-child(2) { color: #3a7a3a; }
 
 /* Gray-parcel "no comps" notice takes the place of the comp table */
 #gray-notice p { margin: 10px 0; }
@@ -1742,8 +1746,8 @@ ul.stats-notable li:last-child { border-bottom: none; }
   }
   .report table.comps .subject-row td { background: #eee; }
   .report table.comps tfoot tr.summary td { background: #f4f4f4; }
-  .report table.comps tfoot tr.summary.over td:last-child { color: #000; font-weight: 700; }
-  .report table.comps tfoot tr.summary.under td:last-child { color: #000; font-weight: 700; }
+  .report table.comps tfoot tr.summary.over  td:nth-last-child(2) { color: #000; font-weight: 700; }
+  .report table.comps tfoot tr.summary.under td:nth-last-child(2) { color: #000; font-weight: 700; }
   .report table.comps tfoot tr.alt-head td,
   .report table.comps tfoot tr.alt-summary td {
     background: transparent; color: #444;
