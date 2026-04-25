@@ -499,7 +499,7 @@ const LegendControl = L.Control.extend({
     const capRow =
       `<div class="legend-row legend-cap">` +
         `<span class="dot ring-cap" aria-hidden="true"></span>` +
-        `<b>Cap</b>` +
+        `<b>Up &gt;10%</b>` +
       `</div>`;
     container.innerHTML = rows + capRow;
     L.DomEvent.disableClickPropagation(container);
