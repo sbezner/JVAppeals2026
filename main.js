@@ -25,15 +25,40 @@ const map = L.map("map", {
   // matching Apple HIG). Desktop uses 0 — mouse pointer is precise.
   renderer: L.canvas({ tolerance: MOBILE ? 22 : 0 }),
 });
-// CartoDB Positron — muted light basemap that lets the red/yellow/green
-// pins read clearly. Retina tile URL ({r} → '@2x') keeps labels crisp
-// on high-density phone screens.
-L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-  maxZoom: 19,
-  subdomains: "abcd",
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-}).addTo(map);
+
+// Two basemaps wired through the layer-control. Street (CartoDB Positron)
+// stays the default — muted light basemap so the bucket-colored pins read
+// clearly. Satellite (Esri World Imagery) is an opt-in toggle for the user
+// who wants to look at roof shape / lot context.
+const streetBasemap = L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  {
+    maxZoom: 19,
+    subdomains: "abcd",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  }
+);
+const satelliteBasemap = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  {
+    maxZoom: 19,
+    attribution: "Tiles &copy; Esri",
+  }
+);
+streetBasemap.addTo(map);
+
+// One L.layerGroup() per bucket so the layer-control checkboxes can
+// toggle visibility (e.g., hide green/purple to focus on red/yellow
+// "should-file" pins). Pin colors and bucket thresholds match the rest
+// of the site (5-bucket §41.43(b)(3) scheme — frozen until May 15).
+const bucketLayers = {
+  red:    L.layerGroup(),
+  yellow: L.layerGroup(),
+  green:  L.layerGroup(),
+  purple: L.layerGroup(),
+  gray:   L.layerGroup(),
+};
 
 // Normalize a string for fuzzy-ish substring search.
 function norm(s) { return (s || "").toLowerCase().replace(/\s+/g, " ").trim(); }
@@ -92,13 +117,16 @@ function scheduleHoverClose(marker) {
 
 // Selected-marker ring (mobile sheet selection indicator).
 const SELECTED_STYLE = { weight: 2.5, color: "#1b6fe6" };
-const DEFAULT_STYLE = { weight: 0.5, color: "#00000033" };
+// Default pin: white border, weight 1 — gives the bucket fill color a
+// clean separation from the basemap (looks especially crisp on the
+// satellite tiles when toggled on).
+const DEFAULT_STYLE = { weight: 1, color: "#fff" };
 // Ring treatment for homestead-cap violations (§23.23). A pin with p.cap
 // wears a bright orange ring on top of its §41.43 color — and renders a
 // notch larger than a normal pin so it's legible at city-wide zoom.
 const CAP_STYLE = { weight: 3, color: "#ff7a00" };
-const CAP_RADIUS = 7;
-const DEFAULT_RADIUS = 5;
+const CAP_RADIUS = 8;
+const DEFAULT_RADIUS = 6;
 let selectedMarker = null;
 function restingStyle(parcel) {
   return parcel && parcel.cap ? CAP_STYLE : DEFAULT_STYLE;
@@ -210,9 +238,16 @@ function drawParcels() {
       });
     }
 
-    m.addTo(map);
+    // Route pin into its bucket's layerGroup instead of the map directly.
+    // The layerGroups are added to the map after this loop, and the
+    // layer-control toggles their visibility.
+    const group = bucketLayers[p.c] || bucketLayers.gray;
+    m.addTo(group);
     state.markers.set(p.a, m);
   }
+  // All five bucket layers visible by default; the user toggles them via
+  // the layer-control in the top-right.
+  for (const g of Object.values(bucketLayers)) g.addTo(map);
 
   if (MOBILE) {
     // Tap anywhere on the map (not a pin) closes the sheet.
@@ -432,23 +467,23 @@ const LEGEND_ROWS = [
 ];
 
 const LegendControl = L.Control.extend({
-  options: { position: "bottomleft" },
+  options: { position: "bottomright" },
   onAdd() {
-    const container = L.DomUtil.create("div", "leaflet-bar legend-control");
+    const container = L.DomUtil.create("div", "leaflet-bar legend-control legend-slim");
+    // Slim: just colored dots + action verbs, no descriptions. The
+    // detailed thresholds and cap explanation live in the layer-control
+    // (top-right) and the ?-popover. This is the always-visible color
+    // key for first-time visitors.
     const rows = LEGEND_ROWS.map((r) =>
       `<div class="legend-row">` +
         `<span class="dot ${r.cls}"></span>` +
         `<b>${r.label}</b>` +
-        `<span class="legend-desc">${r.desc}</span>` +
       `</div>`
     ).join("");
-    // Extra row explaining the orange ring — a secondary statutory ground
-    // that can apply on top of any §41.43 bucket color.
     const capRow =
       `<div class="legend-row legend-cap">` +
         `<span class="dot ring-cap" aria-hidden="true"></span>` +
         `<b>Cap</b>` +
-        `<span class="legend-desc">orange ring = homestead +10% YoY</span>` +
       `</div>`;
     container.innerHTML = rows + capRow;
     L.DomEvent.disableClickPropagation(container);
@@ -459,6 +494,49 @@ const LegendControl = L.Control.extend({
 
 function wireLegend() {
   new LegendControl().addTo(map);
+}
+
+// Top-right layer-control — Leaflet's canonical control, doubling as
+// the map's color legend. Basemap radios on top (Street / Satellite),
+// bucket-overlay checkboxes below, and a non-filterable footer row that
+// explains the orange ring (a §23.23 cap-claim marker that overlays
+// any §41.43 bucket color, never a category of its own).
+function wireLayerControl() {
+  const baseLayers = {
+    "Street": streetBasemap,
+    "Satellite": satelliteBasemap,
+  };
+  // Action-verb labels match the report's verdict banner so a homeowner
+  // toggling layers reads the same "File / Consider / Skip / Don't file
+  // / Review" vocabulary they see in their report.
+  const overlayRows = [
+    ["red",    "File (>7%)"],
+    ["yellow", "Consider (2–7%)"],
+    ["green",  "Skip (noise band)"],
+    ["purple", "Don't file (under)"],
+    ["gray",   "Review (no comps)"],
+  ];
+  const overlays = {};
+  for (const [key, label] of overlayRows) {
+    const html =
+      `<span class="layer-bullet" style="background:${COLOR[key]}"></span>` +
+      `${label}`;
+    overlays[html] = bucketLayers[key];
+  }
+  const layerControl =
+    L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
+
+  // Inject the cap-ring info row inside the overlays section, AFTER the
+  // last checkbox. It looks like a legend row but is not interactive —
+  // the orange ring is a marker style, never a separate bucket.
+  const container = layerControl.getContainer();
+  const overlaysList = container.querySelector(".leaflet-control-layers-overlays");
+  if (overlaysList) {
+    const note = L.DomUtil.create("div", "layer-cap-note", overlaysList);
+    note.innerHTML =
+      '<span class="layer-bullet layer-bullet-ring" aria-hidden="true"></span>' +
+      "Orange ring = &sect;23.23 cap claim";
+  }
 }
 
 function wireLocate() {
@@ -511,6 +589,14 @@ async function boot() {
   map.setView(center, 14);
   drawParcels();
   wireSearch();
+  // Two-control split:
+  //   wireLayerControl() — top-right, collapsed by default. Basemap
+  //     toggle (Street/Satellite), filterable bucket overlays, and
+  //     the cap-ring info as a non-filter footer row.
+  //   wireLegend()       — bottom-right, always-visible slim color key.
+  //     Just colored dots + verbs so a first-time visitor never has to
+  //     hunt for the legend.
+  wireLayerControl();
   wireLegend();
   wireLocate();
 }

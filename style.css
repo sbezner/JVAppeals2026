@@ -236,6 +236,52 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 }
 .info-close:hover { background: #f2f6fb; color: var(--ink); }
 
+/* Layer-control overlay rows: a small colored bullet inline with the
+   bucket label, matching the pin color. The bullet is rendered via an
+   inline `style="background:#xxx"` set in main.js so we don't have to
+   duplicate the bucket palette here. */
+.layer-bullet {
+  display: inline-block;
+  width: 10px; height: 10px; border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 1px solid rgba(0,0,0,0.15);
+  flex: 0 0 auto;
+}
+/* Cap-ring footer row inside the layer-control — non-interactive, just
+   an info note. Hairline rule above to separate it from the checkbox
+   list above; muted color and italic to read as supplementary, not as
+   a missing checkbox. */
+.layer-cap-note {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  font-size: 12px;
+  color: var(--mute);
+  font-style: italic;
+}
+.layer-bullet-ring {
+  background: transparent !important;
+  border: 2px solid #ff7a00;
+}
+
+/* Layer-control box typography — keep it readable on mobile but stay
+   close to Leaflet's canonical default. */
+.leaflet-control-layers-list label {
+  display: flex; align-items: center;
+  font-size: 13px; line-height: 1.4;
+  margin: 4px 0;
+  cursor: pointer;
+}
+.leaflet-control-layers-base label {
+  font-weight: 500;
+}
+.leaflet-control-layers-overlays label {
+  font-size: 12.5px;
+}
+
 @media (max-width: 720px) {
   /* Stack the header so search gets a full row.
      Row 1: title + (optional nudge) + ?
@@ -272,8 +318,10 @@ header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 main { flex: 1; position: relative; }
 #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 
-/* Map-overlay legend (bottom-left). Always visible — five color rows
-   stacked, no header, no toggle. */
+/* Map-overlay legend (bottom-right). Always visible — six rows stacked,
+   no header, no toggle. The .legend-slim variant (current) drops
+   descriptions for a tighter footprint, since the layer-control
+   top-right and the ?-popover already carry the detailed thresholds. */
 .legend-control {
   background: #fff;
   padding: 6px 10px 8px;
@@ -282,6 +330,10 @@ main { flex: 1; position: relative; }
   line-height: 1.3;
   min-width: 170px;
 }
+.legend-control.legend-slim {
+  padding: 5px 9px 6px;
+  min-width: 0;
+}
 .legend-control .legend-row {
   display: grid;
   grid-template-columns: 12px auto 1fr;
@@ -289,8 +341,16 @@ main { flex: 1; position: relative; }
   gap: 6px;
   padding: 2px 0;
 }
+.legend-control.legend-slim .legend-row {
+  grid-template-columns: 10px auto;
+  padding: 1px 0;
+  font-size: 11.5px;
+}
 .legend-control .legend-row .dot {
   width: 12px; height: 12px; margin: 0;
+}
+.legend-control.legend-slim .legend-row .dot {
+  width: 10px; height: 10px;
 }
 .legend-control .legend-desc {
   color: var(--mute); font-size: 11px;
@@ -300,6 +360,20 @@ main { flex: 1; position: relative; }
 .legend-control .legend-cap {
   margin-top: 4px; padding-top: 4px;
   border-top: 1px solid var(--rule);
+}
+.legend-control.legend-slim .legend-cap {
+  margin-top: 3px; padding-top: 3px;
+}
+/* Slim-legend cap row: hollow orange ring at the same outer dimensions
+   as the other dots. The orange ring on a real map pin overlays its
+   bucket color (it's not its own bucket), so the legend swatch shouldn't
+   imply a fill — show just the ring on its own. */
+.legend-control.legend-slim .dot.ring-cap {
+  background: transparent;
+  box-shadow: none;
+  border: 2px solid #ff7a00;
+  box-sizing: border-box;
+  width: 10px; height: 10px;
 }
 /* Legend preview for a cap-violation pin. Mirrors the actual map pin:
    a bucket-colored dot (we use red here as an exemplar) with a thick
