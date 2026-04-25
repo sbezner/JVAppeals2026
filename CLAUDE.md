@@ -954,6 +954,26 @@ touch without good reason:
   because both were set to 80px. The fix is in §6 of the
   refinement-pass shipped block; don't re-introduce per-target
   scroll-margin-top.
+- **Map bucket-layer z-order trick (commit 4c292d7).** In
+  `main.js → drawParcels()`, the empty `bucketLayers` are added to the
+  map BEFORE the parcel loop. That makes each pin hit the canvas
+  immediately in `state.parcels` iteration order (HCAD-account order,
+  effectively random across buckets). The result is a mixed-color
+  mosaic at zoom-out where pins overlap. If the addTo is moved AFTER
+  the loop, Leaflet adds each layerGroup as a batch — all pins of one
+  bucket together — and whichever bucket is added last visually
+  dominates. Don't move the `for (const g of Object.values(bucketLayers))
+  g.addTo(map)` call — it's positioned where it is on purpose.
+- **Comp-table position-dependent CSS (commit a04a78a).** The comp
+  table in `report.html` has 8 columns (the 8th is the Street View
+  cell, added in `af6b5b8`). When you add or remove columns, audit
+  every `:last-child` / `:first-child` / `:nth-child` selector that
+  targets a comp-table row. The Street View addition silently broke
+  the over/under coloring on the summary footer rows because
+  `td:last-child` then pointed at the empty sv-cell rather than the
+  dollar-amount cell. Current correct selector is
+  `td:nth-last-child(2)` for those rules — re-check if the column
+  count changes again.
 - The pipeline is **idempotent and fast** (~1 minute end-to-end).
   Re-run freely; every stage is `CREATE OR REPLACE` under the hood
   and the JSON emitters are write-in-place.
