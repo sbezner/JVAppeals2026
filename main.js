@@ -7,7 +7,7 @@ const COLOR = {
   red:    "#d93a3a",
   yellow: "#e6b422",
   green:  "#2f9e44",
-  purple: "#7c3aed",  // under-assessed — do not file (ARB can adjust up)
+  purple: "#7c3aed",  // under-assessed — no §41.43 case (already below the median)
   gray:   "#4a5058",
 };
 
@@ -471,15 +471,15 @@ const LocateControl = L.Control.extend({
   },
 });
 
-// Map-overlay legend (bottom-left). Compact action-verb key that
-// mirrors the verdict banner in the report: File / Consider / Skip /
-// Don't file / Review. Always visible — no header, no toggle.
+// Map-overlay legend (bottom-left). Compact case-strength key that
+// mirrors the verdict banner in the report: Strong / Marginal / Weak /
+// No case / Review by hand. Always visible — no header, no toggle.
 const LEGEND_ROWS = [
-  { cls: "red",    label: "File",       desc: "more than 7% over median" },
-  { cls: "yellow", label: "Consider",   desc: "2\u20137% over" },
-  { cls: "green",  label: "Skip",       desc: "within noise band" },
-  { cls: "purple", label: "Don't file", desc: "more than 5% under" },
-  { cls: "gray",   label: "Review",     desc: "no comps" },
+  { cls: "red",    label: "Strong case",    desc: "more than 7% over median" },
+  { cls: "yellow", label: "Marginal case",  desc: "2\u20137% over" },
+  { cls: "green",  label: "Weak case",      desc: "within noise band" },
+  { cls: "purple", label: "No case",        desc: "more than 5% under" },
+  { cls: "gray",   label: "Review by hand", desc: "no comps" },
 ];
 
 const LegendControl = L.Control.extend({
@@ -522,15 +522,15 @@ function wireLayerControl() {
     "Street": streetBasemap,
     "Satellite": satelliteBasemap,
   };
-  // Action-verb labels match the report's verdict banner so a homeowner
-  // toggling layers reads the same "File / Consider / Skip / Don't file
-  // / Review" vocabulary they see in their report.
+  // Case-strength labels match the report's verdict banner so a homeowner
+  // toggling layers reads the same "Strong / Marginal / Weak / No case /
+  // Review by hand" vocabulary they see in their report.
   const overlayRows = [
-    ["red",    "File (>7%)"],
-    ["yellow", "Consider (2–7%)"],
-    ["green",  "Skip (noise band)"],
-    ["purple", "Don't file (under)"],
-    ["gray",   "Review (no comps)"],
+    ["red",    "Strong case (>7% over)"],
+    ["yellow", "Marginal case (2–7% over)"],
+    ["green",  "Weak case (–5% to +2%)"],
+    ["purple", "No case (>5% under)"],
+    ["gray",   "Review by hand (no comps)"],
   ];
   const overlays = {};
   for (const [key, label] of overlayRows) {

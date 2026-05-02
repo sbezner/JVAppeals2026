@@ -8,11 +8,13 @@ client-rendered §41.43(b)(3) HCAD appeal report behind every pin.
 - **Pins** are colored by over-assessment vs. the median of 5 comparable
   homes (same HCAD neighborhood code + grade, ±15% sqft, ±10 years age,
   geographically closest). Per-sqft normalization:
-  - **red** >7% over median (strong unequal-appraisal case)
-  - **yellow** 2–7% over (consider filing)
-  - **green** within noise band (skip)
-  - **purple** >5% under (do not file — ARB could raise)
-  - **gray** no comps matched (review manually)
+  - **red** >7% over median (strong case)
+  - **yellow** 2–7% over (marginal case)
+  - **green** within noise band (weak case)
+  - **purple** >5% under (no case — already below the median; under SB 2
+    of 2019 / §41.47(c), the ARB cannot raise on protest without owner
+    consent)
+  - **gray** no comps matched (review by hand)
 - **Orange ring** on a pin = possible §23.23 homestead cap claim
   (homesteaded home with >10% year-over-year appraisal increase).
 - **Click a pin** → opens a two-page report at

@@ -77,11 +77,11 @@
     </p>
     <ul class="doc-bucket-list">
       <li><span class="dot red"></span><b>Strong case</b> &mdash; more than 7% over the per-sqft median. &sect;41.43(b)(3) reduction likely.</li>
-      <li><span class="dot yellow"></span><b>Consider filing</b> &mdash; 2&ndash;7% over. A reduction is possible; panel may push back on specific comps.</li>
-      <li><span class="dot green"></span><b>Skip</b> &mdash; within the noise band (5% under to 2% over). Not worth filing.</li>
-      <li><span class="dot purple"></span><b>Don't file</b> &mdash; more than 5% <i>under</i> the median. The ARB has authority to raise appraisals; filing here is risk-only.</li>
+      <li><span class="dot yellow"></span><b>Marginal case</b> &mdash; 2&ndash;7% over. A reduction is possible; panel may push back on specific comps.</li>
+      <li><span class="dot green"></span><b>Weak case</b> &mdash; within the noise band (5% under to 2% over). Filing is unlikely to reduce the appraisal.</li>
+      <li><span class="dot purple"></span><b>No case</b> &mdash; more than 5% <i>under</i> the median. The §41.43(b)(3) median test only reduces appraisals above the median; yours is already below it. Filing is harmless under SB 2 (Tex. Tax Code &sect;41.47(c)) but won't reduce your appraisal on this ground.</li>
       <li>
-        <span class="dot gray"></span><b>No comps</b> &mdash; fewer than 5 neighbors matched the filters. Unusually old, new, large, or odd-grade homes. Review by hand.
+        <span class="dot gray"></span><b>Review by hand</b> &mdash; fewer than 5 neighbors matched the filters. Unusually old, new, large, or odd-grade homes. Review by hand.
         <div class="bucket-explainer">
           <b>How comps are chosen.</b>
           For each parcel, the tool searches HCAD for homes that match four filters &mdash; same neighborhood code, same grade, living area within &plusmn;15%, year built within &plusmn;10. The 5 geographically closest matches become your comps. &ldquo;No comps&rdquo; means fewer than 5 properties cleared all four filters.
@@ -99,7 +99,9 @@
     <h3>Reading a report</h3>
     <p>
       Tap any pin and hit <b>View report</b>. The report opens with a
-      big <b>FILE</b> or <b>DON'T FILE</b> verdict banner, then:
+      case-strength verdict banner (<b>Strong case</b>, <b>Marginal
+      case</b>, <b>Weak case</b>, <b>No case</b>, or <b>Review by
+      hand</b>), then:
     </p>
     <ul class="doc-plain-list">
       <li><b>Page 1 &mdash; Your case.</b> Your parcel's facts, the 5 comps that drove the verdict (on both per-sqft and raw-dollar bases), and the bottom-line math: median $/sqft &rarr; fair value &rarr; HCAD appraisal &rarr; over-assessment.</li>
@@ -327,8 +329,11 @@
     <p>
       If <i>Final &lt; Initial</i>, you won a reduction. If
       <i>Final == Initial</i>, the panel denied your protest
-      (appraisal stays). If <i>Final &gt; Initial</i>, the panel
-      raised your appraisal (rare, but statutorily possible).
+      (appraisal stays). <i>Final &gt; Initial</i> is essentially
+      never seen on a §41.43 protest: under SB 2 of 2019
+      (<a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.41.htm" target="_blank" rel="noopener">Tex. Tax Code &sect;41.47(c)</a>),
+      the ARB cannot raise your appraisal during a protest unless
+      <i>you</i> specifically request and consent to the increase.
       Historical rates are on the
       <a href="appeals.html">Appeals &amp; History</a> page.
     </p>
@@ -391,9 +396,9 @@
     </details>
 
     <details class="doc-faq">
-      <summary>My pin is purple. Why is the tool telling me not to file?</summary>
+      <summary>What does "No case" mean?</summary>
       <p>
-        Your 2026 appraisal is more than 5% <i>under</i> the median of your comps. That's a good spot &mdash; HCAD's appraised you below your neighbors. Filing under &sect;41.43(b)(3) here is risk-only: the ARB has statutory authority to <i>raise</i> your appraisal at a hearing, and a panel that takes the median seriously could do exactly that.
+        Your 2026 appraisal is more than 5% <i>under</i> the median of your comps &mdash; HCAD's already appraised you below your neighbors. Filing under &sect;41.43(b)(3) on these numbers won't reduce your appraisal further: that statute's median test only lowers appraisals that sit <i>above</i> the comp median, not below it. Under SB 2 of 2019 (<a href="https://statutes.capitol.texas.gov/Docs/TX/htm/TX.41.htm" target="_blank" rel="noopener">Tex. Tax Code &sect;41.47(c)</a>), the ARB cannot raise your appraisal during a protest without your specific written consent &mdash; so filing is harmless, just pointless on this ground. Other grounds (homestead cap, condition, damage, market-value) may still apply; if any of those fit your home, file on those.
       </p>
     </details>
 

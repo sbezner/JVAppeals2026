@@ -159,11 +159,11 @@ function renderDistributionChart(parcels) {
 // Ordering of the bucket rows. Matches the map-overlay legend so the
 // two reads consistently.
 const BUCKETS = [
-  { key: "red",    label: "Strong case",             desc: "more than 7% over the per-sqft median" },
-  { key: "yellow", label: "Marginal case",           desc: "2–7% over" },
-  { key: "green",  label: "Within the noise band",   desc: "skip — not worth filing" },
-  { key: "purple", label: "Appraised below the median", desc: "more than 5% under (ARB can adjust up)" },
-  { key: "gray",   label: "No comparable homes matched", desc: "review manually" },
+  { key: "red",    label: "Strong case",    desc: "more than 7% over the per-sqft median" },
+  { key: "yellow", label: "Marginal case",  desc: "2–7% over" },
+  { key: "green",  label: "Weak case",      desc: "within the noise band — filing unlikely to reduce" },
+  { key: "purple", label: "No case",        desc: "more than 5% under the median" },
+  { key: "gray",   label: "Review by hand", desc: "fewer than 5 comparable homes matched" },
 ];
 
 // For a group of parcels, pick the most common street name to serve as

@@ -5,15 +5,15 @@
 
 const COLOR_LABEL = {
   red:    { verdict: "You have statutory grounds to appeal under §41.43(b)(3).", css: "red",
-            banner: "FILE", bannerSub: "Strong unequal-appraisal case under §41.43(b)(3)." },
+            banner: "Strong case", bannerSub: "Strong unequal-appraisal case under §41.43(b)(3)." },
   yellow: { verdict: "The appeal case is thin but presentable under §41.43(b)(3).", css: "yellow",
-            banner: "Consider filing", bannerSub: "Marginal case — a reduction is possible but not guaranteed." },
+            banner: "Marginal case", bannerSub: "Marginal case — a reduction is possible but not guaranteed." },
   green:  { verdict: "This is within the normal noise of comp selection; filing is unlikely to change the value.", css: "green",
-            banner: "Skip", bannerSub: "Within the noise band — not worth filing in either direction." },
-  purple: { verdict: "Your appraisal is well below the median of similar homes — the ARB has authority to adjust values UPWARD as well as downward, so filing here risks an increase. Strongly recommend NOT filing.", css: "purple",
-            banner: "DO NOT FILE", bannerSub: "Your appraisal is below the median — the ARB can adjust values upward." },
+            banner: "Weak case", bannerSub: "Within the noise band — filing is unlikely to reduce the appraisal." },
+  purple: { verdict: "Your appraisal is already below the median of similar homes, so there is no §41.43(b)(3) case here. Filing under that ground is harmless under SB 2 (Tex. Tax Code §41.47(c)), which bars the ARB from raising your appraisal without your consent — but it also won't reduce it.", css: "purple",
+            banner: "No case", bannerSub: "Appraisal is already below the median — no §41.43(b)(3) case." },
   gray:   { verdict: "No unequal-appraisal case is available from the standard filters — review by hand if it matters to you.", css: "gray",
-            banner: "Review manually", bannerSub: "Fewer than 5 comparable homes matched — hand-pick comps on hcad.org." },
+            banner: "Review by hand", bannerSub: "Fewer than 5 comparable homes matched — hand-pick comps on hcad.org." },
 };
 
 // Comp-basket coefficient of variation (CV) → verbal confidence label.
@@ -294,12 +294,12 @@ function capScriptHtml(p) {
   const ceiling = Math.round(p.prior_v * 1.10);
   const purpleNote = p.c === "purple"
     ? `<p class="cap-script-caution"><b>Tactical note:</b> because your ` +
-      `2026 appraisal is <em>below</em> the median of comparable homes, ` +
-      `the ARB panel has room to adjust upward under §41.43. Stay strictly ` +
-      `on §23.23 at the hearing &mdash; do not volunteer comps, market ` +
-      `value, or anything that invites the panel to evaluate your ` +
-      `unequal-appraisal case. The cap argument is mechanical: prior ` +
-      `value × 1.10 vs. posted value. That's the only ground you raise.</p>`
+      `2026 appraisal is already <em>below</em> the median of comparable ` +
+      `homes, you have no §41.43(b)(3) unequal-appraisal case at this ` +
+      `hearing. Stay strictly on §23.23 &mdash; do not volunteer comps ` +
+      `or market value. They aren't part of the cap argument and only ` +
+      `distract the panel from the mechanical cap math: prior value ` +
+      `× 1.10 vs. posted value. That's the only ground you raise.</p>`
     : "";
   return `
     <div class="cap-script">
@@ -351,20 +351,22 @@ function renderHearingScript(p) {
     const absPct = Math.abs(p.p).toFixed(1);
     primaryHtml = `
       <div class="purple-warning">
-        <p><b>${p.cap ? "§41.43 context (do not raise at hearing)" : "Do not file this protest"}.</b>
+        <p><b>${p.cap ? "§41.43 context (no case)" : "No §41.43 case here"}.</b>
         Your 2026 appraisal of <b>${fmtMoney(p.v)}</b>
         (${fmtPsf(p.psf)}/sqft) is already <b>${absPct}% below</b> the
         per-square-foot median of ${p.comps.length} comparable ${p.comps.length === 1 ? "home" : "homes"}
         (${fmtPsf(p.med_psf)}/sqft, implying a fair value of ${fmtMoney(p.fair)}
         at your ${fmtInt(p.sqft)} sqft).</p>
-        <p>The Appraisal Review Board has the statutory authority to adjust
-        appraised values <b>upward as well as downward</b>. If you file an
-        unequal-appraisal protest with these numbers, the panel may apply the
-        same &sect;41.43(b)(3) median test to <em>your</em> case and conclude
-        the appraisal should be raised toward ${fmtMoney(p.fair)}, costing you
-        roughly ${fmtMoney(p.fair - p.v)} in additional taxable value.</p>
+        <p>The §41.43(b)(3) median test only reduces appraisals that sit
+        <em>above</em> the comp median. Yours sits below it, so this ground
+        has nothing to give you. Under <b>SB 2 of 2019 (Tex. Tax Code
+        &sect;41.47(c))</b>, the ARB cannot raise your appraisal during a
+        protest without your specific written consent &mdash; so filing on
+        this ground is harmless, just pointless. Other grounds (homestead
+        cap, condition, damage) may still apply; review them before
+        deciding.</p>
         <p>${p.cap
-          ? "Proceed with the §23.23 cap script above and do not mention comps or market value at the hearing."
+          ? "Proceed with the §23.23 cap script above. The cap claim is mechanical and doesn't depend on the §41.43 numbers — keep them out of the hearing."
           : "The remaining playbook below (deadlines, iFile, hearing scripts) applies if you ever face a future year where your appraisal moves above the median — bookmark this page and re-check next April."}</p>
       </div>`;
   } else {
@@ -402,18 +404,18 @@ function renderMethodsNote(p) {
   let body;
   if (fileByPsf && !fileByRaw) {
     // Per-sqft suggests filing; raw-dollar doesn't.
-    // Filing is the HIGH-RISK direction: ARB may use raw and raise the value.
+    // The two methods disagree on whether a case exists; flag the homeowner
+    // so they go in eyes-open about which yardstick the ARB panel will use.
     body =
       `The two methods disagree on what to do here. By the per-square-foot ` +
       `method (the primary analysis above), your appraisal is ${psfPct}% ` +
       `${psfDir} median &mdash; a filable case. By the raw-dollar method ` +
       `(what most ARB panels default to at a hearing), your appraisal is ` +
-      `${rawPct}% ${rawDir} median &mdash; <b>no case, and potential ` +
-      `upward-adjustment risk</b>. Your home is ${p.p > 0 ? "smaller" : "larger"} than the ` +
-      `average of its comp band, which is why the two numbers diverge. ` +
-      `Before filing, consider how the ARB panel is likely to compare your ` +
-      `appraisal &mdash; if raw-dollar is their default, the case above ` +
-      `may not hold.`;
+      `${rawPct}% ${rawDir} median &mdash; <b>no case</b>. Your home is ` +
+      `${p.p > 0 ? "smaller" : "larger"} than the average of its comp band, ` +
+      `which is why the two numbers diverge. Before filing, consider how ` +
+      `the ARB panel is likely to compare your appraisal &mdash; if ` +
+      `raw-dollar is their default, the case above may not hold.`;
   } else {
     // Raw-dollar says file; per-sqft doesn't.
     // Not filing is the LOW-RISK direction, but homeowner may miss a case.
@@ -467,15 +469,15 @@ function renderVerdictBanner(p) {
 
   // Cap overrides. The §23.23 cap is a separate statutory ground, and for
   // most §41.43 buckets it is the dominant signal ("File, regardless of
-  // what §41.43 says"). The exception is purple — under-assessed parcels
-  // where filing any protest could invite the ARB to adjust upward toward
-  // the comp median, which conflicts with the cap win.
+  // what §41.43 says"). On purple parcels there's no §41.43 case to
+  // combine — the cap claim stands on its own and the §41.43 numbers stay
+  // out of the hearing.
   if (p.cap) {
     const excess = fmtMoney(p.cap_excess);
     if (p.c === "purple") {
       cls = "verdict-cap-conflict";
-      label = "Mixed — read carefully";
-      sub = `§23.23 cap claim worth ${excess}, but §41.43 risks an upward adjustment at the ARB. Details below.`;
+      label = "FILE — homestead cap";
+      sub = `§23.23 cap claim worth ${excess}; the §41.43 ground has no case here. Details below.`;
     } else if (p.c === "red") {
       cls = "verdict-cap";
       label = "FILE — two grounds";
